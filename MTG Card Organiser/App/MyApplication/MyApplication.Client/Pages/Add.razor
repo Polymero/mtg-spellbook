@@ -1,0 +1,99 @@
+@page "/add"
+
+<PageTitle>Add</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Add</MudText>
+
+<MudTextField @bind-Value="SearchValue" Label="Standard" Variant="Variant.Text"></MudTextField>
+
+@if (SearchValue is not null) {
+    if (SearchValue != "") {
+        isValue = false;
+    }
+    else {
+        isValue = true;
+    }
+}
+
+<MudButton Color="Color.Primary" Disabled=isValue Variant="Variant.Filled" @onclick="FuzzyScryfall">Search</MudButton>
+
+@if (foundCard.Status != 0) {
+    if (foundCard.Status != 1) {
+        <MudText>Search failed to fetch a card, try again...</MudText>
+    }
+    else {
+        <MudText>Fetched the following card:</MudText>
+        <MudImage Src=@foundCard.Image_Uris?.Normal Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+    }
+}
+
+@code {
+    public bool isValue = true;
+    public string SearchValue { get; set; } = "";
+    static HttpClient Client = new HttpClient();
+
+    public class ScryfallImages
+    {
+        public string? Small { get; set; }
+        public string? Normal { get; set; }
+        public string? Large { get; set; }
+    }
+
+        public class ScryfallCard
+    {
+        public int Status { get; set; } = 0;
+        public string? ScryfallId { get; set; }
+        public string? Oracle_Id { get; set; }
+        public string? Name { get; set; }
+        public string? Released_At { get; set; }
+        public string? Mana_Cost { get; set; }
+        public string? Oracle_Text { get; set; }
+        public ScryfallImages? Image_Uris { get; set; }
+        public string[]? Color_Identity { get; set; }
+    }
+    public ScryfallCard foundCard = new ScryfallCard();
+
+    public async Task FuzzyScryfall()
+    {
+        var SearchUri = "";
+        foreach (var chr in SearchValue)
+        {
+            if (Char.IsLetterOrDigit(chr)) {
+                SearchUri += chr;
+            }
+            else if (Char.Equals(chr, " ")) {
+                SearchUri += "+";
+            }
+        }
+        try 
+        {
+            var respCard = await Client.GetAsync("https://api.scryfall.com/cards/named/?fuzzy=" + SearchUri);
+            if (respCard.IsSuccessStatusCode)
+            {
+                var jsonCard = await respCard.Content.ReadAsStringAsync();
+                ScryfallCard? Card = JsonConvert.DeserializeObject<ScryfallCard>(jsonCard);
+                if (Card is null) {
+                    throw new Exception("Failed to generate ScryfallCard object");
+                }
+                else {
+                    foundCard = Card;
+                    foundCard.Status = 1;
+
+                    var respVars = await Client.GetAsync("https://api.scryfall.com/cards/search?order=released&unique=prints&q=game%3Dpaper+oracleid%3A" + foundCard.Oracle_Id);
+                    var jsonVars = await respVars.Content.ReadAsStringAsync();
+
+
+                }
+            }
+            else
+            {
+                throw new Exception("Failed to get succes response from Scryfall API");
+            }
+        }
+        catch (Exception)
+        { 
+            foundCard.Status = 2;
+        }
+        
+    }
+}
