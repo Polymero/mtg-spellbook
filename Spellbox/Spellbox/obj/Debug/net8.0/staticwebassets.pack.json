@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/projectbundle/Spellbox.bundle.scp.css",
+      "PackagePath": "staticwebassets/Spellbox.bundle.scp.css"
+    },
+    {
+      "Id": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.Spellbox.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.Spellbox.props",
+      "PackagePath": "build\\Spellbox.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.Spellbox.props",
+      "PackagePath": "buildMultiTargeting\\Spellbox.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.Spellbox.props",
+      "PackagePath": "buildTransitive\\Spellbox.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

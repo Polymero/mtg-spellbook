@@ -1,0 +1,71 @@
+@page "/collection"
+@using MudBlazor
+@using Spellbox.Model
+@using Spellbox.Components.Dialogs
+
+<MudGrid Spacing="2">
+
+    <MudItem xs="12">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h4">Your Binders:</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton @onclick="AddBinderAsync" Variant="Variant.Filled" Color="Color.Success">New</MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+    </MudItem>
+
+    @if (binders == null)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    }
+    else if (binders.Count == 0)
+    {
+        <MudText>You have no binders. What have you done?</MudText>
+    }
+    else
+    {    
+        @foreach (var binder in @binders)
+        {
+            <MudItem xs="12">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">@binder.Name (@binder.Cards.Count cards)</MudText>
+                        <MudText>@binder.Description</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }   
+    }
+
+</MudGrid>
+
+@inject CollectionDbContext collectionContext
+@inject IDialogService DialogService
+@code {
+    List<Binder> binders = [];
+
+    private async Task AddBinderAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<AddBinderDialog>("Create Binder", options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data != null)
+        {
+            Binder binder = (Binder)result.Data;
+            collectionContext.Binders.Add(binder);
+            await collectionContext.SaveChangesAsync();
+            await OnInitializedAsync();
+            binder = new Binder();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        binders = await collectionContext.Binders.ToListAsync();
+    }
+
+}

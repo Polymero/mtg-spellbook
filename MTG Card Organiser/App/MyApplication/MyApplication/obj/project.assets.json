@@ -467,7 +467,7 @@
           }
         }
       },
-      "MudBlazor/7.1.1": {
+      "MudBlazor/7.2.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.6",
@@ -485,6 +485,7 @@
           }
         },
         "build": {
+          "build/MudBlazor.targets": {},
           "buildTransitive/MudBlazor.props": {}
         },
         "buildMultiTargeting": {
@@ -753,7 +754,7 @@
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
           "Microsoft.AspNetCore.Components.WebAssembly": "8.0.0",
-          "MudBlazor": "7.0.0",
+          "MudBlazor": "7.2.0",
           "Newtonsoft.Json": "13.0.3",
           "SQLite": "3.13.0",
           "SQLitePCLRaw.bundle_green": "2.1.8",
@@ -1478,10 +1479,10 @@
         "microsoft.jsinterop.webassembly.nuspec"
       ]
     },
-    "MudBlazor/7.1.1": {
-      "sha512": "BqJPzOCyEcmmQw/SwjPVJ+C4KCjKawjqhzcperVl9EptYpdxIGj2ZYjxOGAsQWF9B1FXGIbf5XAHBSl/il3kxA==",
+    "MudBlazor/7.2.0": {
+      "sha512": "Gh7cXbg7D1ds4zuZJO8pkOicNom4rzyxSUfG7fJ1g5ZKP9pc2KShiZdWqwmG0rEz126HlxX2gCNOLJYZALyzWA==",
       "type": "package",
-      "path": "mudblazor/7.1.1",
+      "path": "mudblazor/7.2.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1498,7 +1499,7 @@
         "lib/net7.0/MudBlazor.xml",
         "lib/net8.0/MudBlazor.dll",
         "lib/net8.0/MudBlazor.xml",
-        "mudblazor.7.1.1.nupkg.sha512",
+        "mudblazor.7.2.0.nupkg.sha512",
         "mudblazor.nuspec",
         "staticwebassets/MudBlazor.min.css",
         "staticwebassets/MudBlazor.min.js"
@@ -1827,38 +1828,40 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Microsoft.AspNetCore.Components.WebAssembly.Server >= 8.*",
+      "Mudblazor >= 7.2.0",
       "MyApplication.Client >= 1.0.0",
       "SQLite >= 3.13.0",
       "sqlite-net-pcl >= 1.9.172"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Nika\\.nuget\\packages\\": {}
+    "/home/nika/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj",
+      "projectUniqueName": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj",
       "projectName": "MyApplication",
-      "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj",
-      "packagesPath": "C:\\Users\\Nika\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\obj\\",
+      "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj",
+      "packagesPath": "/home/nika/.nuget/packages/",
+      "outputPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Nika\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/nika/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "/home/nika/.dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj": {
-              "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj"
+            "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj": {
+              "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj"
             }
           }
         }
@@ -1881,6 +1884,10 @@
           "Microsoft.AspNetCore.Components.WebAssembly.Server": {
             "target": "Package",
             "version": "[8.*, )"
+          },
+          "Mudblazor": {
+            "target": "Package",
+            "version": "[7.2.0, )"
           },
           "SQLite": {
             "target": "Package",
@@ -1910,7 +1917,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/nika/.dotnet/sdk/8.0.303/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

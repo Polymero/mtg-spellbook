@@ -1,0 +1,145 @@
+@page "/update"
+@using Spellbox.Model
+
+@if (progressInt == 0)
+{
+    <MudButton @onclick="UpdateOracleDatabase" Variant="Variant.Filled" Color="Color.Success">Update</MudButton>
+}
+else
+{
+    @if (progressInt >= 1)
+    {
+        <MudText>Downloading bulk data...</MudText>
+    }
+
+    @if (progressInt >= 2)
+    {
+        <MudText>@cardList?.Count cards downloaded!</MudText>
+        <MudText>Parsing...</MudText>
+    }
+
+    @if (progressInt <= 3)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    }
+
+    @if (progressInt == 3)
+    {
+        <MudText>Done. :)</MudText>
+    }
+}
+
+@inject HttpClient Http
+@inject OracleDbContext oracleContext
+@code {
+    public int progressInt = 0;
+    private string? bulkUri = "https://api.scryfall.com/bulk-data";
+    private List<ScryfallCard>? cardList;
+
+    private async Task UpdateOracleDatabase()
+    {
+        progressInt ++;
+        StateHasChanged();
+
+        var bulkData = await Http.GetFromJsonAsync<BulkData>(bulkUri);
+        var oracleUri = bulkData?.Data?.Find(x => x.Type == "default_cards")?.Download_Uri;
+        cardList = await Http.GetFromJsonAsync<List<ScryfallCard>>(oracleUri);
+
+        if (cardList is not null)
+        {
+            progressInt ++;
+            StateHasChanged();
+
+            // Rejected card layouts
+            var rejectedLayouts = new List<string> { 
+                "art_series", 
+                "double_faced_token",
+                "token",
+                "planar",
+                "scheme",
+                "vanguard",
+                "emblem",
+                "host"
+                };
+
+            foreach (ScryfallCard card in cardList)
+            {
+                // Do we care about the card?
+                if (card is null || card.Oracle_Id is null) {continue;}
+                if (card.Games is null || !card.Games.Contains("paper")) {continue;}
+                if (card.Layout is null || rejectedLayouts.Contains(card.Layout)) {continue;}
+            
+                // Check if the card is already in the Oracle database
+                var existingCard = oracleContext.OracleCards.FirstOrDefault<OracleCard>(x => x.OracleId == card.Oracle_Id);
+                if (existingCard is not null)
+                {
+                    var existingVariant = existingCard.Variants?.FirstOrDefault<CardVariant>(x => x.SetCode == card.Set && x.CollNum == card.Collector_Number);
+                    if (existingVariant is not null) {continue;}
+
+                    // Fill CardVariant
+                    CardVariant parsedVariant = new CardVariant {
+                        SetName = card.Set_Name,
+                        SetCode = card.Set,
+                        CollNum = card.Collector_Number,
+                        Finishes = card.Finishes,
+                        Artist = card.Artist,
+                        Thumb = card.Image_Uris?.Small,
+                        Image = card.Image_Uris?.Normal,
+                        Language = card.Lang,
+                        Released = card.Released_At,
+                        Rarity = card.Rarity,
+                        FlavorName = card.Flavor_Name,
+                        FlavorText = card.Flavor_Text
+                    };
+
+                    // Update existing oracle card with a new variant
+                    existingCard.Variants?.Add(parsedVariant);
+                    await oracleContext.SaveChangesAsync();
+                }
+                else
+                {
+                    // Fill CardVariant
+                    CardVariant parsedVariant = new CardVariant {
+                        SetName = card.Set_Name,
+                        SetCode = card.Set,
+                        CollNum = card.Collector_Number,
+                        Finishes = card.Finishes,
+                        Artist = card.Artist,
+                        Thumb = card.Image_Uris?.Small,
+                        Image = card.Image_Uris?.Normal,
+                        Language = card.Lang,
+                        Released = card.Released_At,
+                        Rarity = card.Rarity,
+                        FlavorName = card.Flavor_Name,
+                        FlavorText = card.Flavor_Text
+                    };
+                    
+                    // Fill OracleCard and add to database
+                    OracleCard parsedCard = new OracleCard {
+                        OracleId = card.Oracle_Id,
+                        Name = card.Name,
+                        TypeLine = card.Type_Line,
+                        Keywords = card.Keywords,
+                        OracleText = card.Oracle_Text,
+                        ManaCost = card.Mana_Cost,
+                        CMC = card.CMC,
+                        Colors = card.Colors,
+                        ColorIdentity = card.Color_Identity,
+                        Variants = new List<CardVariant> { parsedVariant },
+                        Legalities = card.Legalities
+                    };
+
+                    oracleContext.OracleCards.Add(parsedCard);
+                    await oracleContext.SaveChangesAsync();
+                }
+            }
+        }
+        progressInt ++;
+        StateHasChanged();
+    }
+
+    private class BulkData
+    {
+        public List<ScryfallBulk>? Data { get; set; }
+    }
+}

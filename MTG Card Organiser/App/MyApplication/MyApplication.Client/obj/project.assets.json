@@ -461,7 +461,7 @@
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.targets": {}
         }
       },
-      "MudBlazor/7.1.1": {
+      "MudBlazor/7.2.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.6",
@@ -1204,7 +1204,7 @@
           "build/Microsoft.NET.Sdk.WebAssembly.Pack.targets": {}
         }
       },
-      "MudBlazor/7.1.1": {
+      "MudBlazor/7.2.0": {
         "type": "package",
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.6",
@@ -2184,10 +2184,10 @@
         "tools/net8.0/System.Windows.Extensions.dll"
       ]
     },
-    "MudBlazor/7.1.1": {
-      "sha512": "BqJPzOCyEcmmQw/SwjPVJ+C4KCjKawjqhzcperVl9EptYpdxIGj2ZYjxOGAsQWF9B1FXGIbf5XAHBSl/il3kxA==",
+    "MudBlazor/7.2.0": {
+      "sha512": "Gh7cXbg7D1ds4zuZJO8pkOicNom4rzyxSUfG7fJ1g5ZKP9pc2KShiZdWqwmG0rEz126HlxX2gCNOLJYZALyzWA==",
       "type": "package",
-      "path": "mudblazor/7.1.1",
+      "path": "mudblazor/7.2.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2204,7 +2204,7 @@
         "lib/net7.0/MudBlazor.xml",
         "lib/net8.0/MudBlazor.dll",
         "lib/net8.0/MudBlazor.xml",
-        "mudblazor.7.1.1.nupkg.sha512",
+        "mudblazor.7.2.0.nupkg.sha512",
         "mudblazor.nuspec",
         "staticwebassets/MudBlazor.min.css",
         "staticwebassets/MudBlazor.min.js"
@@ -2530,7 +2530,7 @@
       "Microsoft.AspNetCore.Components.WebAssembly >= 8.*",
       "Microsoft.NET.ILLink.Tasks >= 8.0.7",
       "Microsoft.NET.Sdk.WebAssembly.Pack >= 8.0.7",
-      "MudBlazor >= 7.*",
+      "MudBlazor >= 7.2.0",
       "Newtonsoft.Json >= 13.0.3",
       "SQLite >= 3.13.0",
       "SQLitePCLRaw.bundle_green >= 2.1.8",
@@ -2538,24 +2538,25 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Nika\\.nuget\\packages\\": {}
+    "/home/nika/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj",
+      "projectUniqueName": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj",
       "projectName": "MyApplication.Client",
-      "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj",
-      "packagesPath": "C:\\Users\\Nika\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\obj\\",
+      "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj",
+      "packagesPath": "/home/nika/.nuget/packages/",
+      "outputPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Nika\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/nika/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "/home/nika/.dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -2597,7 +2598,7 @@
           },
           "MudBlazor": {
             "target": "Package",
-            "version": "[7.*, )"
+            "version": "[7.2.0, )"
           },
           "Newtonsoft.Json": {
             "target": "Package",
@@ -2638,7 +2639,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/nika/.dotnet/sdk/8.0.303/PortableRuntimeIdentifierGraph.json"
       }
     },
     "runtimes": {

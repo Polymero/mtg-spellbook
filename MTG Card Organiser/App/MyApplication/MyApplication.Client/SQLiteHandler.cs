@@ -17,7 +17,7 @@ namespace MyApplication.Client
 
             _db = new SQLiteAsyncConnection(DatabaseConstants.DatabaseFilepath, DatabaseConstants.Flags);
             await _db.CreateTableAsync<AppBinder>();
-            await _db.CreateTableAsync<AppDeck>();
+            // await _db.CreateTableAsync<AppDeck>();
         }
 
         public async Task<List<AppBinder>> GetCollection()

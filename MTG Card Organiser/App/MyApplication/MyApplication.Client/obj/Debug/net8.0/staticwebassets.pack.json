@@ -1,27 +1,27 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\bin\\Debug\\net8.0\\wwwroot\\_framework\\blazor.webassembly.js",
-      "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js"
+      "Id": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/bin/Debug/net8.0/wwwroot/_framework/blazor.webassembly.js",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js"
     },
     {
-      "Id": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\obj\\Debug\\net8.0\\compressed\\t9uh1o6i9p.gz",
-      "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js.gz"
+      "Id": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/obj/Debug/net8.0/compressed/r68gtd6520.gz",
+      "PackagePath": "staticwebassets/_framework/blazor.webassembly.js.gz"
     },
     {
-      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.MyApplication.Client.Microsoft.AspNetCore.StaticWebAssets.props",
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.MyApplication.Client.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
     {
-      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.MyApplication.Client.props",
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.MyApplication.Client.props",
       "PackagePath": "build\\MyApplication.Client.props"
     },
     {
-      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.MyApplication.Client.props",
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.MyApplication.Client.props",
       "PackagePath": "buildMultiTargeting\\MyApplication.Client.props"
     },
     {
-      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.MyApplication.Client.props",
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.MyApplication.Client.props",
       "PackagePath": "buildTransitive\\MyApplication.Client.props"
     }
   ],

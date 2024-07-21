@@ -1,0 +1,32 @@
+@using Spellbox.Model
+
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Create Binder</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="@binder.Name" Label="Name" Typo="Typo.h5" />
+        <MudTextField @bind-Value="@binder.Description" Label="Description" AutoGrow />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Success" OnClick="Add">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    public Binder binder { get; set; } = new Binder();
+    
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Add()
+    {
+        Snackbar.Add("Binder created", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(binder));
+    }
+}

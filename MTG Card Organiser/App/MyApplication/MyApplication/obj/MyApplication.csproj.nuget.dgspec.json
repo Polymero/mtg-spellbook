@@ -1,25 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj": {}
+    "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj": {
+    "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj",
+        "projectUniqueName": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj",
         "projectName": "MyApplication.Client",
-        "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj",
-        "packagesPath": "C:\\Users\\Nika\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\obj\\",
+        "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj",
+        "packagesPath": "/home/nika/.nuget/packages/",
+        "outputPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Nika\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/nika/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "/home/nika/.dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -61,7 +62,7 @@
             },
             "MudBlazor": {
               "target": "Package",
-              "version": "[7.*, )"
+              "version": "[7.2.0, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
@@ -102,7 +103,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/nika/.dotnet/sdk/8.0.303/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {
@@ -111,30 +112,31 @@
         }
       }
     },
-    "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj": {
+    "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj",
+        "projectUniqueName": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj",
         "projectName": "MyApplication",
-        "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\MyApplication.csproj",
-        "packagesPath": "C:\\Users\\Nika\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication\\obj\\",
+        "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/MyApplication.csproj",
+        "packagesPath": "/home/nika/.nuget/packages/",
+        "outputPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Nika\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/nika/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "/home/nika/.dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj": {
-                "projectPath": "C:\\Users\\Nika\\MTG Card Organiser\\App\\MyApplication\\MyApplication.Client\\MyApplication.Client.csproj"
+              "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj": {
+                "projectPath": "/home/nika/mtg-spellbook/MTG Card Organiser/App/MyApplication/MyApplication.Client/MyApplication.Client.csproj"
               }
             }
           }
@@ -157,6 +159,10 @@
             "Microsoft.AspNetCore.Components.WebAssembly.Server": {
               "target": "Package",
               "version": "[8.*, )"
+            },
+            "Mudblazor": {
+              "target": "Package",
+              "version": "[7.2.0, )"
             },
             "SQLite": {
               "target": "Package",
@@ -186,7 +192,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/nika/.dotnet/sdk/8.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

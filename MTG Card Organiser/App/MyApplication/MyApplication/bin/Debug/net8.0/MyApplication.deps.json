@@ -239,7 +239,7 @@
           }
         }
       },
-      "MudBlazor/7.1.1": {
+      "MudBlazor/7.2.0": {
         "dependencies": {
           "Microsoft.AspNetCore.Components": "8.0.7",
           "Microsoft.AspNetCore.Components.Web": "8.0.7",
@@ -247,8 +247,8 @@
         },
         "runtime": {
           "lib/net8.0/MudBlazor.dll": {
-            "assemblyVersion": "7.1.1.0",
-            "fileVersion": "7.1.1.0"
+            "assemblyVersion": "7.2.0.0",
+            "fileVersion": "7.2.0.0"
           }
         }
       },
@@ -275,12 +275,12 @@
           "runtimes/win7-x64/native/sqlite3.dll": {
             "rid": "win7-x64",
             "assetType": "native",
-            "fileVersion": "3.13.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win7-x86/native/sqlite3.dll": {
             "rid": "win7-x86",
             "assetType": "native",
-            "fileVersion": "3.13.0.0"
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -449,7 +449,7 @@
       "MyApplication.Client/1.0.0": {
         "dependencies": {
           "Microsoft.AspNetCore.Components.WebAssembly": "8.0.7",
-          "MudBlazor": "7.1.1",
+          "MudBlazor": "7.2.0",
           "Newtonsoft.Json": "13.0.3",
           "SQLite": "3.13.0",
           "SQLitePCLRaw.bundle_green": "2.1.8",
@@ -649,12 +649,12 @@
       "path": "microsoft.jsinterop.webassembly/8.0.7",
       "hashPath": "microsoft.jsinterop.webassembly.8.0.7.nupkg.sha512"
     },
-    "MudBlazor/7.1.1": {
+    "MudBlazor/7.2.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-BqJPzOCyEcmmQw/SwjPVJ+C4KCjKawjqhzcperVl9EptYpdxIGj2ZYjxOGAsQWF9B1FXGIbf5XAHBSl/il3kxA==",
-      "path": "mudblazor/7.1.1",
-      "hashPath": "mudblazor.7.1.1.nupkg.sha512"
+      "sha512": "sha512-Gh7cXbg7D1ds4zuZJO8pkOicNom4rzyxSUfG7fJ1g5ZKP9pc2KShiZdWqwmG0rEz126HlxX2gCNOLJYZALyzWA==",
+      "path": "mudblazor/7.2.0",
+      "hashPath": "mudblazor.7.2.0.nupkg.sha512"
     },
     "Newtonsoft.Json/13.0.3": {
       "type": "package",
