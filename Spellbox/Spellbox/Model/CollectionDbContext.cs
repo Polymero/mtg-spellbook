@@ -16,7 +16,7 @@ namespace Spellbox.Model
             options.UseSqlite(Configuration.GetConnectionString("CollectionDatabaseConnectionString"));
         }
 
-        public DbSet<Binder> Binders { get; set; }
-        public DbSet<Deck> Decks { get; set; }
+        public DbSet<CollectionBinder> Binders { get; set; }
+        public DbSet<CollectionDeck> Decks { get; set; }
     }
 }

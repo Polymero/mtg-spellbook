@@ -14,18 +14,25 @@ else
 
     @if (progressInt >= 2)
     {
-        <MudText>@cardList?.Count cards downloaded!</MudText>
+        <MudText>@cardList?.Count cards downloaded ~ !</MudText>
         <MudText>Parsing...</MudText>
     }
 
-    @if (progressInt <= 3)
+    @if (progressInt >= 3)
+    {
+        <MudText>Saving...</MudText>
+    }
+
+    @if (progressInt < 4)
     {
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
 
-    @if (progressInt == 3)
+    @if (progressInt == 4)
     {
-        <MudText>Done. :)</MudText>
+        <MudText>@oracleList?.Count oracle cards parsed ~ !</MudText>
+        <MudText>@variantList?.Count card variants parsed ~ !</MudText>
+        <MudText>Done.</MudText>
     }
 }
 
@@ -35,14 +42,26 @@ else
     public int progressInt = 0;
     private string? bulkUri = "https://api.scryfall.com/bulk-data";
     private List<ScryfallCard>? cardList;
+    private List<OracleCard>? oracleList;
+    private List<CardVariant>? variantList;
 
     private async Task UpdateOracleDatabase()
     {
+        // This speeds things up maybe???
+        oracleContext.ChangeTracker.AutoDetectChangesEnabled = false;
+
+        // Clear database tables
+        oracleContext.OracleCards.RemoveRange(oracleContext.OracleCards.ToList());
+        oracleContext.CardVariants.RemoveRange(oracleContext.CardVariants.ToList());
+
         progressInt ++;
         StateHasChanged();
 
+        // Get ScryfallAPI bulk data
         var bulkData = await Http.GetFromJsonAsync<BulkData>(bulkUri);
         var oracleUri = bulkData?.Data?.Find(x => x.Type == "default_cards")?.Download_Uri;
+
+        // Get ScryfallAPI default cards
         cardList = await Http.GetFromJsonAsync<List<ScryfallCard>>(oracleUri);
 
         if (cardList is not null)
@@ -62,78 +81,118 @@ else
                 "host"
                 };
 
+            var parsedOracleIds = new List<string>();
+            var parsedVariantIds = new List<string>();
+
             foreach (ScryfallCard card in cardList)
             {
                 // Do we care about the card?
-                if (card is null || card.Oracle_Id is null) {continue;}
                 if (card.Games is null || !card.Games.Contains("paper")) {continue;}
                 if (card.Layout is null || rejectedLayouts.Contains(card.Layout)) {continue;}
+                if (card.Promo_Types != null && card.Promo_Types.Contains("thick")) {continue;}
+
+                // Get oracle id
+                string? _OracleId = "";
+                if (card.Oracle_Id != null) {_OracleId = card.Oracle_Id;}
+                else {_OracleId = card.Card_Faces?[0].Oracle_Id;}
+                if (_OracleId is null) {continue;}
+
+                // Fill CardVariant
+                CardVariant parsedVariant = new CardVariant {
+                    OracleId = _OracleId,
+                    SetName = card.Set_Name,
+                    SetCode = card.Set,
+                    CollNum = card.Collector_Number,
+                    Finishes = card.Finishes,
+                    Artist = card.Artist,
+                    Released = card.Released_At,
+                    Rarity = card.Rarity,
+                };
+                if (card.Image_Uris != null)
+                {
+                    parsedVariant.Thumbs = new List<string> { card.Image_Uris.Small is null ? "" : card.Image_Uris.Small };
+                    parsedVariant.Images = new List<string> { card.Image_Uris.Normal is null ? "" : card.Image_Uris.Normal };
+                    parsedVariant.FlavorTexts = new List<string> { card.Flavor_Text is null ? "" : card.Flavor_Text };
+                    parsedVariant.FlavorNames = new List<string> { card.Flavor_Name is null ? "" : card.Flavor_Name };
+                }
+                else if (card.Card_Faces != null)
+                {
+                    parsedVariant.Thumbs = (from face in card.Card_Faces select face.Image_Uris?.Small is null ? "" : face.Image_Uris.Small).Cast<string>().ToList();
+                    parsedVariant.Images = (from face in card.Card_Faces select face.Image_Uris?.Normal is null ? "" : face.Image_Uris.Normal).Cast<string>().ToList();
+                    parsedVariant.FlavorTexts = (from face in card.Card_Faces select face.Flavor_Text is null ? "" : face.Flavor_Text).Cast<string>().ToList();
+                    parsedVariant.FlavorNames = (from face in card.Card_Faces select face.Flavor_Name is null ? "" : face.Flavor_Name).Cast<string>().ToList();
+                }
             
                 // Check if the card is already in the Oracle database
-                var existingCard = oracleContext.OracleCards.FirstOrDefault<OracleCard>(x => x.OracleId == card.Oracle_Id);
-                if (existingCard is not null)
+                if (parsedOracleIds.Contains(_OracleId))
                 {
-                    var existingVariant = existingCard.Variants?.FirstOrDefault<CardVariant>(x => x.SetCode == card.Set && x.CollNum == card.Collector_Number);
-                    if (existingVariant is not null) {continue;}
-
-                    // Fill CardVariant
-                    CardVariant parsedVariant = new CardVariant {
-                        SetName = card.Set_Name,
-                        SetCode = card.Set,
-                        CollNum = card.Collector_Number,
-                        Finishes = card.Finishes,
-                        Artist = card.Artist,
-                        Thumb = card.Image_Uris?.Small,
-                        Image = card.Image_Uris?.Normal,
-                        Language = card.Lang,
-                        Released = card.Released_At,
-                        Rarity = card.Rarity,
-                        FlavorName = card.Flavor_Name,
-                        FlavorText = card.Flavor_Text
-                    };
+                    // Check if the variant is already in the Oracle database
+                    if (parsedVariantIds.Contains(_OracleId + card.Set + card.Collector_Number)) {continue;}
 
                     // Update existing oracle card with a new variant
-                    existingCard.Variants?.Add(parsedVariant);
-                    await oracleContext.SaveChangesAsync();
+                    parsedVariantIds.Add(_OracleId + card.Set + card.Collector_Number);
+                    oracleContext.CardVariants.Add(parsedVariant);
                 }
                 else
                 {
-                    // Fill CardVariant
-                    CardVariant parsedVariant = new CardVariant {
-                        SetName = card.Set_Name,
-                        SetCode = card.Set,
-                        CollNum = card.Collector_Number,
-                        Finishes = card.Finishes,
-                        Artist = card.Artist,
-                        Thumb = card.Image_Uris?.Small,
-                        Image = card.Image_Uris?.Normal,
-                        Language = card.Lang,
-                        Released = card.Released_At,
-                        Rarity = card.Rarity,
-                        FlavorName = card.Flavor_Name,
-                        FlavorText = card.Flavor_Text
-                    };
+                    // Fill CardFaces
+                    List<CardFace> parsedFaces = new List<CardFace>();
+                    if (card.Card_Faces is null)
+                    {
+                        CardFace newFace = new CardFace {
+                            Name = card.Name,
+                            ManaCost = card.Mana_Cost,
+                            TypeLine = card.Type_Line,
+                            OracleText = card.Oracle_Text,
+                            Power = card.Power,
+                            Toughness = card.Toughness,
+                            Defense = card.Defense
+                        };
+                        parsedFaces.Add(newFace);
+                    }
+                    else
+                    {
+                        foreach (ScryfallCardFace face in card.Card_Faces)
+                        {
+                            CardFace newFace = new CardFace {
+                                Name = face.Name,
+                                ManaCost = face.Mana_Cost,
+                                TypeLine = face.Type_Line,
+                                OracleText = face.Oracle_Text,
+                                Power = face.Power,
+                                Toughness = face.Toughness,
+                                Defense = card.Defense
+                            };
+                            parsedFaces.Add(newFace);
+                        }
+                    }
                     
                     // Fill OracleCard and add to database
                     OracleCard parsedCard = new OracleCard {
-                        OracleId = card.Oracle_Id,
+                        OracleId = _OracleId,
                         Name = card.Name,
-                        TypeLine = card.Type_Line,
-                        Keywords = card.Keywords,
-                        OracleText = card.Oracle_Text,
-                        ManaCost = card.Mana_Cost,
-                        CMC = card.CMC,
-                        Colors = card.Colors,
+                        Faces = parsedFaces,
                         ColorIdentity = card.Color_Identity,
+                        CMC = card.CMC,
                         Variants = new List<CardVariant> { parsedVariant },
+                        Keywords = card.Keywords,
+                        TypeLine = card.Type_Line is null ? card.Card_Faces?[0].Type_Line : card.Type_Line,
                         Legalities = card.Legalities
                     };
 
+                    parsedOracleIds.Add(_OracleId);
                     oracleContext.OracleCards.Add(parsedCard);
-                    await oracleContext.SaveChangesAsync();
                 }
             }
         }
+        progressInt ++;
+        StateHasChanged();
+
+        await oracleContext.SaveChangesAsync();
+
+        oracleList = await oracleContext.OracleCards.ToListAsync();
+        variantList = await oracleContext.CardVariants.ToListAsync();
+
         progressInt ++;
         StateHasChanged();
     }

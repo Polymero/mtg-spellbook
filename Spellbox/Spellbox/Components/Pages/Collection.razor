@@ -44,7 +44,7 @@
 @inject CollectionDbContext collectionContext
 @inject IDialogService DialogService
 @code {
-    List<Binder> binders = [];
+    List<CollectionBinder> binders = [];
 
     private async Task AddBinderAsync()
     {
@@ -55,11 +55,11 @@
 
         if (result != null && !result.Canceled && result.Data != null)
         {
-            Binder binder = (Binder)result.Data;
+            CollectionBinder binder = (CollectionBinder)result.Data;
             collectionContext.Binders.Add(binder);
             await collectionContext.SaveChangesAsync();
             await OnInitializedAsync();
-            binder = new Binder();
+            binder = new CollectionBinder();
         }
     }
 

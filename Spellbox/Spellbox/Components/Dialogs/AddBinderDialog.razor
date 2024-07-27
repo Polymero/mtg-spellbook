@@ -20,7 +20,7 @@
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
 
-    public Binder binder { get; set; } = new Binder();
+    public CollectionBinder binder { get; set; } = new CollectionBinder();
     
     private void Cancel() => MudDialog.Cancel();
 

@@ -17,5 +17,6 @@ namespace Spellbox.Model
         }
 
         public DbSet<OracleCard> OracleCards { get; set; }
+        public DbSet<CardVariant> CardVariants { get; set; }
     }
 }
