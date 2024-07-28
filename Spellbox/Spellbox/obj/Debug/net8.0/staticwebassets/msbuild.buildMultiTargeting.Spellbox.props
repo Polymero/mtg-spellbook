@@ -1,3 +1,3 @@
 ﻿<Project>
-  <Import Project="..\build\Spellbox.props" />
+  <Import Project="../build/Spellbox.props" />
 </Project>

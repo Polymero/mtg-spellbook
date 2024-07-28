@@ -10,7 +10,7 @@ namespace Spellbox.Model
         public List<string>? Color_Identity { get; set; }
         public List<string>? Colors { get; set; }
         public List<string>? Keywords { get; set; }
-        public CardLegalities? Legalities { get; set; }
+        public CardLegality? Legalities { get; set; }
         public string? Mana_Cost { get; set; }
         public string? Name { get; set; }
         public string? Oracle_Text { get; set; }

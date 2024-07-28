@@ -6,17 +6,12 @@ namespace Spellbox.Model
     {
         [Key]
         public int Id { get; set; }
-        public string? OracleId { get; set; }
+        [Required]
+        public string OracleId { get; set; } = string.Empty;
         public string? Name { get; set; }
-        public List<CardFace>? Faces { get; set; }
         public string? TypeLine { get; set; }
         public List<string>? Keywords { get; set; }
-        public string? OracleText { get; set; }
-        public string? ManaCost { get; set; }
         public decimal? CMC { get; set; }
-        public List<string>? Colors { get; set; }
         public List<string>? ColorIdentity { get; set; }
-        public List<CardVariant>? Variants { get; set; }
-        public CardLegalities? Legalities { get; set; }
     }
 }

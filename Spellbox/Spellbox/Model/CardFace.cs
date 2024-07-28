@@ -6,6 +6,9 @@ namespace Spellbox.Model
     {
         [Key]
         public int Id { get; set; }
+        [Required]
+        public string? OracleId { get; set; }
+        public int Order { get; set; }
         public string? Name { get; set; }
         public string? ManaCost { get; set; }
         public string? TypeLine { get; set; }

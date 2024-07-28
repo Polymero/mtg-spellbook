@@ -1,0 +1,63 @@
+@page "/search"
+@using MudBlazor
+@using Spellbox.Model
+
+<MudAutocomplete T="OracleCard" Label="Search..." @bind-Value="searchCard" SearchFunc="@OracleSearch" ToStringFunc="@(e => e is null ? null : $"{e.Name}")" />
+
+@if (@searchCard.Name is not null)
+{
+    searchVariants = cardVariants.Where(x => x.OracleId == searchCard.OracleId).ToList();
+    searchFaces = cardFaces.Where(x => x.OracleId == searchCard.OracleId).ToList();
+    searchLegalities = cardLegalities.Where(x => x.OracleId == searchCard.OracleId).ToList();
+
+    <MudGrid Spacing="2">
+
+        <MudItem xs="4">
+            <MudImage Src=@searchVariants[0].Images[0] Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+        </MudItem>
+
+        <MudItem xs="8">
+
+        </MudItem>
+
+    </MudGrid>
+
+}
+
+<MudText>@searchCard.Name</MudText>
+<MudText>@searchCard.TypeLine</MudText>
+<MudText>@searchCard.Keywords</MudText>
+
+@inject CollectionDbContext collectionContext
+@inject OracleDbContext oracleContext
+@code {
+    List<CollectionBinder> userBinders = new List<CollectionBinder>();
+    List<CollectionDeck> userDecks = new List<CollectionDeck>();
+    List<OracleCard> oracleCards = new List<OracleCard>();
+    List<CardFace> cardFaces = new List<CardFace>();
+    List<CardLegality> cardLegalities = new List<CardLegality>();
+    List<CardVariant> cardVariants = new List<CardVariant>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateHasChanged();
+        await Task.Yield();
+
+        oracleCards = await oracleContext.OracleCards.ToListAsync();
+        cardFaces = await oracleContext.CardFaces.ToListAsync();
+        cardLegalities = await oracleContext.CardLegalities.ToListAsync();
+        cardVariants = await oracleContext.CardVariants.ToListAsync();
+    }
+
+    OracleCard searchCard = new OracleCard();
+    List<CardVariant> searchVariants = new List<CardVariant>();
+    List<CardFace> searchFaces = new List<CardFace>();
+    List<CardLegality> searchLegalities = new List<CardLegality>();
+
+    private async Task<IEnumerable<OracleCard>> OracleSearch(string value, CancellationToken token)
+    {
+        var results = oracleCards.Where(x => (x.Name ?? "").Contains(value)) ?? Enumerable.Empty<OracleCard>();
+        return await Task.FromResult(results);
+    }
+
+}

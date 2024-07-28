@@ -31,11 +31,15 @@ namespace Spellbox.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("OracleCardId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("OracleId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("OracleText")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Power")
                         .HasColumnType("TEXT");
@@ -48,12 +52,10 @@ namespace Spellbox.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OracleCardId");
-
-                    b.ToTable("CardFace");
+                    b.ToTable("CardFaces");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.CardLegalities", b =>
+            modelBuilder.Entity("Spellbox.Model.CardLegality", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,6 +89,10 @@ namespace Spellbox.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Oldschool")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OracleId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Pauper")
@@ -145,9 +151,6 @@ namespace Spellbox.Migrations
                     b.Property<string>("Images")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("OracleCardId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("OracleId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -169,8 +172,6 @@ namespace Spellbox.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OracleCardId");
-
                     b.ToTable("CardVariants");
                 });
 
@@ -186,25 +187,14 @@ namespace Spellbox.Migrations
                     b.Property<string>("ColorIdentity")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Colors")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Keywords")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("LegalitiesId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ManaCost")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("OracleId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OracleText")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TypeLine")
@@ -212,39 +202,7 @@ namespace Spellbox.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LegalitiesId");
-
                     b.ToTable("OracleCards");
-                });
-
-            modelBuilder.Entity("Spellbox.Model.CardFace", b =>
-                {
-                    b.HasOne("Spellbox.Model.OracleCard", null)
-                        .WithMany("Faces")
-                        .HasForeignKey("OracleCardId");
-                });
-
-            modelBuilder.Entity("Spellbox.Model.CardVariant", b =>
-                {
-                    b.HasOne("Spellbox.Model.OracleCard", null)
-                        .WithMany("Variants")
-                        .HasForeignKey("OracleCardId");
-                });
-
-            modelBuilder.Entity("Spellbox.Model.OracleCard", b =>
-                {
-                    b.HasOne("Spellbox.Model.CardLegalities", "Legalities")
-                        .WithMany()
-                        .HasForeignKey("LegalitiesId");
-
-                    b.Navigation("Legalities");
-                });
-
-            modelBuilder.Entity("Spellbox.Model.OracleCard", b =>
-                {
-                    b.Navigation("Faces");
-
-                    b.Navigation("Variants");
                 });
 #pragma warning restore 612, 618
         }

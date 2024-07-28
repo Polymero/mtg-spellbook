@@ -1,5 +1,6 @@
 @page "/update"
 @using Spellbox.Model
+@using MudBlazor
 
 @if (progressInt == 0)
 {
@@ -9,26 +10,30 @@ else
 {
     @if (progressInt >= 1)
     {
+        <MudText>Emptying database...</MudText>
+    }
+    @if (progressInt >= 2)
+    {
         <MudText>Downloading bulk data...</MudText>
     }
 
-    @if (progressInt >= 2)
+    @if (progressInt >= 3)
     {
         <MudText>@cardList?.Count cards downloaded ~ !</MudText>
         <MudText>Parsing...</MudText>
     }
 
-    @if (progressInt >= 3)
+    @if (progressInt >= 4)
     {
         <MudText>Saving...</MudText>
     }
 
-    @if (progressInt < 4)
+    @if (progressInt < 5)
     {
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
 
-    @if (progressInt == 4)
+    @if (progressInt == 5)
     {
         <MudText>@oracleList?.Count oracle cards parsed ~ !</MudText>
         <MudText>@variantList?.Count card variants parsed ~ !</MudText>
@@ -40,30 +45,62 @@ else
 @inject OracleDbContext oracleContext
 @code {
     public int progressInt = 0;
-    private string? bulkUri = "https://api.scryfall.com/bulk-data";
+    private string bulkUri = "https://api.scryfall.com/bulk-data";
     private List<ScryfallCard>? cardList;
     private List<OracleCard>? oracleList;
     private List<CardVariant>? variantList;
 
     private async Task UpdateOracleDatabase()
     {
+        progressInt ++;
+        StateHasChanged();
+        await Task.Yield();
+
         // This speeds things up maybe???
-        oracleContext.ChangeTracker.AutoDetectChangesEnabled = false;
+        //oracleContext.ChangeTracker.AutoDetectChangesEnabled = false;
 
         // Clear database tables
-        oracleContext.OracleCards.RemoveRange(oracleContext.OracleCards.ToList());
-        oracleContext.CardVariants.RemoveRange(oracleContext.CardVariants.ToList());
+        await oracleContext.BulkDeleteAsync(oracleContext.OracleCards.ToList());
+        await oracleContext.BulkDeleteAsync(oracleContext.CardVariants.ToList());
+        await oracleContext.BulkDeleteAsync(oracleContext.CardFaces.ToList());
+        await oracleContext.BulkDeleteAsync(oracleContext.CardLegalities.ToList());
+
+        //await oracleContext.BulkSaveChangesAsync();
 
         progressInt ++;
         StateHasChanged();
 
         // Get ScryfallAPI bulk data
-        var bulkData = await Http.GetFromJsonAsync<BulkData>(bulkUri);
+        var bulkData = new BulkData();
+        var bulkRequest = new HttpRequestMessage(HttpMethod.Get, bulkUri);
+        bulkRequest.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
+        bulkRequest.Headers.Add("User-Agent", "SpellboxAPI");
+
+        var bulkResponse = await Http.SendAsync(bulkRequest);
+        if (bulkResponse.IsSuccessStatusCode)
+        {
+            bulkData = await bulkResponse.Content.ReadFromJsonAsync<BulkData>();
+        }
+
         var oracleUri = bulkData?.Data?.Find(x => x.Type == "default_cards")?.Download_Uri;
 
         // Get ScryfallAPI default cards
-        cardList = await Http.GetFromJsonAsync<List<ScryfallCard>>(oracleUri);
+        var cardRequest = new HttpRequestMessage(HttpMethod.Get, oracleUri);
+        cardRequest.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
+        cardRequest.Headers.Add("User-Agent", "SpellboxAPI");
 
+        var cardResponse = await Http.SendAsync(cardRequest);
+        if (cardResponse.IsSuccessStatusCode)
+        {
+            cardList = await cardResponse.Content.ReadFromJsonAsync<List<ScryfallCard>>();
+        }
+
+        var newOracles = new List<OracleCard>();
+        var newVariants = new List<CardVariant>();
+        var newFaces = new List<CardFace>();
+        var newLegalities = new List<CardLegality>();
+
+        // Loop over cards
         if (cardList is not null)
         {
             progressInt ++;
@@ -82,7 +119,6 @@ else
                 };
 
             var parsedOracleIds = new List<string>();
-            var parsedVariantIds = new List<string>();
 
             foreach (ScryfallCard card in cardList)
             {
@@ -92,7 +128,7 @@ else
                 if (card.Promo_Types != null && card.Promo_Types.Contains("thick")) {continue;}
 
                 // Get oracle id
-                string? _OracleId = "";
+                var _OracleId = "";
                 if (card.Oracle_Id != null) {_OracleId = card.Oracle_Id;}
                 else {_OracleId = card.Card_Faces?[0].Oracle_Id;}
                 if (_OracleId is null) {continue;}
@@ -110,10 +146,10 @@ else
                 };
                 if (card.Image_Uris != null)
                 {
-                    parsedVariant.Thumbs = new List<string> { card.Image_Uris.Small is null ? "" : card.Image_Uris.Small };
-                    parsedVariant.Images = new List<string> { card.Image_Uris.Normal is null ? "" : card.Image_Uris.Normal };
-                    parsedVariant.FlavorTexts = new List<string> { card.Flavor_Text is null ? "" : card.Flavor_Text };
-                    parsedVariant.FlavorNames = new List<string> { card.Flavor_Name is null ? "" : card.Flavor_Name };
+                    parsedVariant.Thumbs = new List<string> { card.Image_Uris.Small ?? "" };
+                    parsedVariant.Images = new List<string> { card.Image_Uris.Normal ?? "" };
+                    parsedVariant.FlavorTexts = new List<string> { card.Flavor_Text ?? "" };
+                    parsedVariant.FlavorNames = new List<string> { card.Flavor_Name ?? "" };
                 }
                 else if (card.Card_Faces != null)
                 {
@@ -124,7 +160,7 @@ else
                 }
             
                 // Check if the card is already in the Oracle database
-                if (parsedOracleIds.Contains(_OracleId))
+                @* if (parsedOracleIds.Contains(_OracleId))
                 {
                     // Check if the variant is already in the Oracle database
                     if (parsedVariantIds.Contains(_OracleId + card.Set + card.Collector_Number)) {continue;}
@@ -132,14 +168,16 @@ else
                     // Update existing oracle card with a new variant
                     parsedVariantIds.Add(_OracleId + card.Set + card.Collector_Number);
                     oracleContext.CardVariants.Add(parsedVariant);
-                }
-                else
+                } *@
+                if (!parsedOracleIds.Contains(_OracleId))
                 {
                     // Fill CardFaces
-                    List<CardFace> parsedFaces = new List<CardFace>();
+                    var parsedFaces = new List<CardFace>();
                     if (card.Card_Faces is null)
                     {
                         CardFace newFace = new CardFace {
+                            OracleId = _OracleId,
+                            Order = 0,
                             Name = card.Name,
                             ManaCost = card.Mana_Cost,
                             TypeLine = card.Type_Line,
@@ -148,13 +186,16 @@ else
                             Toughness = card.Toughness,
                             Defense = card.Defense
                         };
-                        parsedFaces.Add(newFace);
+                        newFaces.Add(newFace);
                     }
                     else
                     {
+                        var i = 0;
                         foreach (ScryfallCardFace face in card.Card_Faces)
                         {
                             CardFace newFace = new CardFace {
+                                OracleId = _OracleId,
+                                Order = i,
                                 Name = face.Name,
                                 ManaCost = face.Mana_Cost,
                                 TypeLine = face.Type_Line,
@@ -163,32 +204,49 @@ else
                                 Toughness = face.Toughness,
                                 Defense = card.Defense
                             };
-                            parsedFaces.Add(newFace);
+                            newFaces.Add(newFace);
+                            i ++;
                         }
                     }
                     
-                    // Fill OracleCard and add to database
+                    // Fill OracleCard
                     OracleCard parsedCard = new OracleCard {
                         OracleId = _OracleId,
                         Name = card.Name,
-                        Faces = parsedFaces,
                         ColorIdentity = card.Color_Identity,
                         CMC = card.CMC,
-                        Variants = new List<CardVariant> { parsedVariant },
                         Keywords = card.Keywords,
                         TypeLine = card.Type_Line is null ? card.Card_Faces?[0].Type_Line : card.Type_Line,
-                        Legalities = card.Legalities
                     };
 
+                    // Add oracle card to database
                     parsedOracleIds.Add(_OracleId);
-                    oracleContext.OracleCards.Add(parsedCard);
+                    newOracles.Add(parsedCard);
+                    
+                    var parsedLegality = new CardLegality();
+                    parsedLegality = (CardLegality)card.Legalities;
+                    parsedLegality.OracleId = _OracleId;
+                    newLegalities.Add(parsedLegality);
+
                 }
+
+                // Add card variant to database
+                newVariants.Add(parsedVariant);
             }
         }
+
+        //oracleContext.OracleCards.AddRange(newOracles);
+        //oracleContext.CardVariants.AddRange(newVariants);
+
+        await oracleContext.BulkInsertAsync(newOracles);
+        await oracleContext.BulkInsertAsync(newVariants);
+        await oracleContext.BulkInsertAsync(newFaces);
+        await oracleContext.BulkInsertAsync(newLegalities);
+
         progressInt ++;
         StateHasChanged();
 
-        await oracleContext.SaveChangesAsync();
+        await oracleContext.BulkSaveChangesAsync();
 
         oracleList = await oracleContext.OracleCards.ToListAsync();
         variantList = await oracleContext.CardVariants.ToListAsync();

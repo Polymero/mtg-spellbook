@@ -14,6 +14,8 @@ namespace Spellbox.Model
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite(Configuration.GetConnectionString("CollectionDatabaseConnectionString"));
+            SQLitePCL.Batteries.Init();
+
         }
 
         public DbSet<CollectionBinder> Binders { get; set; }
