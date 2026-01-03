@@ -1,4 +1,4 @@
-@page "/update"
+@* @page "/update"
 @using Spellbox.Model
 @using MudBlazor
 
@@ -28,12 +28,17 @@ else
         <MudText>Saving...</MudText>
     }
 
-    @if (progressInt < 5)
+    @if (progressInt >= 5)
+    {
+        <MudText>Retrieving...</MudText>
+    }
+
+    @if (progressInt < 6)
     {
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
 
-    @if (progressInt == 5)
+    @if (progressInt == 6)
     {
         <MudText>@oracleList?.Count oracle cards parsed ~ !</MudText>
         <MudText>@variantList?.Count card variants parsed ~ !</MudText>
@@ -71,34 +76,34 @@ else
         StateHasChanged();
 
         // Get ScryfallAPI bulk data
-        var bulkData = new BulkData();
-        var bulkRequest = new HttpRequestMessage(HttpMethod.Get, bulkUri);
+        BulkData? bulkData = new BulkData();
+        HttpRequestMessage? bulkRequest = new HttpRequestMessage(HttpMethod.Get, bulkUri);
         bulkRequest.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
         bulkRequest.Headers.Add("User-Agent", "SpellboxAPI");
 
-        var bulkResponse = await Http.SendAsync(bulkRequest);
+        HttpResponseMessage? bulkResponse = await Http.SendAsync(bulkRequest);
         if (bulkResponse.IsSuccessStatusCode)
         {
             bulkData = await bulkResponse.Content.ReadFromJsonAsync<BulkData>();
         }
 
-        var oracleUri = bulkData?.Data?.Find(x => x.Type == "default_cards")?.Download_Uri;
+        string? oracleUri = bulkData?.Data?.Find(x => x.Type == "default_cards")?.Download_Uri;
 
         // Get ScryfallAPI default cards
-        var cardRequest = new HttpRequestMessage(HttpMethod.Get, oracleUri);
+        HttpRequestMessage? cardRequest = new HttpRequestMessage(HttpMethod.Get, oracleUri);
         cardRequest.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
         cardRequest.Headers.Add("User-Agent", "SpellboxAPI");
 
-        var cardResponse = await Http.SendAsync(cardRequest);
+        HttpResponseMessage? cardResponse = await Http.SendAsync(cardRequest);
         if (cardResponse.IsSuccessStatusCode)
         {
             cardList = await cardResponse.Content.ReadFromJsonAsync<List<ScryfallCard>>();
         }
 
-        var newOracles = new List<OracleCard>();
-        var newVariants = new List<CardVariant>();
-        var newFaces = new List<CardFace>();
-        var newLegalities = new List<CardLegality>();
+        List<OracleCard>? newOracles = new List<OracleCard>();
+        List<CardVariant>? newVariants = new List<CardVariant>();
+        List<CardFace>? newFaces = new List<CardFace>();
+        List<CardLegality>? newLegalities = new List<CardLegality>();
 
         // Loop over cards
         if (cardList is not null)
@@ -107,7 +112,7 @@ else
             StateHasChanged();
 
             // Rejected card layouts
-            var rejectedLayouts = new List<string> { 
+            List<string>? rejectedLayouts = new List<string> { 
                 "art_series", 
                 "double_faced_token",
                 "token",
@@ -118,9 +123,9 @@ else
                 "host"
                 };
 
-            var parsedOracleIds = new List<string>();
+            List<string>? parsedOracleIds = new List<string>();
 
-            foreach (ScryfallCard card in cardList)
+            foreach (ScryfallCard? card in cardList)
             {
                 // Do we care about the card?
                 if (card.Games is null || !card.Games.Contains("paper")) {continue;}
@@ -128,7 +133,7 @@ else
                 if (card.Promo_Types != null && card.Promo_Types.Contains("thick")) {continue;}
 
                 // Get oracle id
-                var _OracleId = "";
+                string? _OracleId = "";
                 if (card.Oracle_Id != null) {_OracleId = card.Oracle_Id;}
                 else {_OracleId = card.Card_Faces?[0].Oracle_Id;}
                 if (_OracleId is null) {continue;}
@@ -168,11 +173,11 @@ else
                     // Update existing oracle card with a new variant
                     parsedVariantIds.Add(_OracleId + card.Set + card.Collector_Number);
                     oracleContext.CardVariants.Add(parsedVariant);
-                } *@
+                } 
                 if (!parsedOracleIds.Contains(_OracleId))
                 {
                     // Fill CardFaces
-                    var parsedFaces = new List<CardFace>();
+                    List<CardFace>? parsedFaces = new List<CardFace>();
                     if (card.Card_Faces is null)
                     {
                         CardFace newFace = new CardFace {
@@ -190,7 +195,7 @@ else
                     }
                     else
                     {
-                        var i = 0;
+                        int i = 0;
                         foreach (ScryfallCardFace face in card.Card_Faces)
                         {
                             CardFace newFace = new CardFace {
@@ -223,8 +228,8 @@ else
                     parsedOracleIds.Add(_OracleId);
                     newOracles.Add(parsedCard);
                     
-                    var parsedLegality = new CardLegality();
-                    parsedLegality = (CardLegality)card.Legalities;
+                    CardLegality? parsedLegality = new CardLegality();
+                    parsedLegality = card.Legalities;
                     parsedLegality.OracleId = _OracleId;
                     newLegalities.Add(parsedLegality);
 
@@ -246,7 +251,10 @@ else
         progressInt ++;
         StateHasChanged();
 
-        await oracleContext.BulkSaveChangesAsync();
+        //await oracleContext.BulkSaveChangesAsync();
+
+        progressInt ++;
+        StateHasChanged();
 
         oracleList = await oracleContext.OracleCards.ToListAsync();
         variantList = await oracleContext.CardVariants.ToListAsync();
@@ -259,4 +267,4 @@ else
     {
         public List<ScryfallBulk>? Data { get; set; }
     }
-}
+} *@

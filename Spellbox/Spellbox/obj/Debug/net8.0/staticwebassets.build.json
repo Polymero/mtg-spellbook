@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "LakKWAsKRXZs12/ahjWrZaQDsFOy9H2tePFriAIbAsI=",
+  "Hash": "jbalq2CcdRNEiGK0b2iWcirkBup3pxwm8G6PhWgGIKE=",
   "Source": "Spellbox",
   "BasePath": "_content/Spellbox",
   "Mode": "Default",
@@ -8,19 +8,19 @@
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [
     {
-      "Name": "Spellbox/wwwroot",
+      "Name": "Spellbox\\wwwroot",
       "Source": "Spellbox",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\",
       "BasePath": "_content/Spellbox",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/MudBlazor.min.css",
+      "Identity": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\MudBlazor.min.css",
       "SourceId": "MudBlazor",
       "SourceType": "Package",
-      "ContentRoot": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/",
+      "ContentRoot": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\",
       "BasePath": "_content/MudBlazor",
       "RelativePath": "MudBlazor.min.css",
       "AssetKind": "All",
@@ -33,13 +33,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/MudBlazor.min.css"
+      "OriginalItemSpec": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\MudBlazor.min.css"
     },
     {
-      "Identity": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/MudBlazor.min.js",
+      "Identity": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\MudBlazor.min.js",
       "SourceId": "MudBlazor",
       "SourceType": "Package",
-      "ContentRoot": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/",
+      "ContentRoot": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\",
       "BasePath": "_content/MudBlazor",
       "RelativePath": "MudBlazor.min.js",
       "AssetKind": "All",
@@ -52,13 +52,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/nika/.nuget/packages/mudblazor/7.3.0/staticwebassets/MudBlazor.min.js"
+      "OriginalItemSpec": "C:\\Users\\Nika\\.nuget\\packages\\mudblazor\\7.3.0\\staticwebassets\\MudBlazor.min.js"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/bundle/Spellbox.styles.css",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Spellbox.styles.css",
       "SourceId": "Spellbox",
       "SourceType": "Computed",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/bundle/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "Spellbox.styles.css",
       "AssetKind": "All",
@@ -71,13 +71,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/bundle/Spellbox.styles.css"
+      "OriginalItemSpec": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Spellbox.styles.css"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/projectbundle/Spellbox.bundle.scp.css",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Spellbox.bundle.scp.css",
       "SourceId": "Spellbox",
       "SourceType": "Computed",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/projectbundle/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "Spellbox.bundle.scp.css",
       "AssetKind": "All",
@@ -90,13 +90,13 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/Debug/net8.0/scopedcss/projectbundle/Spellbox.bundle.scp.css"
+      "OriginalItemSpec": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Spellbox.bundle.scp.css"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/app.css",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\app.css",
       "SourceId": "Spellbox",
       "SourceType": "Discovered",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "app.css",
       "AssetKind": "All",
@@ -109,13 +109,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/app.css"
+      "OriginalItemSpec": "wwwroot\\app.css"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/bootstrap/bootstrap.min.css",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\bootstrap\\bootstrap.min.css",
       "SourceId": "Spellbox",
       "SourceType": "Discovered",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "bootstrap/bootstrap.min.css",
       "AssetKind": "All",
@@ -128,13 +128,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/bootstrap/bootstrap.min.css"
+      "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/bootstrap/bootstrap.min.css.map",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\bootstrap\\bootstrap.min.css.map",
       "SourceId": "Spellbox",
       "SourceType": "Discovered",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "bootstrap/bootstrap.min.css.map",
       "AssetKind": "All",
@@ -147,13 +147,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/bootstrap/bootstrap.min.css.map"
+      "OriginalItemSpec": "wwwroot\\bootstrap\\bootstrap.min.css.map"
     },
     {
-      "Identity": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/favicon.png",
+      "Identity": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\favicon.png",
       "SourceId": "Spellbox",
       "SourceType": "Discovered",
-      "ContentRoot": "/home/nika/mtg-spellbook/Spellbox/Spellbox/wwwroot/",
+      "ContentRoot": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\wwwroot\\",
       "BasePath": "_content/Spellbox",
       "RelativePath": "favicon.png",
       "AssetKind": "All",
@@ -166,7 +166,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/favicon.png"
+      "OriginalItemSpec": "wwwroot\\favicon.png"
     }
   ]
 }

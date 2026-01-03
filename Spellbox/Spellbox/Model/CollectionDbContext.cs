@@ -4,21 +4,32 @@ namespace Spellbox.Model
 {
     public class CollectionDbContext : DbContext
     {
-        protected readonly IConfiguration Configuration;
-
-        public CollectionDbContext(IConfiguration configuration) 
-        {
-            Configuration = configuration;
-        }
+        public DbSet<CollectionCard> Cards { get; set; }
+        public DbSet<CollectionBinder> Binders { get; set; }
+        public DbSet<CollectionDeck> Decks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlite(Configuration.GetConnectionString("CollectionDatabaseConnectionString"));
+            options.UseSqlite("Data Source=Data/Collection.db3");
             SQLitePCL.Batteries.Init();
-
         }
 
-        public DbSet<CollectionBinder> Binders { get; set; }
-        public DbSet<CollectionDeck> Decks { get; set; }
+        protected override void OnModelCreating(ModelBuilder model)
+        {
+            model.Entity<CollectionCard>(entity =>
+            {
+                
+            });
+
+            model.Entity<CollectionBinder>(entity =>
+            {
+                
+            });
+
+            model.Entity<CollectionDeck>(entity =>
+            {
+                
+            });
+        }
     }
 }

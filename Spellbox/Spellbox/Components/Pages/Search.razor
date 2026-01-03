@@ -2,18 +2,30 @@
 @using MudBlazor
 @using Spellbox.Model
 
-<MudAutocomplete T="OracleCard" Label="Search..." @bind-Value="searchCard" SearchFunc="@OracleSearch" ToStringFunc="@(e => e is null ? null : $"{e.Name}")" />
+<MudAutocomplete T="OracleCard" Label="Search..." CoerceText=true @bind-Value="searchCard" SearchFunc="@OracleSearch" ToStringFunc="@(e => e is null ? null : $"{e.Name}")" />
 
-@if (@searchCard.Name is not null)
+@if (searchCard.Name is not null)
 {
-    searchVariants = cardVariants.Where(x => x.OracleId == searchCard.OracleId).ToList();
-    searchFaces = cardFaces.Where(x => x.OracleId == searchCard.OracleId).ToList();
-    searchLegalities = cardLegalities.Where(x => x.OracleId == searchCard.OracleId).ToList();
+    searchVariants = searchCard.Variants.ToList();
+
+    @if (chosenVariant is null)
+    {
+        chosenVariant = searchVariants.First();
+    }
+    
+    <MudSelect Label="Variant" @bind-Value="chosenVariant" Placeholder="Pick variant...">
+        @foreach (var variant in searchVariants)
+        {
+            <MudSelectItem Value="@variant">
+                @String.Format("{0} ({1}) - {2}", variant.SetCode.ToUpper(), variant.CollNum, variant.SetName)
+            </MudSelectItem>
+        }
+    </MudSelect>
 
     <MudGrid Spacing="2">
 
         <MudItem xs="4">
-            <MudImage Src=@searchVariants[0].Images[0] Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+            <MudImage Src=@(chosenVariant.Images[0]) Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
         </MudItem>
 
         <MudItem xs="8">
@@ -22,11 +34,30 @@
 
     </MudGrid>
 
-}
+    @foreach (var face in searchCard.Faces.OrderBy(f => f.Order))
+    {
+        <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
 
-<MudText>@searchCard.Name</MudText>
-<MudText>@searchCard.TypeLine</MudText>
-<MudText>@searchCard.Keywords</MudText>
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                @face.Name
+            </MudText>
+
+            <MudDivider Class="my-1" />
+
+            <MudText Typo="Typo.caption">
+                @face.TypeLine
+            </MudText>
+
+            <MudDivider Class="my-1" />
+
+            <MudText Typo="Typo.body2" Style="white-space: pre-line;">
+                @face.OracleText
+            </MudText>
+
+        </MudPaper>
+    }
+
+}
 
 @inject CollectionDbContext collectionContext
 @inject OracleDbContext oracleContext
@@ -34,9 +65,8 @@
     List<CollectionBinder> userBinders = new List<CollectionBinder>();
     List<CollectionDeck> userDecks = new List<CollectionDeck>();
     List<OracleCard> oracleCards = new List<OracleCard>();
-    List<CardFace> cardFaces = new List<CardFace>();
-    List<CardLegality> cardLegalities = new List<CardLegality>();
-    List<CardVariant> cardVariants = new List<CardVariant>();
+    List<CFace> cardFaces = new List<CFace>();
+    List<CVariant> cardVariants = new List<CVariant>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,18 +75,20 @@
 
         oracleCards = await oracleContext.OracleCards.ToListAsync();
         cardFaces = await oracleContext.CardFaces.ToListAsync();
-        cardLegalities = await oracleContext.CardLegalities.ToListAsync();
         cardVariants = await oracleContext.CardVariants.ToListAsync();
     }
 
-    OracleCard searchCard = new OracleCard();
-    List<CardVariant> searchVariants = new List<CardVariant>();
-    List<CardFace> searchFaces = new List<CardFace>();
-    List<CardLegality> searchLegalities = new List<CardLegality>();
+    public OracleCard searchCard { get; set; } = new OracleCard();
+    List<CVariant> searchVariants = new List<CVariant>();
+    public CVariant? chosenVariant { get; set; }
 
     private async Task<IEnumerable<OracleCard>> OracleSearch(string value, CancellationToken token)
     {
-        var results = oracleCards.Where(x => (x.Name ?? "").Contains(value)) ?? Enumerable.Empty<OracleCard>();
+        // Clear chosen variant
+        chosenVariant = null;
+
+        // Find and return all cards with partially matching names
+        IEnumerable<OracleCard>? results = oracleCards.Where(x => (x.Name ?? "").Contains(value, StringComparison.OrdinalIgnoreCase)) ?? Enumerable.Empty<OracleCard>();
         return await Task.FromResult(results);
     }
 

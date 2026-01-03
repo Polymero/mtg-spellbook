@@ -1,0 +1,314 @@
+@page "/renew"
+@using SQLitePCL
+@using Spellbox.Model
+@using Spellbox.Utilities
+@using MudBlazor
+@using System.Text.Json
+
+@if (progressInt == 0)
+{
+    <MudButton @onclick="@(e => ImportCardsAsync(dbContext, bulkUri))" Variant="Variant.Filled" Color="Color.Success">Import</MudButton>
+}
+else
+{
+    @if (progressInt >= 1)
+    {
+        <MudText>Connecting to Scryfall API...</MudText>
+    }
+    @if (progressInt >= 2)
+    {
+        <MudText>Processing data...</MudText>
+        <MudText>@(progressInt - 2) batches processed!</MudText>
+    }
+    @if (progressInt < 999)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    }
+    @if (progressInt == 999)
+    {
+        <MudText>Done ~ !</MudText>
+    }
+    @if (progressInt > 999)
+    {
+        <MudText>ERROR: Something went wrong</MudText>
+    }
+}
+
+@inject HttpClient Http
+@inject OracleDbContext dbContext
+@code {
+    public int progressInt = 0;
+    private string bulkUri = "https://api.scryfall.com/bulk-data";
+    
+    public async Task<string> GetDownloadUrlAsync(string url)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
+        request.Headers.Add("User-Agent", "SpellboxAPI");
+
+        var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var jdoc = await JsonDocument.ParseAsync(stream);
+        
+        return jdoc.RootElement
+            .GetProperty("data")
+            .EnumerateArray()
+            .First(x => x.GetProperty("type").GetString() == "default_cards")
+            .GetProperty("download_uri")
+            .GetString()!;
+    }
+
+    public async IAsyncEnumerable<JsonElement> StreamScryfallCardsAsync(string url)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
+        request.Headers.Add("User-Agent", "SpellboxAPI");
+
+        var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        using var jdoc = await JsonDocument.ParseAsync(stream, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true
+        });
+
+        foreach (var element in jdoc.RootElement.EnumerateArray())
+            yield return element;
+    }
+
+    public async Task ImportCardsAsync(
+        OracleDbContext dbContext, 
+        string bulkUri, 
+        int batchSize = 5000
+    )
+    {
+        progressInt ++;
+        StateHasChanged();
+        await Task.Yield();
+
+        await dbContext.Database.EnsureDeletedAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+
+        var oracleProcessed = new List<Guid>();
+        // var faceProcessed = new List<Guid>();
+        // var variantProcessed = new List<Guid>();
+
+        var oracleBatch = new Dictionary<Guid, OracleCard>();
+        var faceBatch = new List<CFace>();
+        var variantBatch = new List<CVariant>();
+
+        var url = await GetDownloadUrlAsync(bulkUri);
+
+        progressInt ++;
+        StateHasChanged();
+
+        await foreach (var card in StreamScryfallCardsAsync(url))
+        {
+
+            if (!IsCardDesired(card))
+            {
+                continue;
+            }
+
+            Guid oracleId;
+            if (card.TryGetProperty("oracle_id", out var p))
+            {
+                oracleId = Guid.Parse(p.GetString()!);
+            }
+            else
+            {
+                // Only happens for 'reversible_card' layouts...
+                continue;
+            }
+            
+            var scryfallId = Guid.Parse(card.GetProperty("id").GetString()!);
+
+            if (!oracleProcessed.Contains(oracleId))
+            {
+                oracleBatch[oracleId] = ParseOracleCard(card, oracleId, faceBatch);
+                oracleProcessed.Add(oracleId);
+            }
+                
+            variantBatch.Add(ParseCardVariant(card, oracleId, scryfallId));
+
+            if (oracleBatch.Count + variantBatch.Count + faceBatch.Count >= batchSize)
+            {
+                await FlushBatchesAsync(dbContext, oracleBatch, faceBatch, variantBatch);
+                progressInt ++;
+                StateHasChanged();
+            }
+        }
+
+        await FlushBatchesAsync(dbContext, oracleBatch, faceBatch, variantBatch);
+
+        progressInt = 999;
+        StateHasChanged();
+    }
+
+    private bool IsCardDesired(JsonElement card)
+    {
+        var desiredLayouts = new List<string>
+        {
+            "normal", "split", "flip", "transform", "modal_dfc", "meld", "leveler", "class",
+            "case", "saga", "adventure", "mutate", "prototype", "battle", "token", "double_faced_token",
+            "emblem", "reversible_card"
+        };
+
+        // Only accept cards printed/available on paper
+        if (!card.TryGetProperty("games", out var games) || !games.EnumerateArray().Any(g => g.GetString()!.Equals("paper")))
+        {
+            return false;
+        }
+
+        // Only accept desired layouts
+        if (!card.TryGetProperty("layout", out var layout) || !desiredLayouts.Contains(layout.GetString()!))
+        {
+            return false;
+        }
+
+        // Reject thick promo cards
+        if (card.TryGetProperty("promo_types", out var promos) && promos.EnumerateArray().Any(p => p.GetString()!.Equals("thick")))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private OracleCard ParseOracleCard(JsonElement card, Guid oracleId, List<CFace> faceBatch)
+    {
+        var oracle = new OracleCard
+        {
+            OracleId = oracleId,
+            Name = card.GetProperty("name").GetString()!,
+            TypeLine = card.GetProperty("type_line").GetString()!,
+            Keywords = card.GetProperty("keywords").EnumerateArray().Select(c => c.GetString()!).ToList(),
+            CMC = card.GetProperty("cmc").GetDecimal()!,
+            ColorIdentity = card.GetProperty("color_identity").EnumerateArray().Select(c => c.GetString()!).ToList()
+        };
+
+        if (card.TryGetProperty("card_faces", out var faces))
+        {
+            int i = 0;
+            foreach (var face in faces.EnumerateArray())
+            {
+                faceBatch.Add(new CFace
+                {
+                    Id = Guid.NewGuid(),
+                    OracleId = oracleId,
+                    Order = i,
+                    Name = face.GetProperty("name").GetString()!,
+                    ManaCost = face.GetProperty("mana_cost").GetString()!,
+                    TypeLine = face.GetPropertyOrEmptyString("type_line"),
+                    OracleText = face.GetPropertyOrEmptyString("oracle_text"),
+                    Power = face.GetPropertyOrEmptyString("power"),
+                    Toughness = face.GetPropertyOrEmptyString("toughness"),
+                    Defense = face.GetPropertyOrEmptyString("defense")
+                });
+                i ++;
+            }
+        }
+        else
+        {
+            faceBatch.Add(new CFace
+            {
+                Id = Guid.NewGuid(),
+                OracleId = oracleId,
+                Order = 0,
+                Name = card.GetProperty("name").GetString()!,
+                ManaCost = card.GetPropertyOrEmptyString("mana_cost"),
+                TypeLine = card.GetProperty("type_line").GetString()!,
+                OracleText = card.GetPropertyOrEmptyString("oracle_text"),
+                Power = card.GetPropertyOrEmptyString("power"),
+                Toughness = card.GetPropertyOrEmptyString("toughness"),
+                Defense = card.GetPropertyOrEmptyString("defense")
+            });
+        }
+
+        return oracle;
+    }
+
+    private CVariant ParseCardVariant(JsonElement card, Guid oracleId, Guid scryfallId)
+    {
+        var variant =  new CVariant
+        {
+            ScryfallId = scryfallId,
+            OracleCardId = oracleId,
+            SetName = card.GetProperty("set_name").GetString()!,
+            SetCode = card.GetProperty("set").GetString()!,
+            CollNum = card.GetProperty("collector_number").GetString()!,
+            Finishes = card.GetProperty("finishes").EnumerateArray().Select(c => c.GetString()!).ToList(),
+            Artist = card.GetPropertyOrEmptyString("artist"),
+            Released = card.GetProperty("released_at").GetString()!,
+            Rarity = card.GetProperty("rarity").GetString()!,
+            FlavorName = card.GetPropertyOrEmptyString("flavor_name")
+        };
+
+        if (card.TryGetProperty("card_faces", out var faces))
+        {
+            // Try to retrieve image_uris from card_faces elements
+            var faceThumbs = faces.EnumerateArray().Select(f => f.TryGetProperty("image_uris", out var img) ? img.GetProperty("small").GetString() : null).ToList();
+            var faceImages = faces.EnumerateArray().Select(f => f.TryGetProperty("image_uris", out var img) ? img.GetProperty("normal").GetString() : null).ToList();
+
+            // If null, retrieve image from parent object
+            if (faceImages.All(string.IsNullOrEmpty) && card.TryGetProperty("image_uris", out var img))
+            {
+                faceThumbs = new List<string?> { img.GetPropertyOrEmptyString("small") };
+                faceImages = new List<string?> { img.GetPropertyOrEmptyString("normal") };
+            }
+
+            variant.Thumbs = faceThumbs!;
+            variant.Images = faceImages!;
+            variant.FlavorTexts = faces.EnumerateArray().Select(c => c.GetPropertyOrEmptyString("flavor_text")).ToList();
+        }
+        else
+        {
+            if (card.TryGetProperty("image_uris", out var img))
+            {
+                variant.Thumbs = new List<string> { img.GetPropertyOrEmptyString("small") };
+                variant.Images = new List<string> { img.GetPropertyOrEmptyString("normal") };
+            }
+            else
+            {
+                variant.Thumbs = new List<string> { "" };
+                variant.Images = new List<string> { "" };
+            }
+            variant.FlavorTexts = new List<string> { card.GetPropertyOrEmptyString("flavor_text") };
+        }
+
+        return variant;
+    }
+
+    private async Task FlushBatchesAsync(
+        OracleDbContext dbContext,
+        Dictionary<Guid, OracleCard> oracleBatch,
+        List<CFace> faceBatch,
+        List<CVariant> variantBatch
+    )
+    {
+
+        @* await dbContext.BulkInsertOrUpdateAsync
+        (
+            oracleBatch.Values.ToList(),
+            new BulkConfig
+            {
+                UpdateByProperties = new List<string> { nameof(OracleCard.OracleId) }
+            }
+        ); *@
+        var sharedConfig = new BulkConfig
+        {
+            PreserveInsertOrder = false
+        };
+        await dbContext.BulkInsertAsync(oracleBatch.Values.ToList(), sharedConfig);
+        await dbContext.BulkInsertAsync(faceBatch, sharedConfig);
+        await dbContext.BulkInsertAsync(variantBatch, sharedConfig);
+
+        oracleBatch.Clear();
+        faceBatch.Clear();
+        variantBatch.Clear();
+    }
+
+}
