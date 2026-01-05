@@ -1,14 +1,20 @@
 using Spellbox.Components;
 using Spellbox.Model;
 using MudBlazor.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddSingleton<CollectionDbContext>();
+
 builder.Services.AddSingleton<OracleDbContext>();
+builder.Services.AddDbContextFactory<CollectionDbContext>(options =>
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("CollectionDb"));
+});
+
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient();
 

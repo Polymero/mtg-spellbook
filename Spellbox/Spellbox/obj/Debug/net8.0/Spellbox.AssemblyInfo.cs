@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Spellbox")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cae4cf257231487be5b983d8a7a039cd4dbc7980")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15810d8da7765a94e8304870a5d1ffb15f5df2a7")]
 [assembly: System.Reflection.AssemblyProductAttribute("Spellbox")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Spellbox")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

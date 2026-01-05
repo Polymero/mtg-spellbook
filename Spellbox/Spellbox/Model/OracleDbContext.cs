@@ -11,6 +11,7 @@ namespace Spellbox.Model
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseSqlite("Data Source=Data/OracleCards.db3");
+            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             SQLitePCL.Batteries.Init();
         }
 

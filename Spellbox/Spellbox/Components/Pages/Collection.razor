@@ -8,31 +8,43 @@
     <MudItem xs="12">
         <MudCardHeader>
             <CardHeaderContent>
-                <MudText Typo="Typo.h4">Your Binders:</MudText>
+                <MudText Typo="Typo.h4">
+                    Your Binders:
+                </MudText>
             </CardHeaderContent>
             <CardHeaderActions>
-                <MudButton @onclick="AddBinderAsync" Variant="Variant.Filled" Color="Color.Success">New</MudButton>
+                <MudButton @onclick="OpenAddBinderDialog" 
+                           Variant="Variant.Filled" 
+                           Color="Color.Success">
+                    Add
+                </MudButton>
             </CardHeaderActions>
         </MudCardHeader>
     </MudItem>
 
-    @if (binders == null)
+    @if (BinderCache == null)
     {
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
-    else if (binders.Count == 0)
+    else if (BinderCache.Count == 0)
     {
-        <MudText>You have no binders. What have you done?</MudText>
+        <MudText>
+            You have no binders. What have you done?
+        </MudText>
     }
     else
     {    
-        @foreach (var binder in @binders)
+        @foreach (var binder in BinderCache)
         {
             <MudItem xs="12">
                 <MudCard Outlined="true">
                     <MudCardContent>
-                        <MudText Typo="Typo.h6">@binder.Name (@binder.Cards.Count cards)</MudText>
-                        <MudText>@binder.Description</MudText>
+                        <MudText Typo="Typo.h6">
+                            @binder.Name (@binder.Cards.Count cards)
+                        </MudText>
+                        <MudText>
+                            @binder.Description
+                        </MudText>
                     </MudCardContent>
                 </MudCard>
             </MudItem>
@@ -41,31 +53,36 @@
 
 </MudGrid>
 
-@inject CollectionDbContext collectionContext
+@inject IDbContextFactory<CollectionDbContext> DbFactory
 @inject IDialogService DialogService
 @code {
-    List<CollectionBinder> binders = [];
-
-    private async Task AddBinderAsync()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-
-        var dialog = await DialogService.ShowAsync<AddBinderDialog>("Create Binder", options);
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled && result.Data != null)
-        {
-            CollectionBinder binder = (CollectionBinder)result.Data;
-            collectionContext.Binders.Add(binder);
-            await collectionContext.SaveChangesAsync();
-            await OnInitializedAsync();
-            binder = new CollectionBinder();
-        }
-    }
+    private List<CollectionBinder> BinderCache { get; set; } = new List<CollectionBinder>();
 
     protected override async Task OnInitializedAsync()
     {
-        binders = await collectionContext.Binders.ToListAsync();
+        await LoadBindersAsync();
     }
 
+    // Load binders into cache for UI
+    private async Task LoadBindersAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        BinderCache = await context.Binders
+                                   .OrderBy(b => b.Name)
+                                   .ToListAsync();
+    }
+
+    // Open dialog to add a binder to the collection database
+    private async Task OpenAddBinderDialog()
+    {
+        var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small };
+        var dialog = await DialogService.ShowAsync<AddBinderDialog>("Add Binder", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is CollectionBinder newBinder)
+        {
+            BinderCache.Add(newBinder);
+            StateHasChanged();
+        }
+    }
 }

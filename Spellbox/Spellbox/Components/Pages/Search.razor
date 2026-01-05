@@ -2,7 +2,34 @@
 @using MudBlazor
 @using Spellbox.Model
 
-<MudAutocomplete T="OracleCard" Label="Search..." CoerceText=true @bind-Value="searchCard" SearchFunc="@OracleSearch" ToStringFunc="@(e => e is null ? null : $"{e.Name}")" />
+<MudAutocomplete T="OracleCardProj" 
+    Label="Search..."
+    Dense="true"
+    Clearable="true"
+    ResetValueOnEmptyText="true"
+    MinCharacters="2"
+    DebounceInterval="300"
+    MaxItems="20"
+    SearchFunc="@OracleSearchAsync" 
+    ToStringFunc="@(c => c.Name)"
+    ValueChanged="@OracleCardSelect"
+    CoerceText="true"
+    CoerceValue="false">
+
+    <ItemTemplate Context="card">
+        <div class="d-flex flex-column">
+            <span class="fw-semibold">@card.Name</span>
+            <span class="mud-text mud-text-caption">@card.TypeLine</span>
+        </div>
+    </ItemTemplate>
+    
+    <NoItemsTemplate>
+        <MudText Typo="Typo.caption">
+            No cards found
+        </MudText>
+    </NoItemsTemplate>
+    
+</MudAutocomplete>
 
 @if (searchCard.Name is not null)
 {
@@ -62,34 +89,65 @@
 @inject CollectionDbContext collectionContext
 @inject OracleDbContext oracleContext
 @code {
-    List<CollectionBinder> userBinders = new List<CollectionBinder>();
-    List<CollectionDeck> userDecks = new List<CollectionDeck>();
-    List<OracleCard> oracleCards = new List<OracleCard>();
-    List<CFace> cardFaces = new List<CFace>();
-    List<CVariant> cardVariants = new List<CVariant>();
 
+@* 
     protected override async Task OnInitializedAsync()
     {
         StateHasChanged();
         await Task.Yield();
 
-        oracleCards = await oracleContext.OracleCards.ToListAsync();
-        cardFaces = await oracleContext.CardFaces.ToListAsync();
-        cardVariants = await oracleContext.CardVariants.ToListAsync();
-    }
+        //oracleCards = await oracleContext.OracleCards.ToListAsync();
+        //cardFaces = await oracleContext.CardFaces.ToListAsync();
+        //cardVariants = await oracleContext.CardVariants.ToListAsync();
+    } *@
+
+    public record OracleCardProj
+    (
+        Guid OracleId,
+        string Name,
+        string TypeLine
+    );
 
     public OracleCard searchCard { get; set; } = new OracleCard();
     List<CVariant> searchVariants = new List<CVariant>();
     public CVariant? chosenVariant { get; set; }
 
-    private async Task<IEnumerable<OracleCard>> OracleSearch(string value, CancellationToken token)
+    private async Task<IEnumerable<OracleCardProj>> OracleSearchAsync(string value, CancellationToken token)
     {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
+            return Array.Empty<OracleCardProj>();
+
+        return await oracleContext.OracleCards
+            .AsNoTracking()
+            .Where( c =>
+                EF.Functions.Like(c.Name, $"{value}%") ||
+                EF.Functions.Like(c.Name, $"% {value}%"))
+            .OrderBy(c =>
+                EF.Functions.Like(c.Name, $"{value}%") ? 0 :
+                EF.Functions.Like(c.Name, $"% {value}%") ? 1 :
+                2)
+            .ThenBy(c => c.Name)
+            .Select(c => new OracleCardProj(
+                c.OracleId,
+                c.Name,
+                c.TypeLine
+            ))
+            .Take(20)
+            .ToListAsync();
+    }
+
+    private async void OracleCardSelect(OracleCardProj proj)
+    {
+        if (proj is null)
+            return;
+
         // Clear chosen variant
         chosenVariant = null;
 
-        // Find and return all cards with partially matching names
-        IEnumerable<OracleCard>? results = oracleCards.Where(x => (x.Name ?? "").Contains(value, StringComparison.OrdinalIgnoreCase)) ?? Enumerable.Empty<OracleCard>();
-        return await Task.FromResult(results);
+        searchCard = await oracleContext.OracleCards
+            .Include(c => c.Variants)
+            .Include(c => c.Faces)
+            .SingleAsync(c => c.OracleId == proj.OracleId);
     }
 
 }

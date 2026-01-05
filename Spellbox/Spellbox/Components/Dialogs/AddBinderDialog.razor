@@ -1,32 +1,65 @@
 @using Spellbox.Model
 
-@inject ISnackbar Snackbar
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
 
-<MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Create Binder</MudText>
+        <MudText Typo="Typo.h6">
+            Add Binder
+        </MudText>
     </TitleContent>
+
     <DialogContent>
-        <MudTextField @bind-Value="@binder.Name" Label="Name" Typo="Typo.h5" />
-        <MudTextField @bind-Value="@binder.Description" Label="Description" AutoGrow />
+        <MudTextField @bind-Value="binderName"
+                      Label="Name" 
+                      Required="true"
+                      Immediate="true"
+                      Typo="Typo.h5" />
+        <MudTextField @bind-Value="binderDescription" 
+                      Label="Description" 
+                      Lines="3"
+                      Immediate="true"
+                      AutoGrow />
     </DialogContent>
+
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Success" OnClick="Add">Create</MudButton>
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Color="Color.Success" 
+                   OnClick="SaveBinder" 
+                   Disabled="@string.IsNullOrWhiteSpace(binderName)">
+            Add
+        </MudButton>
     </DialogActions>
+
 </MudDialog>
 
+@inject IDbContextFactory<CollectionDbContext> DbFactory
+@inject ISnackbar Snackbar
 @code {
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; }
+    private MudDialogInstance MudDialog { get; set; } = null!;
 
-    public CollectionBinder binder { get; set; } = new CollectionBinder();
-    
-    private void Cancel() => MudDialog.Cancel();
+    private string binderName { get; set; } = string.Empty;
+    private string binderDescription { get; set; } = string.Empty;
 
-    private void Add()
+    private async Task SaveBinder()
     {
-        Snackbar.Add("Binder created", Severity.Success);
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        var binder = new CollectionBinder
+        {
+            Id = Guid.NewGuid(),
+            Name = binderName.Trim(),
+            Description = string.IsNullOrWhiteSpace(binderDescription) ? null : binderDescription.Trim()
+        };
+
+        context.Binders.Add(binder);
+        await context.SaveChangesAsync();
+
         MudDialog.Close(DialogResult.Ok(binder));
+        Snackbar.Add("Binder added!", Severity.Success);
     }
+
+    private void Cancel() => MudDialog.Cancel();
 }
