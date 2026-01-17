@@ -9,6 +9,11 @@ public static class JsonExtensions
             ? p.GetString()!
             : "";
 
+    public static string GetPropertyOrAlternative(this JsonElement e, string name, string alternative)
+        => e.TryGetProperty(name, out var p) && p.ValueKind != JsonValueKind.Null
+            ? p.GetString()!
+            : alternative;
+
     public static int? GetPropertyOrNullInt(this JsonElement e, string name)
         => e.TryGetProperty(name, out var p) && p.TryGetInt32(out var i)
             ? i

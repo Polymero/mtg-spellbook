@@ -10,7 +10,10 @@ namespace Spellbox.Model
         public Guid DeckId { get; set; }
         public Deck Deck { get; set; } = null!;
 
+        public string DeckName { get; set; } = null!;
+
         public bool IsActive { get; set; }
+        public string Name { get; set; } = null!;
         public string? Description { get; set; }
 
         public DateTime CreatedAt { get; set; }

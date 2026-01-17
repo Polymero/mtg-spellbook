@@ -77,9 +77,6 @@ namespace Spellbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FlavorName")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FlavorTexts")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -99,6 +96,10 @@ namespace Spellbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SetCode")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -114,6 +115,11 @@ namespace Spellbox.Migrations
                     b.HasKey("ScryfallId");
 
                     b.HasIndex("OracleCardId");
+
+                    b.HasIndex("SearchName");
+
+                    b.HasIndex("SetCode", "CollNum")
+                        .IsUnique();
 
                     b.ToTable("CardVariants");
                 });

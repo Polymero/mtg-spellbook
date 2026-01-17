@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Spellbox.Migrations
 {
     /// <inheritdoc />
-    public partial class _202601010509_Init : Migration
+    public partial class _202601101919 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -59,6 +59,7 @@ namespace Spellbox.Migrations
                 {
                     ScryfallId = table.Column<Guid>(type: "TEXT", nullable: false),
                     OracleCardId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SearchName = table.Column<string>(type: "TEXT", nullable: false),
                     SetName = table.Column<string>(type: "TEXT", nullable: false),
                     SetCode = table.Column<string>(type: "TEXT", nullable: false),
                     CollNum = table.Column<string>(type: "TEXT", nullable: false),
@@ -68,8 +69,7 @@ namespace Spellbox.Migrations
                     Rarity = table.Column<string>(type: "TEXT", nullable: false),
                     Thumbs = table.Column<string>(type: "TEXT", nullable: false),
                     Images = table.Column<string>(type: "TEXT", nullable: false),
-                    FlavorTexts = table.Column<string>(type: "TEXT", nullable: false),
-                    FlavorName = table.Column<string>(type: "TEXT", nullable: true)
+                    FlavorTexts = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,6 +92,17 @@ namespace Spellbox.Migrations
                 name: "IX_CardVariants_OracleCardId",
                 table: "CardVariants",
                 column: "OracleCardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CardVariants_SearchName",
+                table: "CardVariants",
+                column: "SearchName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CardVariants_SetCode_CollNum",
+                table: "CardVariants",
+                columns: new[] { "SetCode", "CollNum" },
+                unique: true);
         }
 
         /// <inheritdoc />

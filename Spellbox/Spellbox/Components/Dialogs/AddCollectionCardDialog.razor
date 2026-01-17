@@ -1,0 +1,456 @@
+@using Spellbox.Model
+
+<MudDialog>
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            <MudGrid>
+
+                <!-- Oracle card search by name -->
+                <MudItem xs="6">
+                    <MudAutocomplete T="OracleCardProj"
+                                    Label="Search..."
+                                    Dense="true"
+                                    Clearable="true"
+                                    SearchFunc="OracleSearchAsync"
+                                    ToStringFunc="o => o.Name"
+                                    ResetValueOnEmptyText="true"
+                                    OnClearButtonClick="ClearOracle"
+                                    ValueChanged="OracleSelectAsync"
+                                    CoerceText="true"
+                                    CoerceValue="false">
+                    
+                        <ItemTemplate Context="o">
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">@o.Name</span>
+                                <span class="mud-text mud-text-caption">@o.TypeLine</span>
+                            </div>
+                        </ItemTemplate>
+                        
+                        <NoItemsTemplate>
+                            <MudText Typo="Typo.caption">
+                                No cards found
+                            </MudText>
+                        </NoItemsTemplate>
+                    
+                    </MudAutocomplete>
+                </MudItem>
+
+                <MudItem xs="1" Class="d-flex align-end">
+                    <MudText>
+                        OR
+                    </MudText>
+                </MudItem>
+
+                <!-- Card search by set name and collector number -->
+                <MudItem xs="2">
+                    <MudTextField Label="Set Code"
+                                Dense="true"
+                                @bind-Value="_setCode" />
+                </MudItem>
+
+                <MudItem xs="2">
+                    <MudTextField Label="Coll Num"
+                                Dense="true"
+                                @bind-Value="_collNum" />
+                </MudItem>
+
+                <MudItem xs="1" Class="d-flex align-end">
+                    <MudButton Variant="Variant.Outlined"
+                            Color="Color.Success"
+                            Disabled="@(!CanLookupBySet)"
+                            OnClick="LookupVariantAsync">
+                        Go
+                    </MudButton>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider />
+
+            @if (_selectedOracle is not null)
+            {
+                <!-- Card variant selector -->
+                <MudSelect T="CVariant"
+                        Label="Variant"
+                        Dense="true"
+                        Disabled="@(_selectedOracle == null)"
+                        @bind-Value="_selectedVariant">
+                    @foreach (var v in _selectedOracle!.Variants)
+                    {
+                        <MudSelectItem Value="v">
+                            @String.Format("{0} ({1}) - {2}", v.SetCode.ToUpper(), v.CollNum, v.SetName)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            @if (_selectedVariant is not null)
+            {
+                <MudGrid Spacing="2">
+
+                    <MudItem xs="4">
+                        <MudImage Src=@(_selectedVariant.Images[0]) Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+                    </MudItem>
+
+                    <MudItem xs="8">
+                        @foreach (var f in _selectedOracle!.Faces.OrderBy(f => f.Order))
+                        {
+                            <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                    @f.Name
+                                </MudText>
+
+                                <MudDivider Class="my-1" />
+
+                                <MudText Typo="Typo.caption">
+                                    @f.TypeLine
+                                </MudText>
+
+                                <MudDivider Class="my-1" />
+
+                                <MudText Typo="Typo.body2" Style="white-space: pre-line;">
+                                    @f.OracleText
+                                </MudText>
+
+                            </MudPaper>
+                        }
+                    </MudItem>
+
+                </MudGrid>
+            }
+
+            <MudDivider />
+
+            <!-- Physical properties -->
+            <MudGrid>
+
+                <!-- Card Finish -->
+                <MudItem xs="2">
+                    <MudSelect T="CardFinish"
+                               Label="Finish"
+                               @bind-Value="_finish">
+                        @foreach (var v in AvailableFinishes)
+                        {
+                            <MudSelectItem Value="v">
+                                @v
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                
+                <!-- Card language -->
+                <MudItem xs="2">
+                    <MudSelect T="CardLanguage"
+                               Label="Language"
+                               @bind-Value="_language">
+                        @foreach (var v in Enum.GetValues<CardLanguage>())
+                        {
+                            <MudSelectItem Value="v">
+                                @v
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Card condition -->
+                <MudItem xs="2">
+                    <MudSelect T="CardCondition"
+                               Label="Condition"
+                               @bind-Value="_condition">
+                        @foreach (var v in Enum.GetValues<CardCondition>())
+                        {
+                            <MudSelectItem Value="v">
+                                @v
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Altered cards -->
+                <MudItem xs="2" Class="align-end">
+                    <MudCheckBox T="bool"
+                                 Label="Altered"
+                                 @bind-Checked="_isAltered" />
+                </MudItem>
+
+                <!-- Signed cards -->
+                <MudItem xs="2" Class="align-end">
+                    <MudCheckBox T="bool"
+                                 Label="Signed"
+                                 @bind-Checked="_isSigned" />
+                </MudItem>
+
+                <!-- Quantity -->
+                <MudItem xs="2">
+                    <MudNumericField T="int"
+                                    Label="Quantity"
+                                    @bind-Value="_quantity"
+                                    Min="1"
+                                    Immediate="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudGrid>
+
+                <!-- Binder (optional) -->
+                <MudItem xs="5">
+                    <MudSelect T="CollectionBinder"
+                            Label="Binder"
+                            Clearable="true"
+                            @bind-Value="_binder">
+                        @foreach (var binder in BinderCache)
+                        {
+                            <MudSelectItem Value="binder">
+                                @binder.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="1" Class="d-flex align-end">
+                    <MudText>
+                        OR
+                    </MudText>
+                </MudItem>
+
+                @* <!-- Deck (optional) -->
+                <MudItem xs="5">
+                    <MudSelect T="DeckSnapshot"
+                            Label="Deck"
+                            Clearable="true"
+                            @bind-Value="_snapshot">
+                        @foreach (var snapshot in ActiveSnapshotCache)
+                        {
+                            <MudSelectItem Value="snapshot">
+                                @snapshot.DeckName
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem> *@
+
+                <MudItem xs="1" Class="d-flex align-end">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               Disabled="@(!CanSubmit)"
+                               OnClick="SubmitAsync">
+                        Add
+                    </MudButton>
+                </MudItem>
+
+            </MudGrid>
+
+        </MudStack>
+
+    </DialogContent>
+
+    @* <DialogActions>
+        <MudButton Variant="Variant.Text"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="@(!CanSubmit)"
+                   OnClick="SubmitAsync">
+            Add
+        </MudButton>
+    </DialogActions> *@
+</MudDialog>
+
+@inject IDbContextFactory<OracleDbContext> OracleDbFactory
+@inject CollectionService CollectionService
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<CollectionBinder> BinderCache { get; set; } = new List<CollectionBinder>();
+    [Parameter]
+    public IReadOnlyList<Deck> DeckCache { get; set; } = new List<Deck>();
+
+    public record OracleCardProj
+    (
+        Guid OracleId,
+        string Name,
+        string TypeLine
+    );
+
+
+    // Set states
+    @* private OracleCardProj? _selectedOracleProj; *@
+    private OracleCard? _selectedOracle;
+    private CVariant? _selectedVariant;
+
+    private string? _setCode;
+    private string? _collNum;
+
+    private int _quantity = 1;
+
+    private CardFinish _finish = CardFinish.NonFoil;
+    private CardLanguage _language = CardLanguage.English;
+    private CardCondition _condition = CardCondition.NearMint;
+    private bool _isAltered;
+    private bool _isSigned;
+
+    private CollectionBinder? _binder;
+    private DeckSnapshot? _snapshot;
+
+    @* private List<CVariant> _availableVariants = new List<CVariant>(); *@
+
+
+    // Guards
+    private bool CanSubmit =>
+        _selectedVariant != null &&
+        _quantity > 0;
+
+    @* private bool _usingSetLookup =>
+        !string.IsNullOrWhiteSpace(_setCode) ||
+        !string.IsNullOrWhiteSpace(_collNum); *@
+
+    private bool CanLookupBySet =>
+        !string.IsNullOrWhiteSpace(_setCode) &&
+        !string.IsNullOrWhiteSpace(_collNum);
+
+
+    @* private async Task<IEnumerable<CVariant>> SearchVariantByNameAsync(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
+            return Enumerable.Empty<CVariant>();
+
+        using var db = await OracleDbFactory.CreateDbContextAsync();
+
+        return await db.CardVariants
+            .Where(v => v.SearchName.Contains(value))
+            .OrderBy(v => v.SearchName.IndexOf(value))
+            .Take(20)
+            .ToListAsync();
+    } *@
+
+
+    private IEnumerable<CardFinish> AvailableFinishes =>
+        _selectedVariant == null
+            ? Enumerable.Empty<CardFinish>()
+            : GetAvailableFinishes(_selectedVariant);
+
+
+    private async Task<IEnumerable<OracleCardProj>> OracleSearchAsync(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
+            return Enumerable.Empty<OracleCardProj>();
+
+        using var db = await OracleDbFactory.CreateDbContextAsync();
+
+        return await db.OracleCards
+            .AsNoTracking()
+            .Where( c =>
+                EF.Functions.Like(c.Name, $"{value}%") ||
+                EF.Functions.Like(c.Name, $"% {value}%"))
+            .OrderBy(c =>
+                EF.Functions.Like(c.Name, $"{value}%") ? 0 :
+                EF.Functions.Like(c.Name, $"% {value}%") ? 1 :
+                2)
+            .ThenBy(c => c.Name)
+            .Select(c => new OracleCardProj(
+                c.OracleId,
+                c.Name,
+                c.TypeLine
+            ))
+            .Take(20)
+            .ToListAsync();
+    }
+
+
+    private async void OracleSelectAsync(OracleCardProj proj)
+    {
+        if (proj is null)
+            return;
+
+        @* // Clear chosen variant
+        _selectedVariant = null; *@
+
+        using var db = await OracleDbFactory.CreateDbContextAsync();
+
+        _selectedOracle = await db.OracleCards
+            .Include(c => c.Variants)
+            .Include(c => c.Faces)
+            .SingleAsync(c => c.OracleId == proj.OracleId);
+
+        _selectedVariant = _selectedOracle.Variants.First();
+    }
+
+
+    private async Task LookupVariantAsync()
+    {
+        using var db = await OracleDbFactory.CreateDbContextAsync();
+
+        var variant = await db.CardVariants
+            @* .Include(v => v.OracleCard) *@
+            .SingleOrDefaultAsync(v =>
+                v.SetCode == _setCode!.ToLower() &&
+                v.CollNum == _collNum);
+
+        if (variant == null)
+        {
+            Snackbar.Add("No card variant found.", Severity.Warning);
+            return;
+        }
+
+        _selectedOracle = await db.OracleCards
+            .Include(c => c.Variants)
+            .Include(c => c.Faces)
+            .SingleAsync(c => c.OracleId == variant.OracleCardId);
+        _selectedVariant = _selectedOracle.Variants.FirstOrDefault(v => v.ScryfallId == variant.ScryfallId);
+
+        _setCode = null;
+        _collNum = null;
+    }
+
+
+    private static IEnumerable<CardFinish> GetAvailableFinishes(CVariant variant)
+    {
+        if (variant.Finishes.Contains("nonfoil")) yield return CardFinish.NonFoil;
+        if (variant.Finishes.Contains("foil")) yield return CardFinish.Foil;
+        if (variant.Finishes.Contains("etched")) yield return CardFinish.EtchedFoil;
+    }
+
+
+    private async Task SubmitAsync()
+    {
+        if (_selectedVariant == null)
+            return;
+
+        await CollectionService.AddCopiesAsync(
+            oracleId: _selectedVariant.OracleCardId,
+            variantId: _selectedVariant.ScryfallId,
+            quantity: _quantity,
+            finish: _finish,
+            language: _language,
+            condition: _condition,
+            isAltered: _isAltered,
+            isSigned: _isSigned,
+            binderId: _binder?.Id,
+            snapshotId: _snapshot?.Id
+        );
+
+        MudDialog.Close(DialogResult.Ok(1));
+        Snackbar.Add("Card added!", Severity.Success);
+    }
+
+
+    private void ClearOracle()
+    {
+        @* _selectedOracleProj = null; *@
+        _selectedOracle = null;
+        _selectedVariant = null;
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

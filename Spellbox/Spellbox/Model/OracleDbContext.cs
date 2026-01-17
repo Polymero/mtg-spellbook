@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Spellbox.Model
 {
@@ -8,12 +9,12 @@ namespace Spellbox.Model
         public DbSet<CFace> CardFaces => Set<CFace>();
         public DbSet<CVariant> CardVariants => Set<CVariant>();
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
+
+        public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
         {
-            options.UseSqlite("Data Source=Data/OracleCards.db3");
-            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            SQLitePCL.Batteries.Init();
+            
         }
+
 
         protected override void OnModelCreating(ModelBuilder model)
         {
@@ -25,6 +26,11 @@ namespace Spellbox.Model
             model.Entity<CVariant>(entity =>
             {
                 entity.HasKey(e => e.ScryfallId);
+
+                entity.HasIndex(e => e.SearchName);
+
+                entity.HasIndex(e => new { e.SetCode, e.CollNum })
+                      .IsUnique();
 
                 entity.HasOne(e => e.OracleCard)
                       .WithMany(c => c.Variants)
@@ -41,7 +47,8 @@ namespace Spellbox.Model
                       .HasForeignKey(e => e.OracleId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                entity.Property(e => e.OracleId).IsRequired();
+                entity.Property(e => e.OracleId)
+                      .IsRequired();
 
                 entity.HasIndex(e => new { e.OracleId, e.Order })
                       .IsUnique();

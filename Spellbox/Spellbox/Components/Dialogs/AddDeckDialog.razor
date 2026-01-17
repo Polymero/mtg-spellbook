@@ -1,0 +1,88 @@
+@using Spellbox.Model
+
+<MudDialog>
+
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Add Deck
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudTextField @bind-Value="deckName"
+                      Label="Name"
+                      Required="true"
+                      Immediate="true"
+                      Typo="Typo.h5" />
+
+
+        <MudSelect T="DeckType"
+                    Label="Type"
+                    @bind-Value="deckType">
+            @foreach (var v in Enum.GetValues<DeckType>())
+            {
+                <MudSelectItem Value="v">
+                    @v
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudTextField @bind-Value="deckDescription"
+                      Label="Description"
+                      Lines="3"
+                      Immediate="true"
+                      AutoGrow />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Success"
+                   OnClick="SaveDeck"
+                   Disabled="@string.IsNullOrWhiteSpace(deckName)">
+            Add
+        </MudButton>
+    </DialogActions>
+
+</MudDialog>
+
+
+@inject IDbContextFactory<CollectionDbContext> CollectionDbFactory
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    private string deckName { get; set; } = string.Empty;
+    private DeckType deckType { get; set; } = DeckType.Unassigned;
+    private string deckDescription { get; set; } = string.Empty;
+
+
+    private async Task SaveDeck()
+    {
+        using var db = await CollectionDbFactory.CreateDbContextAsync();
+
+        var deck = new Deck
+        {
+            Id = Guid.NewGuid(),
+            Name = deckName,
+            Type = deckType,
+            Description = string.IsNullOrWhiteSpace(deckDescription) ? null : deckDescription.Trim(),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        db.Decks.Add(deck);
+        await db.SaveChangesAsync();
+
+        MudDialog.Close(DialogResult.Ok(deck));
+        Snackbar.Add("Deck added!", Severity.Success);
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

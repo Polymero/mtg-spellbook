@@ -1,0 +1,77 @@
+@page "/binders/{BinderId:guid}"
+@using MudBlazor
+@using Spellbox.Model
+@using Spellbox.Components.Layout
+
+
+<MudToggleGroup T="CardDisplayMode"
+                @bind-Value="_displayMode">
+    <MudToggleItem Value="CardDisplayMode.Grid">
+        <MudIcon Icon="@Icons.Material.Filled.GridView" />
+        Grid
+    </MudToggleItem>
+    <MudToggleItem Value="CardDisplayMode.Table">
+        <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+        Table
+    </MudToggleItem>
+</MudToggleGroup>
+
+<MudPaper Class="pa-4">
+
+    @if (_binder == null)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    }
+    else
+    {
+        <MudText Typo="Typo.h4">
+            @_binder.Name
+        </MudText>
+
+        <MudText Typo="Typo.h6">
+            @_binder.Description
+        </MudText>
+
+        <MudDivider />
+
+        @if (_displayMode == CardDisplayMode.Grid)
+        {
+            <CardGridView Cards="_cards" />
+        }
+        else
+        {
+            <CardTableView Cards="_cards" />
+        }
+
+    }
+
+</MudPaper>
+
+
+@inject CrossService CrossService
+@inject CollectionService CollectionService
+@code {
+
+    [Parameter]
+    public Guid BinderId { get; set; }
+
+    // UI Caches
+    private CollectionBinderDto? _binder;
+    private List<CollectionCardDetailsDto> _cards = new List<CollectionCardDetailsDto>();
+
+    // UI States
+    private CardDisplayMode _displayMode = CardDisplayMode.Grid;
+
+    public enum CardDisplayMode
+    {
+        Grid,
+        Table
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _binder = await CollectionService.GetBinderDetails(BinderId);
+        _cards = await CrossService.GetBinderCardsAsync(BinderId);
+    }
+
+}

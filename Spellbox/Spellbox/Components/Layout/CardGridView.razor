@@ -1,0 +1,148 @@
+@using Microsoft.JSInterop
+@using MudBlazor
+@using Spellbox.Components.Dialogs
+@using Spellbox.Model
+
+
+<div class="card-grid-container pa-2" @ref="_containerRef">
+
+    @if (_rows.Count == 0)
+    {
+        <MudText>No cards to display.</MudText>
+    }
+    else
+    {
+        <MudVirtualize Items="_rows"
+                        ItemSize="@RowHeight"
+                        OverscanCount="3">
+
+            <ChildContent Context="row">
+                <div class="card-row" style="--columns:@_cardsPerRow">
+                    @foreach (var card in row)
+                    {
+                        <MudPaper Class="card-tile" 
+                                  Elevation="1"
+                                  @onclick="@(() => OpenCardDialog(card.AllocationId))">
+
+                            <MudImage Src="@card.Images[0]"
+                                        Alt="img" 
+                                        Width="@CardWidth"
+                                        Class="card-image rounded-lg"/>
+
+                            <div class="text-truncate mt-1">
+                                <MudText Typo="Typo.caption" Class="text-truncate">
+                                    @card.Name
+                                </MudText>
+                            </div>
+
+                        </MudPaper>
+                    }
+                </div>
+            </ChildContent>
+
+        </MudVirtualize>
+    }
+
+</div>
+
+
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@code {
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CollectionCardDetailsDto> Cards { get; set; } = null!;
+
+    // Constants
+    private const int CardWidth = 224;
+    private const int CardHeight = (int)(CardWidth / 0.715);
+    private const int RowGap = 12;
+    private int RowHeight => CardHeight + RowGap;
+
+    // States
+    private ElementReference _containerRef;
+    private int _cardsPerRow = 1;
+    private List<List<CollectionCardDetailsDto>> _rows = new List<List<CollectionCardDetailsDto>>();
+
+    
+    // Rendering
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _resizeObserver;
+
+    protected override void OnParametersSet()
+    {
+        BuildRows();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "../Components/Layout/CardGridView.razor.js");
+
+        _resizeObserver = await _module.InvokeAsync<IJSObjectReference>(
+            "observeResize", _containerRef, DotNetObjectReference.Create(this), 150);
+    }
+
+    [JSInvokable]
+    public void OnContainerResize(double width)
+    {
+        int newColumns = Math.Max(1, (int)(width / CardWidth));
+        if (newColumns != _cardsPerRow)
+        {
+            _cardsPerRow = newColumns;
+            BuildRows();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void BuildRows()
+    {
+        _rows = Cards
+            .Select((card, index) => new { card, index })
+            .GroupBy(x => x.index / _cardsPerRow)
+            .Select(g => g.Select(x => x.card).ToList())
+            .ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_resizeObserver is not null)
+        {
+            await _resizeObserver.InvokeVoidAsync("dispose");
+            await _resizeObserver.DisposeAsync();
+        }
+
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+    }
+
+
+    private async Task OpenCardDialog(Guid allocationId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["AllocationId"] = allocationId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            @* await ReloadBinderAsync(); *@
+        }
+    }
+
+}

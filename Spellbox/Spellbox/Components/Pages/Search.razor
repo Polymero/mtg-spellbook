@@ -52,7 +52,7 @@
     <MudGrid Spacing="2">
 
         <MudItem xs="4">
-            <MudImage Src=@(chosenVariant.Images[0]) Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+            <MudImage Src=@(chosenVariant.Images[0]) Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;" />
         </MudItem>
 
         <MudItem xs="8">
@@ -89,18 +89,6 @@
 @inject CollectionDbContext collectionContext
 @inject OracleDbContext oracleContext
 @code {
-
-@* 
-    protected override async Task OnInitializedAsync()
-    {
-        StateHasChanged();
-        await Task.Yield();
-
-        //oracleCards = await oracleContext.OracleCards.ToListAsync();
-        //cardFaces = await oracleContext.CardFaces.ToListAsync();
-        //cardVariants = await oracleContext.CardVariants.ToListAsync();
-    } *@
-
     public record OracleCardProj
     (
         Guid OracleId,
@@ -112,10 +100,11 @@
     List<CVariant> searchVariants = new List<CVariant>();
     public CVariant? chosenVariant { get; set; }
 
+
     private async Task<IEnumerable<OracleCardProj>> OracleSearchAsync(string value, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
-            return Array.Empty<OracleCardProj>();
+            return Enumerable.Empty<OracleCardProj>();
 
         return await oracleContext.OracleCards
             .AsNoTracking()
@@ -135,6 +124,7 @@
             .Take(20)
             .ToListAsync();
     }
+
 
     private async void OracleCardSelect(OracleCardProj proj)
     {

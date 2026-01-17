@@ -93,8 +93,6 @@ else
         await dbContext.Database.EnsureCreatedAsync();
 
         var oracleProcessed = new List<Guid>();
-        // var faceProcessed = new List<Guid>();
-        // var variantProcessed = new List<Guid>();
 
         var oracleBatch = new Dictionary<Guid, OracleCard>();
         var faceBatch = new List<CFace>();
@@ -148,6 +146,7 @@ else
         StateHasChanged();
     }
 
+
     private bool IsCardDesired(JsonElement card)
     {
         var desiredLayouts = new List<string>
@@ -177,6 +176,7 @@ else
 
         return true;
     }
+
 
     private OracleCard ParseOracleCard(JsonElement card, Guid oracleId, List<CFace> faceBatch)
     {
@@ -231,12 +231,14 @@ else
         return oracle;
     }
 
+
     private CVariant ParseCardVariant(JsonElement card, Guid oracleId, Guid scryfallId)
     {
         var variant =  new CVariant
         {
             ScryfallId = scryfallId,
             OracleCardId = oracleId,
+            SearchName = card.GetPropertyOrAlternative("flavor_name", card.GetProperty("name").GetString()!),
             SetName = card.GetProperty("set_name").GetString()!,
             SetCode = card.GetProperty("set").GetString()!,
             CollNum = card.GetProperty("collector_number").GetString()!,
@@ -244,7 +246,6 @@ else
             Artist = card.GetPropertyOrEmptyString("artist"),
             Released = card.GetProperty("released_at").GetString()!,
             Rarity = card.GetProperty("rarity").GetString()!,
-            FlavorName = card.GetPropertyOrEmptyString("flavor_name")
         };
 
         if (card.TryGetProperty("card_faces", out var faces))

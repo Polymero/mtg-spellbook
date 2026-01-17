@@ -1,0 +1,69 @@
+@* @page "/decks/{DeckId:guid}"
+@using MudBlazor
+@using Spellbox.Model
+
+
+<MudPaper Class="pa-4">
+
+    @if (_deck == null)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    }
+    else
+    {
+        <MudText Typo="Typo.h4">
+            @_deck.Name
+        </MudText>
+
+        <MudText Typo="Typo.h6">
+            @_deck.Description
+        </MudText>
+
+        <MudDivider />
+
+        <MudTable Items="_cards" 
+                  Dense="true"
+                  Hover="true">
+            <HeaderContent>
+                <MudTh>Card</MudTh>
+                <MudTh>Variant</MudTh>
+                <MudTh>Finish</MudTh>
+                <MudTh>Lang</MudTh>
+                <MudTh>Cond</MudTh>
+                <MudTh>Alt</MudTh>
+                <MudTh>Sig</MudTh>
+            </HeaderContent>
+
+            <RowTemplate Context="c">
+                <MudTd>@c.Name</MudTd>
+                <MudTd>@String.Format("{0} ({1})", c.SetCode.ToUpper(), c.CollNum)</MudTd>
+                <MudTd>@c.Finish</MudTd>
+                <MudTd>@c.Language</MudTd>
+                <MudTd>@c.Condition</MudTd>
+                <MudTd>@if (c.IsAltered) {<MudText>Yes</MudText>}</MudTd>
+                <MudTd>@if (c.IsSigned) {<MudText>Yes</MudText>}</MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+</MudPaper>
+
+
+@inject CrossService CrossService
+@inject CollectionService CollectionService
+@code {
+
+    [Parameter]
+    public Guid DeckId { get; set; }
+
+    private DeckDto? _deck;
+    private List<CollectionCardDetailsDto> _cards = new List<CollectionCardDetailsDto>();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _deck = await CollectionService.GetDeckDetails(DeckId);
+        _cards = await CrossService.GetDeckCardsAsync(DeckId);
+    }
+
+} *@

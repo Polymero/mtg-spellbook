@@ -9,7 +9,6 @@ namespace Spellbox.Model
         
         public Guid OracleId { get; set; }
         public Guid VariantId { get; set; }
-        
 
         public int Quantity { get; set; }
 

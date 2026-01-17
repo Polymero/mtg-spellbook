@@ -9,11 +9,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<OracleDbContext>();
+
+builder.Services.AddDbContextFactory<OracleDbContext>(options =>
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("OracleDb"));
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
 builder.Services.AddDbContextFactory<CollectionDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("CollectionDb"));
 });
+
+builder.Services.AddScoped<OracleService>();
+builder.Services.AddScoped<CollectionService>();
+builder.Services.AddScoped<CrossService>();
 
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient();

@@ -1,0 +1,110 @@
+@using MudBlazor
+@using Spellbox.Components.Dialogs
+@using Spellbox.Model
+
+<MudTable Items="Cards" 
+            Dense="true"
+            Hover="true">
+
+    <HeaderContent>
+        <MudTh>
+            Card
+        </MudTh>
+        <MudTh>
+            Variant
+        </MudTh>
+        <MudTh>
+            Finish
+        </MudTh>
+        <MudTh>
+            Lang
+        </MudTh>
+        <MudTh>
+            Cond
+        </MudTh>
+        <MudTh>
+            Flags
+        </MudTh>
+    </HeaderContent>
+
+    <RowTemplate Context="c">
+        <MudTd>
+            @c.Name
+        </MudTd>
+        <MudTd>
+            @String.Format("{0} ({1})", c.SetCode.ToUpper(), c.CollNum)
+        </MudTd>
+        <MudTd>
+            @if (c.Finish == CardFinish.NonFoil)
+            {
+                <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
+            }
+            else if (c.Finish == CardFinish.Foil)
+            {
+                <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
+            }
+            else
+            {
+                @c.Finish
+            }
+        </MudTd>
+        <MudTd>
+            @c.Language
+        </MudTd>
+        <MudTd>
+            @c.Condition
+        </MudTd>
+        <MudTd>
+            @if (c.IsAltered)
+            {
+                <MudChip T="string" 
+                         Variant="Variant.Text"
+                         Size="Size.Small">
+                    Alt
+                </MudChip>
+            }
+            @if (c.IsSigned) 
+            {
+                <MudChip T="string" 
+                         Variant="Variant.Text"
+                         Size="Size.Small">
+                    Sig
+                </MudChip>
+            }
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+
+@inject IDialogService DialogService
+@code {
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CollectionCardDetailsDto> Cards { get; set; } = null!;
+
+
+    private async Task OpenCardDialog(Guid allocationId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["AllocationId"] = allocationId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            @* await ReloadBinderAsync(); *@
+        }
+    }
+
+}

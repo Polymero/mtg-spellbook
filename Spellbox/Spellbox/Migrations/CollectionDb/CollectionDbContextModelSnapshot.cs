@@ -23,6 +23,9 @@ namespace Spellbox.Migrations.CollectionDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("AllocatedAt")
                         .HasColumnType("TEXT");
 
@@ -38,6 +41,24 @@ namespace Spellbox.Migrations.CollectionDb
                     b.Property<Guid>("CollectionCardId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Condition")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("DeckSnapshotId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Finish")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsAltered")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSigned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Language")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("SnapshotId")
                         .HasColumnType("TEXT");
 
@@ -49,11 +70,13 @@ namespace Spellbox.Migrations.CollectionDb
 
                     b.HasIndex("CollectionCardId");
 
+                    b.HasIndex("DeckSnapshotId");
+
                     b.HasIndex("SnapshotId");
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\n                (\n                    (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\n                    (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\n                    (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\n                )\n                ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\r\n                    )\r\n                    ");
                         });
                 });
 
@@ -87,28 +110,11 @@ namespace Spellbox.Migrations.CollectionDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Altered")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Condition")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Finish")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid>("OracleId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Signed")
-                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("VariantId")
                         .HasColumnType("TEXT");
@@ -137,9 +143,8 @@ namespace Spellbox.Migrations.CollectionDb
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -187,11 +192,19 @@ namespace Spellbox.Migrations.CollectionDb
                     b.Property<Guid>("DeckId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DeckName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -241,6 +254,10 @@ namespace Spellbox.Migrations.CollectionDb
                         .HasForeignKey("CollectionCardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Spellbox.Model.DeckSnapshot", null)
+                        .WithMany("Allocations")
+                        .HasForeignKey("DeckSnapshotId");
 
                     b.HasOne("Spellbox.Model.DeckSnapshot", null)
                         .WithMany()
@@ -300,6 +317,8 @@ namespace Spellbox.Migrations.CollectionDb
 
             modelBuilder.Entity("Spellbox.Model.DeckSnapshot", b =>
                 {
+                    b.Navigation("Allocations");
+
                     b.Navigation("Zones");
                 });
 

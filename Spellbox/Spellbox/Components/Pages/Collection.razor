@@ -3,86 +3,227 @@
 @using Spellbox.Model
 @using Spellbox.Components.Dialogs
 
-<MudGrid Spacing="2">
 
-    <MudItem xs="12">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h4">
-                    Your Binders:
-                </MudText>
-            </CardHeaderContent>
-            <CardHeaderActions>
-                <MudButton @onclick="OpenAddBinderDialog" 
-                           Variant="Variant.Filled" 
-                           Color="Color.Success">
-                    Add
-                </MudButton>
-            </CardHeaderActions>
-        </MudCardHeader>
-    </MudItem>
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           @onclick="OpenAddCollectionCardDialog">
+    Add Card
+</MudButton>
 
-    @if (BinderCache == null)
-    {
-        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-    }
-    else if (BinderCache.Count == 0)
-    {
-        <MudText>
-            You have no binders. What have you done?
-        </MudText>
-    }
-    else
-    {    
-        @foreach (var binder in BinderCache)
+
+<MudStack>
+    <!-- Binders -->
+    <MudGrid Spacing="2">
+
+        <MudItem xs="12">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        Your Binders:
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton @onclick="OpenAddBinderDialog" 
+                            Variant="Variant.Outlined" 
+                            Color="Color.Success"
+                            Class="align-end">
+                        Add
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+        </MudItem>
+
+        @if (BinderCache == null)
         {
-            <MudItem xs="12">
-                <MudCard Outlined="true">
-                    <MudCardContent>
-                        <MudText Typo="Typo.h6">
-                            @binder.Name (@binder.Cards.Count cards)
-                        </MudText>
-                        <MudText>
-                            @binder.Description
-                        </MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }   
-    }
+            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        }
+        else if (BinderCache.Count == 0)
+        {
+            <MudText>
+                You have no binders. What have you done?
+            </MudText>
+        }
+        else
+        {    
+            @foreach (var binder in BinderCache)
+            {
+                <MudItem xs="12">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudLink Typo="Typo.h6"
+                                     Href=@String.Format("/binders/{0}", binder.Id)>
+                                @binder.Name
+                            </MudLink>
+                            <MudText>
+                                (@binder.Cards.Count cards) @binder.Description
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }   
+        }
 
-</MudGrid>
+    </MudGrid>
 
-@inject IDbContextFactory<CollectionDbContext> DbFactory
+
+    <MudDivider />
+
+
+    <!-- Decks -->
+    <MudGrid Spacing="2">
+
+        <MudItem xs="12">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">
+                        Your Decks:
+                    </MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton @onclick="OpenAddDeckDialog" 
+                            Variant="Variant.Outlined" 
+                            Color="Color.Success"
+                            Class="align-end">
+                        Add
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+        </MudItem>
+
+        @if (DeckCache == null)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        }
+        else if (DeckCache.Count == 0)
+        {
+            <MudText>
+                You have no decks yet. Why not build one?
+            </MudText>
+        }
+        else
+        {    
+            @foreach (var deck in DeckCache)
+            {
+                <MudItem xs="12">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudLink Typo="Typo.h6"
+                                     Href=@String.Format("/decks/{0}", deck.Id)>
+                                @deck.Name 
+                            </MudLink>
+                            <MudText>
+                                @deck.Type (@deck.UpdatedAt.ToShortDateString()) - @deck.Description
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }   
+        }
+
+    </MudGrid>
+</MudStack>
+
+@inject IDbContextFactory<CollectionDbContext> CollectionDbFactory
 @inject IDialogService DialogService
+@inject NavigationManager Nav
 @code {
+
+    // UI caches
     private List<CollectionBinder> BinderCache { get; set; } = new List<CollectionBinder>();
+    private List<Deck> DeckCache { get; set; } = new List<Deck>();
+    @* private List<DeckSnapshot> ActiveSnapshotCache { get; set; } = new List<DeckSnapshot>(); *@
+
 
     protected override async Task OnInitializedAsync()
     {
         await LoadBindersAsync();
+        await LoadDecksAsync();
     }
 
-    // Load binders into cache for UI
+
+    // Load binders into UI cache
     private async Task LoadBindersAsync()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        BinderCache = await context.Binders
-                                   .OrderBy(b => b.Name)
-                                   .ToListAsync();
+        using var db = await CollectionDbFactory.CreateDbContextAsync();
+        BinderCache = await db.Binders
+            .OrderBy(b => b.Name)
+            .ToListAsync();
     }
+
+
+    // Load decks into UI cache
+    private async Task LoadDecksAsync()
+    {
+        using var db = await CollectionDbFactory.CreateDbContextAsync();
+        DeckCache = await db.Decks
+            .OrderByDescending(d => d.UpdatedAt)
+            .ToListAsync();
+    }
+
 
     // Open dialog to add a binder to the collection database
     private async Task OpenAddBinderDialog()
     {
-        var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small };
+        var options = new DialogOptions 
+        {
+            CloseButton = true, 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
         var dialog = await DialogService.ShowAsync<AddBinderDialog>("Add Binder", options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is CollectionBinder newBinder)
+        if (!result!.Canceled && result.Data is CollectionBinder newBinder)
         {
             BinderCache.Add(newBinder);
             StateHasChanged();
         }
     }
+
+
+    // Open dialog to add a deck to the collection database
+    private async Task OpenAddDeckDialog()
+    {
+        var options = new DialogOptions 
+        {
+            CloseButton = true, 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDeckDialog>("Add Deck", options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is Deck newDeck)
+        {
+            DeckCache.Add(newDeck);
+            StateHasChanged();
+        }
+    }
+
+
+    // Open dialog to add a physical copy of a card to the collection database
+    private async Task OpenAddCollectionCardDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["BinderCache"] = BinderCache,
+            ["DeckCache"] = DeckCache
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddCollectionCardDialog>("Add Card", parameters, options);
+        var result = await dialog.Result;
+    }
+
 }

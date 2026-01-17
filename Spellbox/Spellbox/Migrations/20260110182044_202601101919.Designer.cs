@@ -11,8 +11,8 @@ using Spellbox.Model;
 namespace Spellbox.Migrations
 {
     [DbContext(typeof(OracleDbContext))]
-    [Migration("20260101041306_202601010509_Init")]
-    partial class _202601010509_Init
+    [Migration("20260110182044_202601101919")]
+    partial class _202601101919
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -80,9 +80,6 @@ namespace Spellbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FlavorName")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FlavorTexts")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -102,6 +99,10 @@ namespace Spellbox.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SetCode")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -117,6 +118,11 @@ namespace Spellbox.Migrations
                     b.HasKey("ScryfallId");
 
                     b.HasIndex("OracleCardId");
+
+                    b.HasIndex("SearchName");
+
+                    b.HasIndex("SetCode", "CollNum")
+                        .IsUnique();
 
                     b.ToTable("CardVariants");
                 });

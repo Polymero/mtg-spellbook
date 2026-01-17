@@ -1,0 +1,118 @@
+@using Spellbox.Model
+
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (_cardDto is null)
+        {
+            <MudProgressCircular Indeterminate />
+        }
+        else
+        {
+            <MudGrid>
+
+                <!-- Card image -->
+                <MudItem xs="4">
+                    <MudImage Src=@(_cardDto.Images[0]) Alt="IMG" Style="border-radius: 16px;"/>
+                </MudItem>
+
+                <!-- Oracle data -->
+                <MudItem xs="8">
+                    @foreach (var f in _cardDto!.Faces.OrderBy(f => f.Order))
+                    {
+                        <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                @f.Name
+                            </MudText>
+
+                            <MudDivider Class="my-1" />
+
+                            <MudText Typo="Typo.caption">
+                                @f.TypeLine
+                            </MudText>
+
+                            <MudDivider Class="my-1" />
+
+                            <MudText Typo="Typo.body2" Style="white-space: pre-line;">
+                                @f.OracleText
+                            </MudText>
+
+                        </MudPaper>
+                    }
+                </MudItem>
+
+            </MudGrid>
+        }
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Color="Color.Error"
+                   Variant="Variant.Outlined"
+                   OnClick="DeleteAsync">
+            Delete
+        </MudButton>
+
+        <MudSpacer />
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Success"
+                   Variant="Variant.Filled"
+                   OnClick="SaveAsync">
+            Save
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@inject CollectionService CollectionService
+@inject CrossService CrossService
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public Guid AllocationId { get; set; }
+
+    private CardViewerSingleDto? _cardDto;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cardDto = await CrossService.GetCardByAllocationIdAsync(AllocationId);
+    }
+
+
+    private async Task SaveAsync()
+    {
+        await CollectionService.UpdateAllocationAsync(_cardDto!);
+
+        Snackbar.Add("Changes saved!", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+
+    private async Task DeleteAsync()
+    {
+        await CollectionService.DeleteAllocationAsync(AllocationId);
+
+        Snackbar.Add("Card deleted!", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

@@ -22,7 +22,24 @@ namespace Spellbox.Model
         public bool IsAltered { get; set; } = false;
         public bool IsSigned { get; set; } = false;
 
+        public DateTime AddedAt { get; set; }
         public DateTime AllocatedAt { get; set; }
+    }
+
+    public sealed class CollectionAllocationDto
+    {
+        public Guid Id { get; init; }
+
+        // from CollectionCard
+        public Guid OracleId { get; init; }
+        public Guid VariantId { get; init; }
+
+        public CardFinish Finish { get; init; }
+        public CardLanguage Language { get; init; }
+        public CardCondition Condition { get; init; }
+        
+        public bool IsAltered { get; init; }
+        public bool IsSigned { get; init; }
     }
 
     public enum AllocationIndex

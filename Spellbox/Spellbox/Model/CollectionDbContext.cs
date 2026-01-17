@@ -13,10 +13,12 @@ namespace Spellbox.Model
         public DbSet<DeckZone> Zones { get; set; }
         public DbSet<DeckCard> DeckCards { get; set; }
 
+
         public CollectionDbContext(DbContextOptions<CollectionDbContext> options) : base(options)
         {
             
         }
+
 
         protected override void OnModelCreating(ModelBuilder model)
         {
@@ -29,6 +31,7 @@ namespace Spellbox.Model
             model.ApplyConfiguration(new DeckCardConfiguration());
         }
     }
+
 
     public class CollectionCardConfiguration : IEntityTypeConfiguration<CollectionCard>
     {
@@ -54,6 +57,7 @@ namespace Spellbox.Model
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
+
 
     public class CollectionAllocationConfiguration : IEntityTypeConfiguration<CollectionAllocation>
     {
@@ -90,18 +94,22 @@ namespace Spellbox.Model
             entity.HasIndex(e => e.BinderId);
             entity.HasIndex(e => e.SnapshotId);
 
-            entity.HasCheckConstraint(
-                "CK_CollectionAllocation_AllocationIndex",
-                @"
-                (
-                    (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR
-                    (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR
-                    (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)
-                )
-                "
-            );
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_CollectionAllocation_AllocationIndex",
+                    @"
+                    (
+                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR
+                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR
+                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)
+                    )
+                    "
+                );
+            });
         }
     }
+
 
     public class CollectionBinderConfiguration : IEntityTypeConfiguration<CollectionBinder>
     {
@@ -124,6 +132,7 @@ namespace Spellbox.Model
                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
+
 
     public class DeckConfiguration : IEntityTypeConfiguration<Deck>
     {
@@ -150,13 +159,20 @@ namespace Spellbox.Model
         }
     }
 
+
     public class DeckSnapshotConfiguration : IEntityTypeConfiguration<DeckSnapshot>
     {
         public void Configure(EntityTypeBuilder<DeckSnapshot> entity)
         {
             entity.HasKey(e => e.Id);
 
+            entity.Property(e => e.DeckName)
+                  .IsRequired();
+
             entity.Property(e => e.IsActive)
+                  .IsRequired();
+
+            entity.Property(e => e.Name)
                   .IsRequired();
 
             entity.Property(e => e.CreatedAt)
@@ -181,6 +197,7 @@ namespace Spellbox.Model
         }
     }
 
+
     public class DeckZoneConfiguration : IEntityTypeConfiguration<DeckZone>
     {
         public void Configure(EntityTypeBuilder<DeckZone> entity)
@@ -200,6 +217,7 @@ namespace Spellbox.Model
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
+
 
     public class DeckCardConfiguration : IEntityTypeConfiguration<DeckCard>
     {
