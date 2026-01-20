@@ -2,9 +2,9 @@
 @using Spellbox.Components.Dialogs
 @using Spellbox.Model
 
-<MudTable Items="Cards" 
-            Dense="true"
-            Hover="true">
+<MudTable Items="@TableRows"
+          Dense="true"
+          Hover="true">
 
     <HeaderContent>
         <MudTh>
@@ -27,51 +27,65 @@
         </MudTh>
     </HeaderContent>
 
-    <RowTemplate Context="c">
+    <RowTemplate Context="r">
+
         <MudTd>
-            @c.Name
+            @if (r.IsFirst)
+            {
+                @r.Name
+            }
         </MudTd>
+
         <MudTd>
-            @String.Format("{0} ({1})", c.SetCode.ToUpper(), c.CollNum)
+            @if (r.IsFirst)
+            {
+                @String.Format("{0} {1}", r.SetCode?.ToUpper(), r.CollNum)
+            }
         </MudTd>
+
         <MudTd>
-            @if (c.Finish == CardFinish.NonFoil)
+            @if (r.Allocation.Finish == CardFinish.NonFoil)
             {
                 <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
             }
-            else if (c.Finish == CardFinish.Foil)
+            else if (r.Allocation.Finish == CardFinish.Foil)
             {
                 <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
             }
             else
             {
-                @c.Finish
+                @r.Allocation.Finish
             }
         </MudTd>
+
         <MudTd>
-            @c.Language
+            @r.Allocation.Language
         </MudTd>
+
         <MudTd>
-            @c.Condition
+            @r.Allocation.Condition
         </MudTd>
+
         <MudTd>
-            @if (c.IsAltered)
+            @if (r.Allocation.IsAltered)
             {
                 <MudChip T="string" 
-                         Variant="Variant.Text"
-                         Size="Size.Small">
+                        Variant="Variant.Text"
+                        Size="Size.Small">
                     Alt
                 </MudChip>
             }
-            @if (c.IsSigned) 
+
+            @if (r.Allocation.IsSigned) 
             {
                 <MudChip T="string" 
-                         Variant="Variant.Text"
-                         Size="Size.Small">
+                        Variant="Variant.Text"
+                        Size="Size.Small">
                     Sig
                 </MudChip>
             }
         </MudTd>
+
     </RowTemplate>
 </MudTable>
 
@@ -80,7 +94,55 @@
 @code {
 
     [Parameter, EditorRequired]
-    public IReadOnlyList<CollectionCardDetailsDto> Cards { get; set; } = null!;
+    public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
+    public IReadOnlyList<BinderTableRowDto> TableRows { get; set; } = null!;
+
+
+    public sealed class BinderTableRowDto
+    {
+        public bool IsFirst { get; init; }
+
+        // Variant-level
+        public string? Name { get; init; }
+        public string? SetCode { get; init; } 
+        public string? CollNum { get; init; }
+        
+        // Copy-level
+        public CollectionAllocationDto Allocation { get; init; } = null!;
+    }
+
+    private IReadOnlyList<BinderTableRowDto> BuildRows(
+        IEnumerable<CollectionVariantGroupDto> groups
+    )
+    {
+        var rows = new List<BinderTableRowDto>();
+
+        foreach (var group in groups)
+        {
+            var first = true;
+
+            foreach (var copy in group.Allocations)
+            {
+                rows.Add(new BinderTableRowDto
+                {
+                    IsFirst = first,
+                    Name = first ? group.Name : null,
+                    SetCode = first ? group.SetCode : null,
+                    CollNum = first ? group.CollNum : null,
+                    Allocation = copy
+                });
+
+                first = false;
+            }
+        }
+
+        return rows;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        TableRows = BuildRows(Groups);
+    }
 
 
     private async Task OpenCardDialog(Guid allocationId)

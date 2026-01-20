@@ -13,7 +13,9 @@ namespace Spellbox.Model
         public AllocationIndex AllocationIndex { get; set; }
 
         public Guid? BinderId { get; set; }
+        public CollectionBinder? Binder { get; set; }
         public Guid? SnapshotId { get; set; }
+        public DeckSnapshot? DeckSnapshot { get; set; }
 
         public CardFinish Finish { get; set; } = CardFinish.Unknown;
         public CardLanguage Language { get; set; } = CardLanguage.Unknown;
@@ -29,6 +31,11 @@ namespace Spellbox.Model
     public sealed class CollectionAllocationDto
     {
         public Guid Id { get; init; }
+
+        public Guid? BinderId { get; init; }
+        public string? BinderName { get; init; }
+        public Guid? DeckId { get; init; }
+        public string? DeckName { get; init; }
 
         // from CollectionCard
         public Guid OracleId { get; init; }

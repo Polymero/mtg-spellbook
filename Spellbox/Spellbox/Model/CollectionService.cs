@@ -74,6 +74,63 @@ namespace Spellbox.Model
         }
 
 
+        // Collection overview
+        public async Task<int> GetQuantityUnassigned()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Where(a => a.AllocationIndex == AllocationIndex.Unassigned)
+                .CountAsync();
+        }
+
+        public async Task<List<CollectionBinderDto>> GetAllBinders()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Binders
+                .OrderBy(b => b.Name)
+                .Select(b => new CollectionBinderDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    CreatedAt = b.CreatedAt,
+                    UpdatedAt = b.UpdatedAt,
+
+                    Quantity = b.Cards.Count()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<DeckDto>> GetAllDecks()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Decks
+                .OrderByDescending(d => d.UpdatedAt)
+                .Select(d => new DeckDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Type = d.Type,
+                    Description = d.Description,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt,
+
+                    ActiveSnapshotId = d.Snapshots
+                        .Where(s => s.IsActive)
+                        .Select(s => s.Id)
+                        .FirstOrDefault(),
+
+                    Quantity = d.Snapshots
+                        .Where(s => s.IsActive)
+                        .Sum(s => s.Allocations.Count)
+                })
+                .ToListAsync();
+        }
+
+
         // Binder viewing
         public async Task<CollectionBinderDto> GetBinderDetails(Guid binderId)
         {
@@ -86,6 +143,7 @@ namespace Spellbox.Model
                     Id = b.Id,
                     Name = b.Name,
                     Description = b.Description,
+                    Quantity = b.Cards.Count,
                     CreatedAt = b.CreatedAt,
                     UpdatedAt = b.UpdatedAt
                 })
@@ -96,11 +154,15 @@ namespace Spellbox.Model
         {
             using var db = await _factory.CreateDbContextAsync();
 
+            var binder = await GetBinderDetails(binderId);
+
             return await db.Allocations
                 .Where(a => a.BinderId == binderId)
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
+                    BinderId = a.BinderId,
+                    BinderName = binder.Name,
                     OracleId = a.CollectionCard.OracleId,
                     VariantId = a.CollectionCard.VariantId,
                     Finish = a.Finish,
@@ -134,8 +196,13 @@ namespace Spellbox.Model
         {
             using var db = await _factory.CreateDbContextAsync();
 
+            var activeSnapshotId = await db.Snapshots
+                .Where(s => (s.DeckId == deckId) && s.IsActive)
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+
             return await db.Allocations
-                .Where(a => a.SnapshotId == deckId)
+                .Where(a => a.SnapshotId == activeSnapshotId)
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
@@ -172,23 +239,23 @@ namespace Spellbox.Model
                 .SingleAsync();
         }
 
-        public async Task UpdateAllocationAsync(CardViewerSingleDto updatedDto)
-        {
-            using var db = await _factory.CreateDbContextAsync();
+        // public async Task UpdateAllocationAsync(CardViewerSingleDto updatedDto)
+        // {
+        //     using var db = await _factory.CreateDbContextAsync();
 
-            var allocation = await db.Allocations.FindAsync(updatedDto.AllocationId);
+        //     var allocation = await db.Allocations.FindAsync(updatedDto.AllocationId);
 
-            if (allocation != null)
-            {
-                allocation.Finish = updatedDto.Finish;
-                allocation.Language = updatedDto.Language;
-                allocation.Condition = updatedDto.Condition;
-                allocation.IsAltered = updatedDto.IsAltered;
-                allocation.IsSigned = updatedDto.IsSigned;
+        //     if (allocation != null)
+        //     {
+        //         allocation.Finish = updatedDto.Finish;
+        //         allocation.Language = updatedDto.Language;
+        //         allocation.Condition = updatedDto.Condition;
+        //         allocation.IsAltered = updatedDto.IsAltered;
+        //         allocation.IsSigned = updatedDto.IsSigned;
 
-                await db.SaveChangesAsync();
-            }            
-        }
+        //         await db.SaveChangesAsync();
+        //     }            
+        // }
 
         public async Task DeleteAllocationAsync(Guid allocationId)
         {

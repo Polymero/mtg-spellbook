@@ -45,6 +45,7 @@ namespace Spellbox.Model
         public string? Power { get; set; }
         public string? Toughness { get; set; }
         public string? Defense { get; set; }
+        public string? Loyalty { get; set; }
     }
 
         public sealed class CFaceDto
@@ -58,6 +59,7 @@ namespace Spellbox.Model
         public string? Power { get; init; }
         public string? Toughness { get; init; }
         public string? Defense { get; init; }
+        public string? Loyalty { get; init; }
     }
 
 
@@ -90,6 +92,7 @@ namespace Spellbox.Model
         public Guid OracleCardId { get; init; }
 
         public string Name { get; init; } = null!;
+        public string SetName { get; init; } = null!;
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
         public string? Artist { get; init; }

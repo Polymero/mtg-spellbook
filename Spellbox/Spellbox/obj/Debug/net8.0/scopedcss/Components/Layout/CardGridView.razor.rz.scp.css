@@ -1,35 +1,30 @@
 
-.card-grid-container[b-222q0nahjh] {
+.card-grid-container[b-hoqfvrcn97] {
     width: 100%;
     height: 100%;
     overflow-y: auto;
 }
 
-.card-row[b-222q0nahjh] {
+.card-row[b-hoqfvrcn97] {
     display: grid;
     grid-template-columns: repeat(var(--columns), 224px);
     gap: 12px;
     justify-content: center;
 }
 
-.card-tile[b-222q0nahjh] {
+.card-tile[b-hoqfvrcn97] {
     width: 224px;
     height: 313px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
 }
 
-.card-image[b-222q0nahjh] {
+.card-image[b-hoqfvrcn97] {
     width: 100%;
     height: auto;
     display: block;
     margin-bottom: 4px;
 }
 
-.text-truncate[b-222q0nahjh] {
+.text-truncate[b-hoqfvrcn97] {
     display: block;
     width: 100%;
     text-align: center;

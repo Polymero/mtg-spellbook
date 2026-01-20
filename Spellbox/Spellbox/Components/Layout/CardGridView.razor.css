@@ -15,11 +15,6 @@
 .card-tile {
     width: 224px;
     height: 313px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
 }
 
 .card-image {

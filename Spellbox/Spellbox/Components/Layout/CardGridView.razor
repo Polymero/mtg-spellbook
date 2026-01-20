@@ -1,5 +1,6 @@
 @using Microsoft.JSInterop
 @using MudBlazor
+@using MudBlazor.Services
 @using Spellbox.Components.Dialogs
 @using Spellbox.Model
 
@@ -18,20 +19,28 @@
 
             <ChildContent Context="row">
                 <div class="card-row" style="--columns:@_cardsPerRow">
-                    @foreach (var card in row)
+                    @foreach (var group in row)
                     {
                         <MudPaper Class="card-tile" 
                                   Elevation="1"
-                                  @onclick="@(() => OpenCardDialog(card.AllocationId))">
+                                  @onclick="@(() => OpenCardDialog(group))">
 
-                            <MudImage Src="@card.Images[0]"
+                            <MudImage Src="@group.Images[0]"
                                         Alt="img" 
                                         Width="@CardWidth"
-                                        Class="card-image rounded-lg"/>
+                                        Class="card-image"
+                                        Style="border-radius: 5%"/>
 
                             <div class="text-truncate mt-1">
+                                <MudChip T="string"
+                                         Color="Color.Primary"
+                                         Size="Size.Small">
+                                    <MudText Typo="Typo.caption">
+                                        @String.Format("{0}x", group.Quantity)
+                                    </MudText>
+                                </MudChip>
                                 <MudText Typo="Typo.caption" Class="text-truncate">
-                                    @card.Name
+                                    @group.Name
                                 </MudText>
                             </div>
 
@@ -51,23 +60,22 @@
 @code {
 
     [Parameter, EditorRequired]
-    public IReadOnlyList<CollectionCardDetailsDto> Cards { get; set; } = null!;
+    public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
 
     // Constants
     private const int CardWidth = 224;
     private const int CardHeight = (int)(CardWidth / 0.715);
-    private const int RowGap = 12;
+    private const int ColGap = 4;
+    private const int RowGap = 16;
     private int RowHeight => CardHeight + RowGap;
 
-    // States
+    // Rendering
     private ElementReference _containerRef;
     private int _cardsPerRow = 1;
-    private List<List<CollectionCardDetailsDto>> _rows = new List<List<CollectionCardDetailsDto>>();
-
-    
-    // Rendering
+    private List<List<CollectionVariantGroupDto>> _rows = new List<List<CollectionVariantGroupDto>>();
     private IJSObjectReference? _module;
     private IJSObjectReference? _resizeObserver;
+    private DotNetObjectReference<CardGridView>? _dotNetRef;
 
     protected override void OnParametersSet()
     {
@@ -76,30 +84,41 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
+        if (!firstRender || _resizeObserver is not null)
             return;
 
-        _module = await JS.InvokeAsync<IJSObjectReference>("import", "../Components/Layout/CardGridView.razor.js");
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "../Components/Layout/CardGridView.razor.js?v=1.0.3");
+
+        _dotNetRef = DotNetObjectReference.Create(this);
+
+        await Task.Yield();
 
         _resizeObserver = await _module.InvokeAsync<IJSObjectReference>(
-            "observeResize", _containerRef, DotNetObjectReference.Create(this), 150);
+            "observeResize", _containerRef, _dotNetRef, 150);
     }
 
     [JSInvokable]
-    public void OnContainerResize(double width)
+    public async Task OnContainerResize(double width)
     {
-        int newColumns = Math.Max(1, (int)(width / CardWidth));
-        if (newColumns != _cardsPerRow)
+        try
+            {
+            int newColumns = Math.Max(1, (int)Math.Floor(width / (CardWidth + ColGap)));
+            if (newColumns != _cardsPerRow)
+            {
+                _cardsPerRow = newColumns;
+                BuildRows();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
         {
-            _cardsPerRow = newColumns;
-            BuildRows();
-            InvokeAsync(StateHasChanged);
+            Console.Error.WriteLine(ex);
         }
     }
 
     private void BuildRows()
     {
-        _rows = Cards
+        _rows = Groups
             .Select((card, index) => new { card, index })
             .GroupBy(x => x.index / _cardsPerRow)
             .Select(g => g.Select(x => x.card).ToList())
@@ -114,6 +133,11 @@
             await _resizeObserver.DisposeAsync();
         }
 
+        if (_dotNetRef is not null)
+        {
+            _dotNetRef.Dispose();
+        }
+
         if (_module is not null)
         {
             await _module.DisposeAsync();
@@ -121,15 +145,16 @@
     }
 
 
-    private async Task OpenCardDialog(Guid allocationId)
+    private async Task OpenCardDialog(CollectionVariantGroupDto group)
     {
         var parameters = new DialogParameters
         {
-            ["AllocationId"] = allocationId
+            ["Group"] = group
         };
 
         var options = new DialogOptions
         {
+            NoHeader = true,
             CloseButton = true,
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Large,

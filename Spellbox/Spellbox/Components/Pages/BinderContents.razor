@@ -36,11 +36,11 @@
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
-            <CardGridView Cards="_cards" />
+            <CardGridView Groups="_groups" />
         }
         else
         {
-            <CardTableView Cards="_cards" />
+            <CardTableView Groups="_groups" />
         }
 
     }
@@ -57,7 +57,7 @@
 
     // UI Caches
     private CollectionBinderDto? _binder;
-    private List<CollectionCardDetailsDto> _cards = new List<CollectionCardDetailsDto>();
+    private List<CollectionVariantGroupDto> _groups = new List<CollectionVariantGroupDto>();
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
@@ -71,7 +71,7 @@
     protected override async Task OnParametersSetAsync()
     {
         _binder = await CollectionService.GetBinderDetails(BinderId);
-        _cards = await CrossService.GetBinderCardsAsync(BinderId);
+        _groups = await CrossService.GetCollapsedVariantsAsync(BinderId);
     }
 
 }

@@ -10,16 +10,16 @@
                 <!-- Oracle card search by name -->
                 <MudItem xs="6">
                     <MudAutocomplete T="OracleCardProj"
-                                    Label="Search..."
-                                    Dense="true"
-                                    Clearable="true"
-                                    SearchFunc="OracleSearchAsync"
-                                    ToStringFunc="o => o.Name"
-                                    ResetValueOnEmptyText="true"
-                                    OnClearButtonClick="ClearOracle"
-                                    ValueChanged="OracleSelectAsync"
-                                    CoerceText="true"
-                                    CoerceValue="false">
+                                     Label="Search..."
+                                     Dense="true"
+                                     Clearable="true"
+                                     SearchFunc="OracleSearchAsync"
+                                     ToStringFunc="o => o.Name"
+                                     ResetValueOnEmptyText="true"
+                                     OnClearButtonClick="ClearOracle"
+                                     ValueChanged="OracleSelectAsync"
+                                     CoerceText="true"
+                                     CoerceValue="false">
                     
                         <ItemTemplate Context="o">
                             <div class="d-flex flex-column">
@@ -37,7 +37,8 @@
                     </MudAutocomplete>
                 </MudItem>
 
-                <MudItem xs="1" Class="d-flex align-end">
+                <MudItem xs="1" 
+                         Class="d-flex align-end">
                     <MudText>
                         OR
                     </MudText>
@@ -46,21 +47,22 @@
                 <!-- Card search by set name and collector number -->
                 <MudItem xs="2">
                     <MudTextField Label="Set Code"
-                                Dense="true"
-                                @bind-Value="_setCode" />
+                                  Immediate="true"
+                                  @bind-Value="_setCode" />
                 </MudItem>
 
                 <MudItem xs="2">
                     <MudTextField Label="Coll Num"
-                                Dense="true"
-                                @bind-Value="_collNum" />
+                                  Immediate="true"
+                                  @bind-Value="_collNum" />
                 </MudItem>
 
-                <MudItem xs="1" Class="d-flex align-end">
+                <MudItem xs="1" 
+                         Class="d-flex align-end">
                     <MudButton Variant="Variant.Outlined"
-                            Color="Color.Success"
-                            Disabled="@(!CanLookupBySet)"
-                            OnClick="LookupVariantAsync">
+                               Color="Color.Success"
+                               Disabled="@(!CanLookupBySet)"
+                               OnClick="LookupVariantAsync">
                         Go
                     </MudButton>
                 </MudItem>
@@ -73,10 +75,10 @@
             {
                 <!-- Card variant selector -->
                 <MudSelect T="CVariant"
-                        Label="Variant"
-                        Dense="true"
-                        Disabled="@(_selectedOracle == null)"
-                        @bind-Value="_selectedVariant">
+                           Label="Variant"
+                           Dense="true"
+                           Disabled="@(_selectedOracle == null)"
+                           @bind-Value="_selectedVariant">
                     @foreach (var v in _selectedOracle!.Variants)
                     {
                         <MudSelectItem Value="v">
@@ -91,15 +93,22 @@
                 <MudGrid Spacing="2">
 
                     <MudItem xs="4">
-                        <MudImage Src=@(_selectedVariant.Images[0]) Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;"/>
+                        <MudImage Src=@(_selectedVariant.Images[0]) 
+                                  Width="256" 
+                                  Height="null" 
+                                  Alt="IMG" 
+                                  Style="border-radius: 5%;"/>
                     </MudItem>
 
                     <MudItem xs="8">
                         @foreach (var f in _selectedOracle!.Faces.OrderBy(f => f.Order))
                         {
-                            <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
+                            <MudPaper Class="pa-2 mb-2" 
+                                      Elevation="0" 
+                                      Outlined="true">
 
-                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                <MudText Typo="Typo.subtitle1" 
+                                         Class="font-weight-bold">
                                     @f.Name
                                 </MudText>
 
@@ -111,7 +120,8 @@
 
                                 <MudDivider Class="my-1" />
 
-                                <MudText Typo="Typo.body2" Style="white-space: pre-line;">
+                                <MudText Typo="Typo.body2" 
+                                         Style="white-space: pre-line;">
                                     @f.OracleText
                                 </MudText>
 
@@ -173,23 +183,23 @@
                 <MudItem xs="2" Class="align-end">
                     <MudCheckBox T="bool"
                                  Label="Altered"
-                                 @bind-Checked="_isAltered" />
+                                 @bind-Value="_isAltered" />
                 </MudItem>
 
                 <!-- Signed cards -->
                 <MudItem xs="2" Class="align-end">
                     <MudCheckBox T="bool"
                                  Label="Signed"
-                                 @bind-Checked="_isSigned" />
+                                 @bind-Value="_isSigned" />
                 </MudItem>
 
                 <!-- Quantity -->
                 <MudItem xs="2">
                     <MudNumericField T="int"
-                                    Label="Quantity"
-                                    @bind-Value="_quantity"
-                                    Min="1"
-                                    Immediate="true" />
+                                     Label="Quantity"
+                                     @bind-Value="_quantity"
+                                     Min="1"
+                                     Immediate="true" />
                 </MudItem>
             </MudGrid>
 
@@ -198,9 +208,9 @@
                 <!-- Binder (optional) -->
                 <MudItem xs="5">
                     <MudSelect T="CollectionBinder"
-                            Label="Binder"
-                            Clearable="true"
-                            @bind-Value="_binder">
+                               Label="Binder"
+                               Clearable="true"
+                               @bind-Value="_binder">
                         @foreach (var binder in BinderCache)
                         {
                             <MudSelectItem Value="binder">
@@ -210,7 +220,8 @@
                     </MudSelect>
                 </MudItem>
 
-                <MudItem xs="1" Class="d-flex align-end">
+                <MudItem xs="1" 
+                         Class="d-flex align-end">
                     <MudText>
                         OR
                     </MudText>
@@ -231,7 +242,8 @@
                     </MudSelect>
                 </MudItem> *@
 
-                <MudItem xs="1" Class="d-flex align-end">
+                <MudItem xs="1" 
+                         Class="d-flex align-end">
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Success"
                                Disabled="@(!CanSubmit)"
@@ -270,9 +282,9 @@
     private MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public IReadOnlyList<CollectionBinder> BinderCache { get; set; } = new List<CollectionBinder>();
+    public IReadOnlyList<CollectionBinderDto> BinderCache { get; set; } = new List<CollectionBinderDto>();
     [Parameter]
-    public IReadOnlyList<Deck> DeckCache { get; set; } = new List<Deck>();
+    public IReadOnlyList<DeckDto> DeckCache { get; set; } = new List<DeckDto>();
 
     public record OracleCardProj
     (
@@ -309,28 +321,9 @@
         _selectedVariant != null &&
         _quantity > 0;
 
-    @* private bool _usingSetLookup =>
-        !string.IsNullOrWhiteSpace(_setCode) ||
-        !string.IsNullOrWhiteSpace(_collNum); *@
-
     private bool CanLookupBySet =>
         !string.IsNullOrWhiteSpace(_setCode) &&
         !string.IsNullOrWhiteSpace(_collNum);
-
-
-    @* private async Task<IEnumerable<CVariant>> SearchVariantByNameAsync(string value, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
-            return Enumerable.Empty<CVariant>();
-
-        using var db = await OracleDbFactory.CreateDbContextAsync();
-
-        return await db.CardVariants
-            .Where(v => v.SearchName.Contains(value))
-            .OrderBy(v => v.SearchName.IndexOf(value))
-            .Take(20)
-            .ToListAsync();
-    } *@
 
 
     private IEnumerable<CardFinish> AvailableFinishes =>

@@ -24,10 +24,15 @@ namespace Spellbox.Model
                     ScryfallId = v.ScryfallId,
                     OracleCardId = v.OracleCardId,
                     Name = v.SearchName,
+                    SetName = v.SetName,
                     SetCode = v.SetCode,
                     CollNum = v.CollNum,
                     Thumbs = v.Thumbs,
-                    Images = v.Images
+                    Images = v.Images,
+                    Artist = v.Artist,
+                    Rarity = v.Rarity,
+                    Released = v.Released,
+                    FlavorTexts = v.FlavorTexts
                 })
                 .ToDictionaryAsync(v => v.ScryfallId);
         }
@@ -70,5 +75,54 @@ namespace Spellbox.Model
             return (oracle, faces);
         }
 
+
+        public async Task<CardViewerDto> GetCardInfoByVariantIdAsync(Guid variantId)
+        {
+            var variant = await GetVariantsByIdsAsync(new List<Guid> { variantId });
+            var v = variant[variantId];
+
+            (OracleDto oracle, List<CFaceDto> faces) = await GetSingleOracleAsync(v.OracleCardId);
+
+            return new CardViewerDto
+            {
+                OracleId = oracle.OracleId,
+                Name = oracle.Name,
+                Faces = faces,
+                ScryfallId = v.ScryfallId,
+                SetCode = v.SetCode,
+                CollNum = v.CollNum,
+                SetName = v.SetName,
+                Artist = v.Artist,
+                Released = v.Released,
+                Rarity = v.Rarity,
+                FlavorTexts = v.FlavorTexts,
+                Thumbs = v.Thumbs,
+                Images = v.Images,
+            };
+        }
+
     }
+
+    public sealed class CardViewerDto
+    {
+        // Oracle
+        public Guid OracleId { get; init; }
+        public string Name { get; init; } = null!;
+
+        // Face(s)
+        public ICollection<CFaceDto> Faces { get; init; } = null!;
+
+        // Variant
+        public Guid ScryfallId { get; init; }
+        public string SetCode { get; init; } = null!;
+        public string CollNum { get; init; } = null!;
+        public string SetName { get; init; } = null!;
+        public string? Artist { get; init; }
+        public string Released { get; init; } = null!;
+        public string Rarity { get; init; } = null!;
+        public List<string> FlavorTexts { get; init; } = null!;
+        public List<string> Thumbs { get; init; } = null!;
+        public List<string> Images { get; init; } = null!;
+    }
+
 }

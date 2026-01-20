@@ -126,8 +126,8 @@ namespace Spellbox.Model
             entity.Property(e => e.UpdatedAt)
                   .IsRequired();
 
-            entity.HasMany<CollectionAllocation>()
-                  .WithOne()
+            entity.HasMany(e => e.Cards)
+                  .WithOne(a => a.Binder)
                   .HasForeignKey(a => a.BinderId)
                   .OnDelete(DeleteBehavior.Restrict);
         }
@@ -190,8 +190,8 @@ namespace Spellbox.Model
                   .HasForeignKey(z => z.SnapshotId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany<CollectionAllocation>()
-                  .WithOne()
+            entity.HasMany(e => e.Allocations)
+                  .WithOne(a => a.DeckSnapshot)
                   .HasForeignKey(a => a.SnapshotId)
                   .OnDelete(DeleteBehavior.Restrict);
         }
