@@ -1,5 +1,7 @@
 using Spellbox.Components;
-using Spellbox.Model;
+using Spellbox.Contexts;
+using Spellbox.Services;
+
 using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddMudServices();
+builder.Services.AddHttpClient();
 
 builder.Services.AddDbContextFactory<OracleDbContext>(options =>
 {
@@ -19,13 +23,22 @@ builder.Services.AddDbContextFactory<CollectionDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("CollectionDb"));
 });
+builder.Services.AddDbContextFactory<CardMarketDbContext>(options =>
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("CardMarketPricingDb"));
+});
 
 builder.Services.AddScoped<OracleService>();
 builder.Services.AddScoped<CollectionService>();
 builder.Services.AddScoped<CrossService>();
 
-builder.Services.AddMudServices();
-builder.Services.AddHttpClient();
+builder.Services.AddScoped<UserSessionService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
+builder.Services.AddScoped<CardMarketPriceGuideService>();
+builder.Services.AddScoped<CardMarketCardPricingService>();
+
+builder.Services.AddHostedService<CardMarketSyncWorker>();
 
 var app = builder.Build();
 

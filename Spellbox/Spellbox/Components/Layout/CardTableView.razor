@@ -93,8 +93,11 @@
 @inject IDialogService DialogService
 @code {
 
-    [Parameter, EditorRequired]
+    [Parameter]
     public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
+    [Parameter]
+    public string SubcollectionName { get; set; } = null!;
+
     public IReadOnlyList<BinderTableRowDto> TableRows { get; set; } = null!;
 
 
@@ -139,7 +142,7 @@
         return rows;
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         TableRows = BuildRows(Groups);
     }

@@ -248,6 +248,7 @@ else
             Artist = card.GetPropertyOrEmptyString("artist"),
             Released = card.GetProperty("released_at").GetString()!,
             Rarity = card.GetProperty("rarity").GetString()!,
+            CardMarketProductId = card.GetPropertyOrNullInt("cardmarket_id")
         };
 
         if (card.TryGetProperty("card_faces", out var faces))

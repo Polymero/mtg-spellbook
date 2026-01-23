@@ -1,7 +1,5 @@
 ﻿@page "/"
 @using MudBlazor
-@using Spellbox.Model
-@using Spellbox.Components.Dialogs
 
 <PageTitle>
     Spellbox
@@ -9,15 +7,15 @@
 
 
 <MudPaper Elevation="0"
-          Class="my-12">
+          Class="my-12 mud-transparent">
     <MudText Typo="Typo.h2"
              Align="Align.Center">
-        Welcome back <b>Spellbox.User</b> ~ !
+        Welcome back <b>@_displayName</b> ~ !
     </MudText>
 </MudPaper>
 
 <MudPaper Elevation="0"
-          Class="my-8 d-flex justify-center">
+          Class="my-8 d-flex justify-center mud-transparent">
     <MudButton Variant="Variant.Filled"
                Color="Color.Info"
                @onclick="OpenAddCollectionCardDialog">
@@ -151,6 +149,7 @@
 @inject CollectionService CollectionService
 @inject IDialogService DialogService
 @inject NavigationManager Nav
+@inject UserSessionService UserSession
 @code {
 
     // UI caches
@@ -158,8 +157,13 @@
     private List<DeckDto> DeckCache { get; set; } = new List<DeckDto>();
     private int Unassigned;
 
+    private string _displayName = null!;
+
     protected override async Task OnInitializedAsync()
     {
+        var profile = await UserSession.GetProfileAsync();
+        _displayName = profile.DisplayName;
+
         Unassigned = await CollectionService.GetQuantityUnassigned();
         BinderCache = await CollectionService.GetAllBinders();
         DeckCache = await CollectionService.GetAllDecks();

@@ -207,7 +207,7 @@
 
                 <!-- Binder (optional) -->
                 <MudItem xs="5">
-                    <MudSelect T="CollectionBinder"
+                    <MudSelect T="CollectionBinderDto"
                                Label="Binder"
                                Clearable="true"
                                @bind-Value="_binder">
@@ -310,7 +310,7 @@
     private bool _isAltered;
     private bool _isSigned;
 
-    private CollectionBinder? _binder;
+    private CollectionBinderDto? _binder;
     private DeckSnapshot? _snapshot;
 
     @* private List<CVariant> _availableVariants = new List<CVariant>(); *@

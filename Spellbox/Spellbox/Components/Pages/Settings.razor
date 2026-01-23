@@ -1,0 +1,39 @@
+@page "/settings"
+
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">
+        Profile
+    </MudText>
+    <MudDivider />
+
+    <MudTextField @bind-Value="_displayName"
+                  Label="Username"
+                  Immediate="true"
+                  DebounceInterval="400"
+                  OnBlur="SaveNameAsync" />
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">
+        Databases
+    </MudText>
+    <MudDivider />
+
+</MudPaper>
+
+@inject UserSessionService UserSession
+@code {
+    private string _displayName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var profile = await UserSession.GetProfileAsync();
+        _displayName = profile.DisplayName;
+    }
+
+    private async Task SaveNameAsync()
+    {
+        await UserSession.UpdateDisplayNameAsync(_displayName);
+    }
+}

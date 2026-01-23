@@ -84,6 +84,8 @@ namespace Spellbox.Model
         public List<string> FlavorTexts { get; set; } = null!;
         public List<string> Thumbs { get; set; } = null!;
         public List<string> Images { get; set; } = null!;
+
+        public int? CardMarketProductId { get; set; }
     }
 
     public sealed class CVariantDto

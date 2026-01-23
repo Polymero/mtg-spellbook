@@ -1,8 +1,3 @@
-@using Microsoft.JSInterop
-@using MudBlazor
-@using MudBlazor.Services
-@using Spellbox.Components.Dialogs
-@using Spellbox.Model
 
 
 <div class="card-grid-container pa-2" @ref="_containerRef">
@@ -18,7 +13,7 @@
                         OverscanCount="3">
 
             <ChildContent Context="row">
-                <div class="card-row" style="--columns:@_cardsPerRow">
+                <div class="card-row" style="grid-template-columns: repeat(@_cardsPerRow, 224px);">
                     @foreach (var group in row)
                     {
                         <MudPaper Class="card-tile" 
@@ -59,8 +54,10 @@
 @inject IJSRuntime JS
 @code {
 
-    [Parameter, EditorRequired]
+    [Parameter]
     public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
+    [Parameter]
+    public string SubcollectionName { get; set; } = null!;
 
     // Constants
     private const int CardWidth = 224;
@@ -101,8 +98,9 @@
     public async Task OnContainerResize(double width)
     {
         try
-            {
+        {
             int newColumns = Math.Max(1, (int)Math.Floor(width / (CardWidth + ColGap)));
+
             if (newColumns != _cardsPerRow)
             {
                 _cardsPerRow = newColumns;
@@ -149,7 +147,8 @@
     {
         var parameters = new DialogParameters
         {
-            ["Group"] = group
+            ["Group"] = group,
+            ["SubcollectionName"] = SubcollectionName
         };
 
         var options = new DialogOptions
