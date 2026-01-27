@@ -23,6 +23,9 @@ namespace Spellbox.Model
 
         public bool IsAltered { get; set; } = false;
         public bool IsSigned { get; set; } = false;
+        public bool IsStamped { get; set; } = false;
+
+        public decimal? BoughtFor { get; set; }
 
         public DateTime AddedAt { get; set; }
         public DateTime AllocatedAt { get; set; }
@@ -47,6 +50,30 @@ namespace Spellbox.Model
         
         public bool IsAltered { get; init; }
         public bool IsSigned { get; init; }
+        public bool IsStamped { get; init; }
+
+        public decimal? BoughtFor { get; init; }
+
+        public DateTime AddedAt { get; init; }
+        public DateTime AllocatedAt { get; init; }
+    }
+
+    public sealed class EditableAllocationDto
+    {
+        public Guid AllocationId { get; init; }
+        public Guid VariantId { get; init; }
+
+        public CardFinish Finish { get; set; }
+        public CardLanguage Language { get; set; }
+        public CardCondition Condition { get; set; }
+        public bool IsAltered { get; set; }
+        public bool IsSigned { get; set; }
+        public bool IsStamped { get; set; }
+
+        public decimal? BoughtFor { get; set; }
+
+        public Guid? BinderId { get; set; }
+        public Guid? SnapshotId { get; set; }
     }
 
     public enum AllocationIndex

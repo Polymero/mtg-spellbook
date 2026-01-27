@@ -35,6 +35,10 @@ namespace Spellbox.Migrations
                     b.Property<Guid?>("BinderId")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("BoughtFor")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("CollectionCardId")
                         .HasColumnType("TEXT");
 
@@ -48,6 +52,9 @@ namespace Spellbox.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsSigned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsStamped")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Language")
@@ -66,7 +73,7 @@ namespace Spellbox.Migrations
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\r\n                    )\r\n                    ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\n                    (\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\n                    )\n                    ");
                         });
                 });
 

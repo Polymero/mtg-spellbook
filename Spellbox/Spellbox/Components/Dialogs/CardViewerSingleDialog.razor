@@ -152,9 +152,6 @@
             
                 <HeaderContent>
                     <MudTh>
-                    
-                    </MudTh>
-                    <MudTh>
                         Allocation
                     </MudTh>
                     <MudTh>
@@ -170,6 +167,9 @@
                         Flags
                     </MudTh>
                     <MudTh>
+                        Bought
+                    </MudTh>
+                    <MudTh>
                         Price
                     </MudTh>
                     <MudTh>
@@ -178,9 +178,6 @@
                 </HeaderContent>
 
                 <RowTemplate Context="a">
-                    <MudTh>
-                    
-                    </MudTh>
                     <MudTh>
                         @if (a.BinderName is not null)
                         {
@@ -232,6 +229,20 @@
                         }
                     </MudTh>
                     <MudTh>
+                        @if (a.BoughtFor.HasValue)
+                        {
+                            <span>
+                                €@a.BoughtFor.Value.ToString("0.00")
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                —
+                            </span>
+                        }
+                    </MudTh>
+                    <MudTh>
                         @if (!_priceCache.TryGetValue(a.Id, out var price))
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate />
@@ -240,26 +251,23 @@
                         {
                             @if (price.HasValue)
                             {
-                                <MudText Typo="Typo.caption">
+                                <span>
                                     €@price.Value.ToString("0.00")
-                                </MudText>
+                                </span>
                             }
                             else
                             {
-                                <MudText>
+                                <span>
                                     —
-                                </MudText>
+                                </span>
                             }
                         }
                     </MudTh>
                     <MudTh>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Warning"
                                        Size="Size.Small" 
-                                       OnClick="@(() => Cancel())" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Size="Size.Small"
-                                       Color="Color.Error"
-                                       OnClick="@(() => Cancel())" />
+                                       OnClick="@(() => EditAsync(a.Id))" />
                     </MudTh>
                 </RowTemplate>
             
@@ -269,35 +277,13 @@
 
     </DialogContent>
 
-    @* <DialogActions>
-
-        <MudButton Color="Color.Error"
-                   Variant="Variant.Outlined"
-                   OnClick="DeleteAsync">
-            Delete
-        </MudButton>
-
-        <MudSpacer />
-
-        <MudButton Variant="Variant.Text"
-                   OnClick="Cancel">
-            Cancel
-        </MudButton>
-
-        <MudButton Color="Color.Success"
-                   Variant="Variant.Filled"
-                   OnClick="SaveAsync">
-            Save
-        </MudButton>
-
-    </DialogActions> *@
-
 </MudDialog>
 
 
-@inject CardMarketCardPricingService PricingService
+@inject IPricingRouter PricingRouter
 @inject CollectionService CollectionService
 @inject OracleService OracleService
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @code {
 
@@ -308,6 +294,8 @@
     public CollectionVariantGroupDto Group { get; set; } = null!;
     [Parameter]
     public string SubcollectionName { get; set; } = null!;
+    [Parameter]
+    public EventCallback<EditCallback> OnEditSuccess { get; set; }
 
     private CardViewerDto? _cardDto;
     private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
@@ -322,7 +310,7 @@
 
         _cardDto = await OracleService.GetCardInfoByVariantIdAsync(Group.VariantId);
 
-        _priceCache = await PricingService.GetPriceBatchAsync(Group.Allocations);
+        _priceCache = await PricingRouter.GetPriceBatchAsync(Group.Allocations);
 
         @* foreach (var allocation in Group.Allocations)
         {
@@ -341,22 +329,44 @@
     }
 
 
-    @* private async Task SaveAsync()
+    private async Task EditAsync(Guid allocationId)
     {
-        // await CollectionService.UpdateAllocationAsync(_cardDto!);
+        var parameters = new DialogParameters
+        {
+            ["AllocationId"] = allocationId
+        };
 
-        Snackbar.Add("Changes saved!", Severity.Success);
-        MudDialog.Close(DialogResult.Ok(true));
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditAllocationDialog>("Edit Card", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled &&
+            result.Data is EditCallback callback)
+        {
+            if (callback.IsUpdated)
+                await CollectionService.UpdateVariantGroupAsync(Group);
+
+            if (callback.IsDeleted)
+            {
+                Group.Allocations.RemoveAll(a => a.Id == callback.AllocationId);
+                Group.Quantity = Group.Allocations.Count;
+
+                if (Group.Quantity == 0)
+                    MudDialog.Close(DialogResult.Ok(callback));
+                    return;
+            }
+
+            StateHasChanged();
+
+            await OnEditSuccess.InvokeAsync(callback);
+        }
     }
-
-
-    private async Task DeleteAsync()
-    {
-        await CollectionService.DeleteAllocationAsync(AllocationId);
-
-        Snackbar.Add("Card deleted!", Severity.Success);
-        MudDialog.Close(DialogResult.Ok(true));
-    } *@
 
 
     private void Cancel() => MudDialog.Cancel();

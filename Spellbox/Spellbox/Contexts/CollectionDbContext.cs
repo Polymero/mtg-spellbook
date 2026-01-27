@@ -15,6 +15,7 @@ namespace Spellbox.Contexts
         public DbSet<DeckCard> DeckCards { get; set; }
 
         public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<UserPricingSettings> UserPricingSettings { get; set; }
 
 
         public CollectionDbContext(DbContextOptions<CollectionDbContext> options) : base(options)
@@ -32,7 +33,9 @@ namespace Spellbox.Contexts
             model.ApplyConfiguration(new DeckSnapshotConfiguration());
             model.ApplyConfiguration(new DeckZoneConfiguration());
             model.ApplyConfiguration(new DeckCardConfiguration());
+
             model.ApplyConfiguration(new UserProfileConfiguration());
+            model.ApplyConfiguration(new UserPricingSettingsConfiguration());
         }
     }
 
@@ -93,6 +96,12 @@ namespace Spellbox.Contexts
 
             entity.Property(e => e.IsSigned)
                   .IsRequired();
+
+            entity.Property(e => e.IsStamped)
+                  .IsRequired();
+
+            entity.Property(e => e.BoughtFor)
+                  .HasPrecision(10, 2);
 
             entity.HasIndex(e => e.CollectionCardId);
             entity.HasIndex(e => e.BinderId);
@@ -266,6 +275,23 @@ namespace Spellbox.Contexts
 
             entity.HasIndex(e => e.DisplayName)
                   .IsUnique();
+        }
+    }
+
+    public class UserPricingSettingsConfiguration : IEntityTypeConfiguration<UserPricingSettings>
+    {
+        public void Configure(EntityTypeBuilder<UserPricingSettings> entity)
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Marketplace)
+                  .HasConversion<int>();
+
+            entity.Property(e => e.NonFoilMetric)
+                  .HasConversion<int>();
+            
+            entity.Property(e => e.FoilMetric)
+                  .HasConversion<int>();
         }
     }
 }

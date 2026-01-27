@@ -7,7 +7,6 @@ namespace Spellbox.Contexts
 {
     public class CardMarketDbContext : DbContext
     {
-        // public DbSet<CardMarketProductMapping> ProductMappings { get; set; }
         public DbSet<CardMarketPriceCache> PriceCaches { get; set; }
         public DbSet<PricingSyncState> SyncStates { get; set; }
 
@@ -20,54 +19,10 @@ namespace Spellbox.Contexts
 
         protected override void OnModelCreating(ModelBuilder model)
         {
-            // model.ApplyConfiguration(new CardMarketProductMappingConfiguration());
             model.ApplyConfiguration(new CardMarketPriceCacheConfiguration());
             model.ApplyConfiguration(new SyncStatesConfiguration());
         }
     }
-
-
-    // public class CardMarketProductMappingConfiguration : IEntityTypeConfiguration<CardMarketProductMapping>
-    // {
-    //     public void Configure(EntityTypeBuilder<CardMarketProductMapping> entity)
-    //     {
-    //         entity.HasKey(e => e.Id);
-
-    //         entity.Property(e => e.CardVariantId)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.ProductId)
-    //               .IsRequired();
-            
-    //         entity.Property(e => e.SetCode)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.CollNum)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.Name)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.Finish)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.Language)
-    //               .IsRequired();
-
-    //         entity.Property(e => e.CreatedAt)
-    //               .IsRequired();
-
-    //         entity.HasIndex(e => new
-    //         {
-    //             e.CardVariantId,
-    //             e.Finish,
-    //             e.Language
-    //         }).IsUnique();
-
-    //         entity.HasIndex(e => e.ProductId)
-    //               .IsUnique();
-    //     }
-    // }
 
 
     public class CardMarketPriceCacheConfiguration : IEntityTypeConfiguration<CardMarketPriceCache>
@@ -77,19 +32,40 @@ namespace Spellbox.Contexts
 
             entity.HasKey(e => e.ProductId);
 
-            entity.Property(e => e.PriceLow)
+            entity.Property(e => e.Low)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.PriceTrend)
+            entity.Property(e => e.Avg)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.PriceAverage)
+            entity.Property(e => e.Trend)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.PriceFoilLow)
+            entity.Property(e => e.Avg1)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.PriceFoilTrend)
+            entity.Property(e => e.Avg7)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.Avg30)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilLow)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilAvg)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilTrend)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilAvg1)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilAvg7)
+                  .HasColumnType("decimal(10,2)");
+
+            entity.Property(e => e.FoilAvg30)
                   .HasColumnType("decimal(10,2)");
 
             entity.Property(e => e.UpdatedAt)

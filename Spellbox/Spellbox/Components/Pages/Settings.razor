@@ -7,11 +7,56 @@
     </MudText>
     <MudDivider />
 
+    <!-- Display name -->
     <MudTextField @bind-Value="_displayName"
                   Label="Username"
                   Immediate="true"
                   DebounceInterval="400"
                   OnBlur="SaveNameAsync" />
+</MudPaper>
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">
+        Pricing
+    </MudText>
+    <MudDivider />
+
+    <!-- Marketplace selection -->
+    <MudSelect T="PricingMarketplace"
+               Label="Marketplace"
+               @bind-Value="_pricingSettings.Marketplace">
+        @foreach (var v in Enum.GetValues<PricingMarketplace>())
+        {
+            <MudSelectItem Value="v">
+                @v
+            </MudSelectItem>
+        }
+    </MudSelect>
+
+    <!-- Non-foil price metric -->
+    <MudSelect T="PriceMetric"
+               Label="Non-foil Metric"
+               @bind-Value="_pricingSettings.NonFoilMetric">
+        @foreach (var v in Enum.GetValues<PriceMetric>())
+        {
+            <MudSelectItem Value="v">
+                @v
+            </MudSelectItem>
+        }    
+    </MudSelect>
+
+    <!-- Foil price metric -->
+    <MudSelect T="PriceMetric"
+               Label="Foil Metric"
+               @bind-Value="_pricingSettings.FoilMetric">
+        @foreach (var v in Enum.GetValues<PriceMetric>())
+        {
+            <MudSelectItem Value="v">
+                @v
+            </MudSelectItem>
+        }
+    </MudSelect>
+
 </MudPaper>
 
 <MudPaper Class="pa-4">
@@ -25,15 +70,19 @@
 @inject UserSessionService UserSession
 @code {
     private string _displayName = "";
+    private UserPricingSettings _pricingSettings = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        var profile = await UserSession.GetProfileAsync();
-        _displayName = profile.DisplayName;
+        var session = await UserSession.GetAsync();
+        
+        _displayName = session.DisplayName;
+        _pricingSettings = session.PricingSettings;
     }
 
     private async Task SaveNameAsync()
     {
         await UserSession.UpdateDisplayNameAsync(_displayName);
+        await UserSession.UpdatePricingSettingsAsync(_pricingSettings);
     }
 }

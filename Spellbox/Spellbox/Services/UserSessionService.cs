@@ -6,35 +6,79 @@ using Spellbox.Model;
 
 namespace Spellbox.Services
 {
-    public sealed class UserSessionService
+
+    public sealed class UserSession
     {
-        private UserProfile? _profile;
+        public Guid UserProfileId { get; set; }
+        public string DisplayName { get; set; } = null!;
+        public UserPricingSettings PricingSettings { get; set; } = null!;
+        public DateTime LoadedAt { get; set; }
+    }
 
-        private readonly IUserProfileService _service;
+
+    public interface IUserSessionService
+    {
+        Task<UserSession> GetAsync();
+        Task UpdateDisplayNameAsync(
+            string name
+        );
+        Task UpdatePricingSettingsAsync(
+            UserPricingSettings settings
+        );
+    }
+
+    public sealed class UserSessionService : IUserSessionService
+    {
+        private readonly IUserProfileService _profile;
+        private readonly IUserPricingSettingsService _pricing;
+
+        private UserSession? _session;
 
 
-        public UserSessionService(IUserProfileService service)
+        public UserSessionService(IUserProfileService profile, IUserPricingSettingsService pricing)
         {
-            _service = service;
+            _profile = profile;
+            _pricing = pricing;
         }
 
 
-        public async Task<UserProfile> GetProfileAsync()
+        public async Task<UserSession> GetAsync()
         {
-            if (_profile != null)
-                return _profile;
+            if (_session != null)
+                return _session;
 
-            _profile = await _service.GetOrCreateAsync();
-            return _profile;
+            var profile = await _profile.GetAsync();
+            var pricing = await _pricing.GetAsync();
+
+            _session = new UserSession
+            {
+                UserProfileId = profile.Id,
+                DisplayName = profile.DisplayName,
+                PricingSettings = pricing,
+                LoadedAt = DateTime.UtcNow
+            };
+
+            return _session;
         }
 
 
         public async Task UpdateDisplayNameAsync(string name)
         {
-            await _service.UpdateDisplayNameAsync(name);
+            await _profile.UpdateDisplayNameAsync(name);
 
-            if (_profile != null)
-                _profile.DisplayName = name;
+            if (_session != null)
+                _session.DisplayName = name;
         }
+
+
+        public async Task UpdatePricingSettingsAsync(UserPricingSettings settings)
+        {
+            await _pricing.UpdateAsync(settings);
+
+            if (_session != null)
+                _session.PricingSettings = settings;
+        }
+        
     }
+
 }

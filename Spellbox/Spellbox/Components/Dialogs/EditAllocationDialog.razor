@@ -1,0 +1,221 @@
+﻿
+
+<MudDialog>
+
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Edit Collection Card
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+    
+        <MudGrid Class="mb-4">
+        
+            <!-- Card finish -->
+            <MudItem xs="4">
+                <MudSelect T="CardFinish"
+                           Label="Finish"
+                           @bind-Value="_editDto.Finish">
+                    @foreach (var v in Enum.GetValues<CardFinish>())
+                    {
+                        <MudSelectItem Value="v">
+                            @v
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            
+            <!-- Card language -->
+            <MudItem xs="4">
+                <MudSelect T="CardLanguage"
+                           Label="Language"
+                           @bind-Value="_editDto.Language">
+                    @foreach (var v in Enum.GetValues<CardLanguage>())
+                    {
+                        <MudSelectItem Value="v">
+                            @v
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- Card condition -->
+            <MudItem xs="4">
+                <MudSelect T="CardCondition"
+                           Label="Condition"
+                           @bind-Value="_editDto.Condition">
+                    @foreach (var v in Enum.GetValues<CardCondition>())
+                    {
+                        <MudSelectItem Value="v">
+                            @v
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudFlexBreak />
+
+            <!-- Altered cards -->
+            <MudItem xs="3" Class="align-end">
+                <MudCheckBox T="bool"
+                             Label="Altered"
+                             @bind-Value="_editDto.IsAltered" />
+            </MudItem>
+
+            <!-- Signed cards -->
+            <MudItem xs="3" Class="align-end">
+                <MudCheckBox T="bool"
+                             Label="Signed"
+                             @bind-Value="_editDto.IsSigned" />
+            </MudItem>
+
+            <!-- Stamped cards -->
+            <MudItem xs="3" Class="align-end">
+                <MudCheckBox T="bool"
+                             Label="Stamped"
+                             @bind-Value="_editDto.IsStamped" />
+            </MudItem>
+
+            <MudFlexBreak />
+
+            <!-- Bought for price -->
+            <MudItem xs="4" Class="align-end">
+                <MudNumericField T="decimal?"
+                                 Label="Bought for"
+                                 Format="N2"
+                                 @bind-Value="_editDto.BoughtFor" />
+            </MudItem>
+
+            <MudFlexBreak />
+
+            <!-- Binder allocation -->
+            <MudItem xs="5">
+                <MudSelect T="Guid?"
+                           Label="Binder"
+                           Clearable="true"
+                           @bind-Value="_editDto.BinderId">
+                    @foreach (var b in _binders)
+                    {
+                        <MudSelectItem Value="@( (Guid?) b.Id)">
+                            @b.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="2"
+                     Class="d-flex align-end">
+                <MudText>
+                    OR
+                </MudText>
+            </MudItem>
+
+            <!-- Deck allocation -->
+            <MudItem xs="5">
+                <MudSelect T="Guid?"
+                           Label="Deck"
+                           Clearable="true"
+                           @bind-Value=_editDto.SnapshotId>
+                    @foreach (var d in _decks)
+                    {
+                        <MudSelectItem Value="@( (Guid?) d.ActiveSnapshotId)">
+                            @d.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        
+        </MudGrid>
+
+    </DialogContent>
+
+    <DialogActions>
+    
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Error"
+                   Variant="Variant.Outlined"
+                   OnClick="DeleteAsync">
+            Delete
+        </MudButton>
+
+        <MudSpacer />
+
+        <MudButton Class="mx-2 my-1"
+                   Variant="Variant.Text"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   Disabled="@(!CanSave)"
+                   OnClick="SaveAsync">
+            Save Changes
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@inject CollectionService CollectionService
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid AllocationId { get; set; }
+
+
+    private EditableAllocationDto _editDto = null!;
+    @* private IEnumerable<CardFinish> AvailableFinishes = null!; *@
+
+    private List<CollectionBinderDto> _binders = new List<CollectionBinderDto>();
+    private List<DeckDto> _decks = new List<DeckDto>();
+
+    private bool CanSave =>
+        !(
+            _editDto.BinderId.HasValue && 
+            _editDto.SnapshotId.HasValue
+        );
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _editDto = await CollectionService.GetEditableAllocationAsync(AllocationId);
+
+        _binders = await CollectionService.GetAllBinders();
+        _decks = await CollectionService.GetAllDecks();
+    }
+
+
+    private async Task SaveAsync()
+    {
+        await CollectionService.UpdateAllocationAsync(_editDto);
+        MudDialog.Close(DialogResult.Ok(new EditCallback(
+            _editDto.VariantId,
+            _editDto.AllocationId,
+            true, 
+            false
+        )));
+    }
+
+    private async Task DeleteAsync()
+    {
+        await CollectionService.DeleteAllocationAsync(_editDto.AllocationId);
+        MudDialog.Close(DialogResult.Ok(new EditCallback(
+            _editDto.VariantId,
+            _editDto.AllocationId,
+            false,
+            true
+        )));
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

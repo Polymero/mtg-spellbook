@@ -17,16 +17,16 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<Dictionary<Guid, CVariantDto>> GetVariantsByIdsAsync(IEnumerable<Guid> variantIds)
+        public async Task<Dictionary<Guid, CardVariantDto>> GetVariantsByIdsAsync(IEnumerable<Guid> variantIds)
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            return await db.CardVariants
+            return await db.Variants
                 .Where(v => variantIds.Contains(v.ScryfallId))
-                .Select(v => new CVariantDto
+                .Select(v => new CardVariantDto
                 {
                     ScryfallId = v.ScryfallId,
-                    OracleCardId = v.OracleCardId,
+                    OracleId = v.OracleId,
                     Name = v.SearchName,
                     SetName = v.SetName,
                     SetCode = v.SetCode,
@@ -42,13 +42,13 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<(OracleDto, List<CFaceDto>)> GetSingleOracleAsync(Guid oracleId)
+        public async Task<(CardOracleDto, List<CardFaceDto>)> GetSingleOracleAsync(Guid oracleId)
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            var oracle = await db.OracleCards
+            var oracle = await db.Oracles
                 .Where(o => o.OracleId == oracleId)
-                .Select(o => new OracleDto
+                .Select(o => new CardOracleDto
                 {
                     OracleId = o.OracleId,
                     Name = o.Name,
@@ -59,10 +59,10 @@ namespace Spellbox.Services
                 })
                 .SingleAsync();
 
-            var faces = await db.CardFaces
+            var faces = await db.Faces
                 .Where(f => f.OracleId == oracleId)
                 .OrderBy(f => f.Order)
-                .Select(f => new CFaceDto
+                .Select(f => new CardFaceDto
                 {
                     OracleId = f.OracleId,
                     Order = f.Order,
@@ -85,7 +85,7 @@ namespace Spellbox.Services
             var variant = await GetVariantsByIdsAsync(new List<Guid> { variantId });
             var v = variant[variantId];
 
-            (OracleDto oracle, List<CFaceDto> faces) = await GetSingleOracleAsync(v.OracleCardId);
+            (CardOracleDto oracle, List<CardFaceDto> faces) = await GetSingleOracleAsync(v.OracleId);
 
             return new CardViewerDto
             {
@@ -105,6 +105,29 @@ namespace Spellbox.Services
             };
         }
 
+
+        public async Task<List<CardVariantDto>> GetVariantsWithMissingCardMarketIdByIdsAsync(IEnumerable<Guid> variantIds)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Variants
+                .Where(v => variantIds.Contains(v.ScryfallId) &&
+                       v.CardMarketProductId == null)
+                .Select(v => new CardVariantDto
+                {
+                    ScryfallId = v.ScryfallId,
+                    OracleId = v.OracleId,
+                    Name = v.SearchName,
+                    SetName = v.SetName,
+                    SetCode = v.SetCode,
+                    CollNum = v.CollNum,
+                    Thumbs = v.Thumbs,
+                    Images = v.Images,
+                    CardMarketProductId = v.CardMarketProductId
+                })
+                .ToListAsync();
+        }
+
     }
 
     public sealed class CardViewerDto
@@ -114,7 +137,7 @@ namespace Spellbox.Services
         public string Name { get; init; } = null!;
 
         // Face(s)
-        public ICollection<CFaceDto> Faces { get; init; } = null!;
+        public ICollection<CardFaceDto> Faces { get; init; } = null!;
 
         // Variant
         public Guid ScryfallId { get; init; }

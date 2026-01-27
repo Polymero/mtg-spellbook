@@ -1,0 +1,94 @@
+﻿@page "/unassigned"
+
+
+<PageTitle>Unassigned</PageTitle>
+
+@if (_groups.Count == 0)
+{
+    <MudText>
+        What are you doing here? You have no unassigned cards. Shoo ~ !
+    </MudText>
+}
+else
+{
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h4">
+            Unassigned Cards
+        </MudText>
+
+        <MudText Typo="Typo.h6">
+            These cards have not been assigned to any binder or deck. Why not give them a home?
+        </MudText>
+    </MudPaper>
+
+    <MudToggleGroup T="CardDisplayMode"
+                    @bind-Value="_displayMode">
+        <MudToggleItem Value="CardDisplayMode.Grid">
+            <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                Grid
+        </MudToggleItem>
+        <MudToggleItem Value="CardDisplayMode.Table">
+            <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+                Table
+        </MudToggleItem>
+    </MudToggleGroup>
+
+    <MudPaper Class="pa-4">
+
+        @if (_displayMode == CardDisplayMode.Grid)
+        {
+            <CardGridView Groups="_groups" 
+                          SubcollectionName="Unassigned"
+                          OnEditSuccess="ReloadAsync" />
+        }
+        else
+        {
+            <CardTableView Groups="_groups" 
+                           SubcollectionName="Unassigned" 
+                           OnEditSuccess="ReloadAsync" />
+        }
+
+    </MudPaper>
+
+}
+
+
+@inject CrossService CrossService
+@inject CollectionService CollectionService
+@code {
+
+    // UI Cache
+    private List<CollectionVariantGroupDto> _groups = new List<CollectionVariantGroupDto>();
+
+    // UI States
+    private CardDisplayMode _displayMode = CardDisplayMode.Grid;
+
+    public enum CardDisplayMode
+    {
+        Grid,
+        Table
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _groups = await CrossService.GetUnassignedVariantGroupsAsync();
+        StateHasChanged();
+    }
+
+
+    private async Task ReloadAsync(EditCallback callback)
+    {
+        if (callback.IsDeleted)
+        {
+            _groups.RemoveAll(g => g.VariantId == callback.VariantId);
+        }
+        else
+        {
+            var group = _groups.Single(g => g.VariantId == callback.VariantId);
+            await CollectionService.UpdateVariantGroupAsync(group);
+        }
+        
+        StateHasChanged();
+    }
+
+}

@@ -58,11 +58,18 @@ namespace Spellbox.Services
                 buffer.Add(new CardMarketPriceCache
                 {
                     ProductId = entry.ProductId,
-                    PriceAverage = entry.Avg,
-                    PriceLow = entry.Low,
-                    PriceTrend = entry.Trend,
-                    PriceFoilLow = entry.LowFoil,
-                    PriceFoilTrend = entry.TrendFoil,
+                    Low = entry.Low,
+                    Avg = entry.Avg,
+                    Trend = entry.Trend,
+                    Avg1 = entry.Avg1,
+                    Avg7 = entry.Avg7,
+                    Avg30 = entry.Avg30,
+                    FoilLow = entry.LowFoil,
+                    FoilAvg = entry.AvgFoil,
+                    FoilTrend = entry.TrendFoil,
+                    FoilAvg1 = entry.Avg1Foil,
+                    FoilAvg7 = entry.Avg7Foil,
+                    FoilAvg30 = entry.Avg30Foil,
                     UpdatedAt = DateTime.UtcNow
                 });
 

@@ -32,13 +32,15 @@ builder.Services.AddScoped<OracleService>();
 builder.Services.AddScoped<CollectionService>();
 builder.Services.AddScoped<CrossService>();
 
-builder.Services.AddScoped<UserSessionService>();
+builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IUserPricingSettingsService, UserPricingSettingsService>();
+
+builder.Services.AddScoped<IPricingRouter, PricingRouter>();
 
 builder.Services.AddScoped<CardMarketPriceGuideService>();
-builder.Services.AddScoped<CardMarketCardPricingService>();
-
 builder.Services.AddHostedService<CardMarketSyncWorker>();
+builder.Services.AddScoped<IPricingService, CardMarketPricingService>();
 
 var app = builder.Build();
 

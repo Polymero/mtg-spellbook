@@ -18,7 +18,7 @@ export function observeResize(element, dotNetRef, debounceMs = 100) {
             }
 
             resizeTimeouts.set(el, setTimeout(() => {
-                dotNetRef.invokeMethodAsync('OnContainerResize', entry.contentRect.width);
+                dotNetRef.invokeMethodAsync('OnContainerResize', Math.floor(entry.contentRect.width));
                 resizeTimeouts.delete(el);
             }, debounceMs));
         }

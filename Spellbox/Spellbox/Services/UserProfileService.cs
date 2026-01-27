@@ -8,7 +8,7 @@ namespace Spellbox.Services
 {
     public interface IUserProfileService
     {
-        Task<UserProfile> GetOrCreateAsync();
+        Task<UserProfile> GetAsync();
         Task UpdateDisplayNameAsync(string name);
     }
 
@@ -24,7 +24,7 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<UserProfile> GetOrCreateAsync()
+        public async Task<UserProfile> GetAsync()
         {
             using var db = await _factory.CreateDbContextAsync();
 

@@ -37,7 +37,9 @@ else
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
-            <CardGridView Groups="_groups" SubcollectionName="@_binder.Name" />
+            <CardGridView Groups="_groups" 
+                          SubcollectionName="@_binder.Name"
+                          OnEditSuccess="ReloadAsync" />
         }
         else
         {
@@ -72,7 +74,24 @@ else
     protected override async Task OnParametersSetAsync()
     {
         _binder = await CollectionService.GetBinderDetails(BinderId);
-        _groups = await CrossService.GetCollapsedVariantsAsync(BinderId);
+        _groups = await CrossService.GetBinderVariantGroupsAsync(BinderId);
+        StateHasChanged();
+    }
+
+
+    private async Task ReloadAsync(EditCallback callback)
+    {
+        if (callback.IsDeleted)
+        {
+            _groups.RemoveAll(g => g.VariantId == callback.VariantId);
+        }
+        else
+        {
+            var group = _groups.Single(g => g.VariantId == callback.VariantId);
+            await CollectionService.UpdateVariantGroupAsync(group);
+        }
+
+        StateHasChanged();
     }
 
 }

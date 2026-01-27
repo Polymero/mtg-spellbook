@@ -13,7 +13,8 @@
 
 .card-tile {
     width: 224px;
-    height: 313px;
+    min-width: 224px;
+    max-width: 224px;
 }
 
 .card-image {

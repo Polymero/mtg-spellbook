@@ -5,9 +5,9 @@ namespace Spellbox.Contexts
 {
     public class OracleDbContext : DbContext
     {
-        public DbSet<OracleCard> OracleCards => Set<OracleCard>();
-        public DbSet<CFace> CardFaces => Set<CFace>();
-        public DbSet<CVariant> CardVariants => Set<CVariant>();
+        public DbSet<CardOracle> Oracles => Set<CardOracle>();
+        public DbSet<CardFace> Faces => Set<CardFace>();
+        public DbSet<CardVariant> Variants => Set<CardVariant>();
 
 
         public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
@@ -18,12 +18,12 @@ namespace Spellbox.Contexts
 
         protected override void OnModelCreating(ModelBuilder model)
         {
-            model.Entity<OracleCard>(entity =>
+            model.Entity<CardOracle>(entity =>
             {
                 entity.HasKey(e => e.OracleId);
             });
 
-            model.Entity<CVariant>(entity =>
+            model.Entity<CardVariant>(entity =>
             {
                 entity.HasKey(e => e.ScryfallId);
 
@@ -34,17 +34,17 @@ namespace Spellbox.Contexts
 
                 entity.HasIndex(e => e.CardMarketProductId);
 
-                entity.HasOne(e => e.OracleCard)
+                entity.HasOne(e => e.Oracle)
                       .WithMany(c => c.Variants)
-                      .HasForeignKey(e => e.OracleCardId)
+                      .HasForeignKey(e => e.OracleId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            model.Entity<CFace>(entity =>
+            model.Entity<CardFace>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.OracleCard)
+                entity.HasOne(e => e.Oracle)
                       .WithMany(c => c.Faces)
                       .HasForeignKey(e => e.OracleId)
                       .OnDelete(DeleteBehavior.Cascade);

@@ -29,7 +29,7 @@
     @if (Unassigned > 0)
     {
         <MudText Align="Align.Center">
-            You have @Unassigned unassigned card(s) just hanging around. Give them a home!
+            You have @Unassigned <MudLink Href="/unassigned">unassigned</MudLink> card(s) just hanging around. Give them a home!
         </MudText>
     }
 
@@ -161,8 +161,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var profile = await UserSession.GetProfileAsync();
-        _displayName = profile.DisplayName;
+        var session = await UserSession.GetAsync();
+        _displayName = session.DisplayName;
 
         Unassigned = await CollectionService.GetQuantityUnassigned();
         BinderCache = await CollectionService.GetAllBinders();

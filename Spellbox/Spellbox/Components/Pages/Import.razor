@@ -94,9 +94,9 @@ else
 
         var oracleProcessed = new List<Guid>();
 
-        var oracleBatch = new Dictionary<Guid, OracleCard>();
-        var faceBatch = new List<CFace>();
-        var variantBatch = new List<CVariant>();
+        var oracleBatch = new Dictionary<Guid, CardOracle>();
+        var faceBatch = new List<CardFace>();
+        var variantBatch = new List<CardVariant>();
 
         var url = await GetDownloadUrlAsync(bulkUri);
 
@@ -126,7 +126,7 @@ else
 
             if (!oracleProcessed.Contains(oracleId))
             {
-                oracleBatch[oracleId] = ParseOracleCard(card, oracleId, faceBatch);
+                oracleBatch[oracleId] = ParseCardOracle(card, oracleId, faceBatch);
                 oracleProcessed.Add(oracleId);
             }
                 
@@ -152,8 +152,7 @@ else
         var desiredLayouts = new List<string>
         {
             "normal", "split", "flip", "transform", "modal_dfc", "meld", "leveler", "class",
-            "case", "saga", "adventure", "mutate", "prototype", "battle", "token", "double_faced_token",
-            "emblem", "reversible_card"
+            "case", "saga", "adventure", "mutate", "prototype", "battle", "reversible_card"
         };
 
         // Only accept cards printed/available on paper
@@ -178,9 +177,9 @@ else
     }
 
 
-    private OracleCard ParseOracleCard(JsonElement card, Guid oracleId, List<CFace> faceBatch)
+    private CardOracle ParseCardOracle(JsonElement card, Guid oracleId, List<CardFace> faceBatch)
     {
-        var oracle = new OracleCard
+        var oracle = new CardOracle
         {
             OracleId = oracleId,
             Name = card.GetProperty("name").GetString()!,
@@ -195,7 +194,7 @@ else
             int i = 0;
             foreach (var face in faces.EnumerateArray())
             {
-                faceBatch.Add(new CFace
+                faceBatch.Add(new CardFace
                 {
                     Id = Guid.NewGuid(),
                     OracleId = oracleId,
@@ -214,7 +213,7 @@ else
         }
         else
         {
-            faceBatch.Add(new CFace
+            faceBatch.Add(new CardFace
             {
                 Id = Guid.NewGuid(),
                 OracleId = oracleId,
@@ -234,12 +233,12 @@ else
     }
 
 
-    private CVariant ParseCardVariant(JsonElement card, Guid oracleId, Guid scryfallId)
+    private CardVariant ParseCardVariant(JsonElement card, Guid oracleId, Guid scryfallId)
     {
-        var variant =  new CVariant
+        var variant =  new CardVariant
         {
             ScryfallId = scryfallId,
-            OracleCardId = oracleId,
+            OracleId = oracleId,
             SearchName = card.GetPropertyOrAlternative("flavor_name", card.GetProperty("name").GetString()!),
             SetName = card.GetProperty("set_name").GetString()!,
             SetCode = card.GetProperty("set").GetString()!,
@@ -288,9 +287,9 @@ else
 
     private async Task FlushBatchesAsync(
         OracleDbContext dbContext,
-        Dictionary<Guid, OracleCard> oracleBatch,
-        List<CFace> faceBatch,
-        List<CVariant> variantBatch
+        Dictionary<Guid, CardOracle> oracleBatch,
+        List<CardFace> faceBatch,
+        List<CardVariant> variantBatch
     )
     {
 

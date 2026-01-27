@@ -2,9 +2,11 @@
 @using Spellbox.Components.Dialogs
 @using Spellbox.Model
 
-<MudTable Items="@TableRows"
+<MudTable Items="@_tableRows"
           Dense="true"
-          Hover="true">
+          Hover="true"
+          T="BinderTableRowDto"
+          OnRowClick="RowClicked">
 
     <HeaderContent>
         <MudTh>
@@ -24,6 +26,15 @@
         </MudTh>
         <MudTh>
             Flags
+        </MudTh>
+        <MudTh>
+            Bought
+        </MudTh>
+        <MudTh>
+            Price
+        </MudTh>
+        <MudTh>
+        
         </MudTh>
     </HeaderContent>
 
@@ -84,6 +95,56 @@
                     Sig
                 </MudChip>
             }
+            
+            @if (r.Allocation.IsStamped)
+            {
+                <MudChip T="string" 
+                        Variant="Variant.Text"
+                        Size="Size.Small">
+                    Dft
+                </MudChip>
+            }
+        </MudTd>
+        <MudTd>
+            @if (r.Allocation.BoughtFor.HasValue)
+            {
+                <span>
+                    €@r.Allocation.BoughtFor.Value.ToString("0.00")
+                </span>
+            }
+            else
+            {
+                <span>
+                    —
+                </span>
+            }
+        </MudTd>
+        <MudTd>
+            @if (!_priceCache.TryGetValue(r.Allocation.Id, out var price))
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate />
+                }
+                else
+                {
+                    @if (price.HasValue)
+                    {
+                        <span>
+                            €@price.Value.ToString("0.00")
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            —
+                        </span>
+                    }
+                }
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Warning"
+                           Size="Size.Small" 
+                           OnClick="@(() => EditAsync(r.Allocation.Id))" />
         </MudTd>
 
     </RowTemplate>
@@ -91,14 +152,19 @@
 
 
 @inject IDialogService DialogService
+@inject IPricingRouter PricingRouter
 @code {
 
     [Parameter]
     public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
     [Parameter]
     public string SubcollectionName { get; set; } = null!;
+    [Parameter]
+    public EventCallback<EditCallback> OnEditSuccess { get; set; }
 
-    public IReadOnlyList<BinderTableRowDto> TableRows { get; set; } = null!;
+    // UI cache
+    private List<BinderTableRowDto> _tableRows { get; set; } = new List<BinderTableRowDto>();
+    private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
 
 
     public sealed class BinderTableRowDto
@@ -114,11 +180,18 @@
         public CollectionAllocationDto Allocation { get; init; } = null!;
     }
 
-    private IReadOnlyList<BinderTableRowDto> BuildRows(
+    private async Task BuildRowsAsync(
         IEnumerable<CollectionVariantGroupDto> groups
     )
     {
-        var rows = new List<BinderTableRowDto>();
+        _tableRows.Clear();
+        _priceCache.Clear();
+    
+        var allocs = groups
+            .SelectMany(g => g.Allocations)
+            .ToList();
+            
+        _priceCache = await PricingRouter.GetPriceBatchAsync(allocs);
 
         foreach (var group in groups)
         {
@@ -126,7 +199,7 @@
 
             foreach (var copy in group.Allocations)
             {
-                rows.Add(new BinderTableRowDto
+                _tableRows.Add(new BinderTableRowDto
                 {
                     IsFirst = first,
                     Name = first ? group.Name : null,
@@ -138,17 +211,52 @@
                 first = false;
             }
         }
-
-        return rows;
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        TableRows = BuildRows(Groups);
+        await BuildRowsAsync(Groups);
     }
 
 
-    private async Task OpenCardDialog(Guid allocationId)
+    public async Task RowClicked(TableRowClickEventArgs<BinderTableRowDto> row)
+    {
+        var group = Groups.Single(g => g.VariantId == row.Item!.Allocation.VariantId);
+        await OpenCardDialog(group);
+    }
+
+
+    private async Task OpenCardDialog(CollectionVariantGroupDto group)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Group"] = group,
+            ["SubcollectionName"] = SubcollectionName,
+            ["OnEditSuccess"] = EventCallback.Factory.Create<EditCallback>(this, HandleEditSuccess)
+        };
+
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled &&
+            result.Data is EditCallback callback)
+        {
+            await OnEditSuccess.InvokeAsync(callback);
+            StateHasChanged();
+        }
+    }
+
+
+        private async Task EditAsync(Guid allocationId)
     {
         var parameters = new DialogParameters
         {
@@ -157,19 +265,28 @@
 
         var options = new DialogOptions
         {
-            CloseButton = true,
-            CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Medium,
-            FullWidth = true
+            FullWidth = true,
+            CloseButton = true
         };
 
-        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var dialog = await DialogService.ShowAsync<EditAllocationDialog>("Edit Card", parameters, options);
         var result = await dialog.Result;
 
-        if (!result!.Canceled)
+        if (!result!.Canceled &&
+            result.Data is EditCallback callback)
         {
-            @* await ReloadBinderAsync(); *@
+            StateHasChanged();
+
+            await OnEditSuccess.InvokeAsync(callback);
         }
+    }
+
+
+    private async Task HandleEditSuccess(EditCallback callback)
+    {
+        await OnEditSuccess.InvokeAsync(callback);
+        StateHasChanged();
     }
 
 }

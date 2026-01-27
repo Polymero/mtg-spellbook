@@ -19,9 +19,9 @@ namespace Spellbox.Migrations.CardMarketDb
 
             modelBuilder.Entity("Spellbox.Model.CardMarketPriceCache", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("ProductId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("INTEGER");
 
                     b.Property<decimal?>("PriceAverage")
                         .HasColumnType("decimal(10,2)");
@@ -38,16 +38,10 @@ namespace Spellbox.Migrations.CardMarketDb
                     b.Property<decimal?>("PriceTrend")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId")
-                        .IsUnique();
+                    b.HasKey("ProductId");
 
                     b.ToTable("PriceCaches");
                 });

@@ -16,44 +16,7 @@ namespace Spellbox.Services
         }
 
 
-        // public async Task<List<CollectionCardDetailsDto>> GetBinderCardsAsync(Guid binderId)
-        // {
-        //     var allocations = await _collection.GetBinderAllocationsAsync(binderId);
-
-        //     if (allocations.Count == 0)
-        //         return new List<CollectionCardDetailsDto>();
-
-        //     var variantIds = allocations
-        //         .Select(a => a.VariantId)
-        //         .Distinct()
-        //         .ToList();
-
-        //     var variants = await _oracle.GetVariantsByIdsAsync(variantIds);
-
-        //     return allocations.Select(a =>
-        //     {
-        //         var v = variants[a.VariantId];
-
-        //         return new CollectionCardDetailsDto
-        //         {
-        //             AllocationId = a.Id,
-        //             Finish = a.Finish,
-        //             Language = a.Language,
-        //             Condition = a.Condition,
-        //             IsAltered = a.IsAltered,
-        //             IsSigned = a.IsSigned,
-        //             Name = v.Name,
-        //             SetCode = v.SetCode,
-        //             CollNum = v.CollNum,
-        //             Thumbs = v.Thumbs,
-        //             Images = v.Images
-        //         };
-        //     })
-        //     .OrderBy(c => c.Name)
-        //     .ToList();
-        // }
-
-        public async Task<List<CollectionVariantGroupDto>> GetCollapsedVariantsAsync(
+        public async Task<List<CollectionVariantGroupDto>> GetBinderVariantGroupsAsync(
             Guid binderId
         )
         {
@@ -92,20 +55,74 @@ namespace Spellbox.Services
                         Id = a.Id,
                         BinderId = a.BinderId,
                         BinderName = a.BinderName,
+                        DeckId = a.DeckId,
+                        DeckName = a.DeckName,
                         Finish = a.Finish,
                         Language = a.Language,
                         Condition = a.Condition,
                         IsAltered = a.IsAltered,
                         IsSigned = a.IsSigned,
-                        OracleId = variant.OracleCardId,
+                        IsStamped = a.IsStamped,
+                        BoughtFor = a.BoughtFor,
+                        OracleId = variant.OracleId,
                         VariantId = variant.ScryfallId
                     }).ToList()
                 };
             }).OrderBy(g => g.Name).ToList();
         }
 
+        public async Task<List<CollectionVariantGroupDto>> GetUnassignedVariantGroupsAsync()
+        {
+            var allocs = await _collection.GetUnassignedAllocationsAsync();
 
+            if (allocs.Count == 0)
+                return new List<CollectionVariantGroupDto>();
 
+            var variantGroups = allocs
+                .GroupBy(a => a.VariantId)
+                .ToList();
+
+            var variantIds = variantGroups
+                .Select(g => g.Key)
+                .ToList();
+            
+            var variants = await _oracle.GetVariantsByIdsAsync(variantIds);
+
+            return variantGroups.Select(g =>
+            {
+                var variant = variants[g.Key];
+
+                return new CollectionVariantGroupDto
+                {
+                    VariantId = g.Key,
+                    Name = variant.Name,
+                    SetCode = variant.SetCode,
+                    CollNum = variant.CollNum,
+                    Thumbs = variant.Thumbs,
+                    Images = variant.Images,
+
+                    Quantity = g.Count(),
+
+                    Allocations = g.Select(a => new CollectionAllocationDto
+                    {
+                        Id = a.Id,
+                        BinderId = a.BinderId,
+                        BinderName = a.BinderName,
+                        DeckId = a.DeckId,
+                        DeckName = a.DeckName,
+                        Finish = a.Finish,
+                        Language = a.Language,
+                        Condition = a.Condition,
+                        IsAltered = a.IsAltered,
+                        IsSigned = a.IsSigned,
+                        IsStamped = a.IsStamped,
+                        BoughtFor = a.BoughtFor,
+                        OracleId = variant.OracleId,
+                        VariantId = variant.ScryfallId
+                    }).ToList()
+                };
+            }).OrderBy(g => g.Name).ToList();
+        }
 
     }
 
@@ -113,8 +130,8 @@ namespace Spellbox.Services
     public sealed class CollectionVariantGroupDto
     {
         // from CollectionAllocations
-        public IReadOnlyList<CollectionAllocationDto> Allocations { get; init; } = new List<CollectionAllocationDto>();
-        public int Quantity { get; init; }
+        public List<CollectionAllocationDto> Allocations { get; set; } = new List<CollectionAllocationDto>();
+        public int Quantity { get; set; }
 
         // from CVariant
         public Guid VariantId { get; init; }
@@ -123,6 +140,7 @@ namespace Spellbox.Services
         public string CollNum { get; init; } = null!;
         public List<string> Thumbs { get; init; } = null!;
         public List<string> Images { get; init; } = null!;
+        public int? CardMarketProductId { get; init; } = null;
     }
 
 }

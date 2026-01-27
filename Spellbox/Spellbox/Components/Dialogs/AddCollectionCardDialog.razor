@@ -1,6 +1,14 @@
 @using Spellbox.Model
 
+
 <MudDialog>
+
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Add Card to Collection
+        </MudText>
+    </TitleContent>
+
     <DialogContent>
 
         <MudStack Spacing="3">
@@ -74,7 +82,7 @@
             @if (_selectedOracle is not null)
             {
                 <!-- Card variant selector -->
-                <MudSelect T="CVariant"
+                <MudSelect T="CardVariant"
                            Label="Variant"
                            Dense="true"
                            Disabled="@(_selectedOracle == null)"
@@ -242,23 +250,13 @@
                     </MudSelect>
                 </MudItem> *@
 
-                <MudItem xs="1" 
-                         Class="d-flex align-end">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Success"
-                               Disabled="@(!CanSubmit)"
-                               OnClick="SubmitAsync">
-                        Add
-                    </MudButton>
-                </MudItem>
-
             </MudGrid>
 
         </MudStack>
 
     </DialogContent>
 
-    @* <DialogActions>
+    <DialogActions>
         <MudButton Variant="Variant.Text"
                    OnClick="Cancel">
             Cancel
@@ -268,10 +266,12 @@
                    Color="Color.Success"
                    Disabled="@(!CanSubmit)"
                    OnClick="SubmitAsync">
-            Add
+            Add Card
         </MudButton>
-    </DialogActions> *@
+    </DialogActions>
+
 </MudDialog>
+
 
 @inject IDbContextFactory<OracleDbContext> OracleDbFactory
 @inject CollectionService CollectionService
@@ -296,8 +296,8 @@
 
     // Set states
     @* private OracleCardProj? _selectedOracleProj; *@
-    private OracleCard? _selectedOracle;
-    private CVariant? _selectedVariant;
+    private CardOracle? _selectedOracle;
+    private CardVariant? _selectedVariant;
 
     private string? _setCode;
     private string? _collNum;
@@ -339,7 +339,7 @@
 
         using var db = await OracleDbFactory.CreateDbContextAsync();
 
-        return await db.OracleCards
+        return await db.Oracles
             .AsNoTracking()
             .Where( c =>
                 EF.Functions.Like(c.Name, $"{value}%") ||
@@ -369,7 +369,7 @@
 
         using var db = await OracleDbFactory.CreateDbContextAsync();
 
-        _selectedOracle = await db.OracleCards
+        _selectedOracle = await db.Oracles
             .Include(c => c.Variants)
             .Include(c => c.Faces)
             .SingleAsync(c => c.OracleId == proj.OracleId);
@@ -382,8 +382,7 @@
     {
         using var db = await OracleDbFactory.CreateDbContextAsync();
 
-        var variant = await db.CardVariants
-            @* .Include(v => v.OracleCard) *@
+        var variant = await db.Variants
             .SingleOrDefaultAsync(v =>
                 v.SetCode == _setCode!.ToLower() &&
                 v.CollNum == _collNum);
@@ -394,10 +393,10 @@
             return;
         }
 
-        _selectedOracle = await db.OracleCards
+        _selectedOracle = await db.Oracles
             .Include(c => c.Variants)
             .Include(c => c.Faces)
-            .SingleAsync(c => c.OracleId == variant.OracleCardId);
+            .SingleAsync(c => c.OracleId == variant.OracleId);
         _selectedVariant = _selectedOracle.Variants.FirstOrDefault(v => v.ScryfallId == variant.ScryfallId);
 
         _setCode = null;
@@ -405,7 +404,7 @@
     }
 
 
-    private static IEnumerable<CardFinish> GetAvailableFinishes(CVariant variant)
+    private static IEnumerable<CardFinish> GetAvailableFinishes(CardVariant variant)
     {
         if (variant.Finishes.Contains("nonfoil")) yield return CardFinish.NonFoil;
         if (variant.Finishes.Contains("foil")) yield return CardFinish.Foil;
@@ -419,7 +418,7 @@
             return;
 
         await CollectionService.AddCopiesAsync(
-            oracleId: _selectedVariant.OracleCardId,
+            oracleId: _selectedVariant.OracleId,
             variantId: _selectedVariant.ScryfallId,
             quantity: _quantity,
             finish: _finish,

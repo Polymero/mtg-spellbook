@@ -17,6 +17,7 @@ namespace Spellbox.Services
         }
 
 
+        // Card adding
         public async Task AddCopiesAsync(
             Guid oracleId,
             Guid variantId,
@@ -135,6 +136,30 @@ namespace Spellbox.Services
         }
 
 
+        // Unassigend viewing
+        public async Task<List<CollectionAllocationDto>> GetUnassignedAllocationsAsync()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Where(a => a.AllocationIndex == AllocationIndex.Unassigned)
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    OracleId = a.CollectionCard.OracleId,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish,
+                    Language = a.Language,
+                    Condition = a.Condition,
+                    IsAltered = a.IsAltered,
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor
+                })
+                .ToListAsync();
+        }
+
+
         // Binder viewing
         public async Task<CollectionBinderDto> GetBinderDetails(Guid binderId)
         {
@@ -173,7 +198,9 @@ namespace Spellbox.Services
                     Language = a.Language,
                     Condition = a.Condition,
                     IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor
                 })
                 .ToListAsync();
         }
@@ -238,40 +265,143 @@ namespace Spellbox.Services
                     Language = a.Language,
                     Condition = a.Condition,
                     IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor,
+                    AddedAt = a.AddedAt,
+                    AllocatedAt = a.AllocatedAt
                 })
                 .SingleAsync();
         }
 
-        // public async Task UpdateAllocationAsync(CardViewerSingleDto updatedDto)
-        // {
-        //     using var db = await _factory.CreateDbContextAsync();
+        public async Task UpdateVariantGroupAsync(CollectionVariantGroupDto group)
+        {
+            using var db = await _factory.CreateDbContextAsync();
 
-        //     var allocation = await db.Allocations.FindAsync(updatedDto.AllocationId);
+            var allocIds = group.Allocations
+                .Select(a => a.Id)
+                .ToList();
 
-        //     if (allocation != null)
-        //     {
-        //         allocation.Finish = updatedDto.Finish;
-        //         allocation.Language = updatedDto.Language;
-        //         allocation.Condition = updatedDto.Condition;
-        //         allocation.IsAltered = updatedDto.IsAltered;
-        //         allocation.IsSigned = updatedDto.IsSigned;
+            var allocs = await db.Allocations
+                .AsNoTracking()
+                .Where(a => allocIds.Contains(a.Id))
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    OracleId = a.CollectionCard.OracleId,
+                    VariantId = a.CollectionCard.VariantId,
+                    BinderId = a.BinderId,
+                    BinderName = "nyi",
+                    Finish = a.Finish,
+                    Language = a.Language,
+                    Condition = a.Condition,
+                    IsAltered = a.IsAltered,
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor
+                })
+                .ToListAsync();
 
-        //         await db.SaveChangesAsync();
-        //     }            
-        // }
+            group.Allocations.Clear();
+            group.Allocations.AddRange(allocs);
+
+            group.Quantity = allocs.Count;
+        }
+
+        public async Task<EditableAllocationDto> GetEditableAllocationAsync(Guid allocationId)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Where(a => a.Id == allocationId)
+                .Select(a => new EditableAllocationDto
+                {
+                    AllocationId = a.Id,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish,
+                    Language = a.Language,
+                    Condition = a.Condition,
+                    IsAltered = a.IsAltered,
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor,
+                    BinderId = a.BinderId,
+                    SnapshotId = a.SnapshotId
+                })
+                .SingleAsync();
+        }
+
+        public async Task UpdateAllocationAsync(EditableAllocationDto editDto)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var alloc = await db.Allocations.FindAsync(editDto.AllocationId);
+
+            if (alloc != null)
+            {
+                alloc.Finish = editDto.Finish;
+                alloc.Language = editDto.Language;
+                alloc.Condition = editDto.Condition;
+                alloc.IsAltered = editDto.IsAltered;
+                alloc.IsSigned = editDto.IsSigned;
+                alloc.IsStamped = editDto.IsStamped;
+                alloc.BoughtFor = editDto.BoughtFor;
+
+                alloc.BinderId = null;
+                alloc.SnapshotId = null;
+
+                if (editDto.BinderId.HasValue)
+                {
+                    alloc.BinderId = editDto.BinderId;
+                    alloc.AllocationIndex = AllocationIndex.Binder;
+                }
+                else if (editDto.SnapshotId.HasValue)
+                {
+                    alloc.SnapshotId = editDto.SnapshotId;
+                    alloc.AllocationIndex = AllocationIndex.Deck;
+                }
+                else
+                {
+                    alloc.AllocationIndex = AllocationIndex.Unassigned;
+                }
+
+                await db.SaveChangesAsync();
+            }
+        }
 
         public async Task DeleteAllocationAsync(Guid allocationId)
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            var allocation = await db.Allocations.FindAsync(allocationId);
+            var alloc = await db.Allocations
+                .Include(a => a.CollectionCard)
+                .SingleAsync(a => a.Id == allocationId);
 
-            if (allocation != null)
+            if (alloc != null)
             {
-                db.Allocations.Remove(allocation);
+                db.Allocations.Remove(alloc);
+
+                var inUse = await db.Allocations
+                    .AnyAsync(a => 
+                        a.CollectionCardId == alloc.CollectionCardId
+                        && a.Id != allocationId);
+
+                if (!inUse)
+                    db.CollectionCards.Remove(alloc.CollectionCard);
+
                 await db.SaveChangesAsync();
             }
+        }
+
+
+        public async Task<List<Guid>> GetAllDistinctVariantsAsync()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.CollectionCards
+                .Select(c => c.VariantId)
+                .Distinct()
+                .ToListAsync();
         }
 
     }
