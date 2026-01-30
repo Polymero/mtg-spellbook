@@ -3,19 +3,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Spellbox.Model;
 using Spellbox.Services;
 
+
 namespace Spellbox.Contexts
 {
+
     public class CardMarketDbContext : DbContext
     {
         public DbSet<CardMarketPriceCache> PriceCaches { get; set; }
         public DbSet<PricingSyncState> SyncStates { get; set; }
 
-
         public CardMarketDbContext(DbContextOptions<CardMarketDbContext> options) : base(options)
         {
             
         }
-
 
         protected override void OnModelCreating(ModelBuilder model)
         {
@@ -23,7 +23,6 @@ namespace Spellbox.Contexts
             model.ApplyConfiguration(new SyncStatesConfiguration());
         }
     }
-
 
     public class CardMarketPriceCacheConfiguration : IEntityTypeConfiguration<CardMarketPriceCache>
     {
@@ -72,7 +71,6 @@ namespace Spellbox.Contexts
                   .IsRequired();
         }
     }
-
 
     public class SyncStatesConfiguration : IEntityTypeConfiguration<PricingSyncState>
     {

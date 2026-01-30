@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Spellbox.Model;
 
+
 namespace Spellbox.Contexts
 {
+
     public class CollectionDbContext : DbContext
     {
         public DbSet<CollectionCard> CollectionCards { get; set; }
@@ -17,12 +19,10 @@ namespace Spellbox.Contexts
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<UserPricingSettings> UserPricingSettings { get; set; }
 
-
         public CollectionDbContext(DbContextOptions<CollectionDbContext> options) : base(options)
         {
             
         }
-
 
         protected override void OnModelCreating(ModelBuilder model)
         {
@@ -38,7 +38,6 @@ namespace Spellbox.Contexts
             model.ApplyConfiguration(new UserPricingSettingsConfiguration());
         }
     }
-
 
     public class CollectionCardConfiguration : IEntityTypeConfiguration<CollectionCard>
     {
@@ -64,7 +63,6 @@ namespace Spellbox.Contexts
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
-
 
     public class CollectionAllocationConfiguration : IEntityTypeConfiguration<CollectionAllocation>
     {
@@ -128,7 +126,6 @@ namespace Spellbox.Contexts
         }
     }
 
-
     public class CollectionBinderConfiguration : IEntityTypeConfiguration<CollectionBinder>
     {
         public void Configure(EntityTypeBuilder<CollectionBinder> entity)
@@ -150,7 +147,6 @@ namespace Spellbox.Contexts
                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
-
 
     public class DeckConfiguration : IEntityTypeConfiguration<Deck>
     {
@@ -176,7 +172,6 @@ namespace Spellbox.Contexts
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
-
 
     public class DeckSnapshotConfiguration : IEntityTypeConfiguration<DeckSnapshot>
     {
@@ -215,7 +210,6 @@ namespace Spellbox.Contexts
         }
     }
 
-
     public class DeckZoneConfiguration : IEntityTypeConfiguration<DeckZone>
     {
         public void Configure(EntityTypeBuilder<DeckZone> entity)
@@ -235,7 +229,6 @@ namespace Spellbox.Contexts
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
-
 
     public class DeckCardConfiguration : IEntityTypeConfiguration<DeckCard>
     {
@@ -261,7 +254,6 @@ namespace Spellbox.Contexts
             .IsUnique();
         }
     }
-
 
     public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
     {
@@ -294,4 +286,5 @@ namespace Spellbox.Contexts
                   .HasConversion<int>();
         }
     }
+    
 }

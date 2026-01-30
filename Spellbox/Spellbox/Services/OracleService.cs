@@ -16,6 +16,57 @@ namespace Spellbox.Services
             _factory = factory;
         }
 
+        
+        // Oracle search
+        public async Task<IEnumerable<CardOracleDto>> OracleSearchFuncAsync(
+            string search, 
+            CancellationToken ct
+        )
+        {
+            if (string.IsNullOrWhiteSpace(search) || search.Length < 2)
+                return Enumerable.Empty<CardOracleDto>();
+
+            using var db = await _factory.CreateDbContextAsync(ct);
+
+            return await db.Oracles
+                .AsNoTracking()
+                .Where( c =>
+                    EF.Functions.Like(c.Name, $"{search}%") ||
+                    EF.Functions.Like(c.Name, $"% {search}%"))
+                .OrderBy(c =>
+                    EF.Functions.Like(c.Name, $"{search}%") ? 0 :
+                    EF.Functions.Like(c.Name, $"% {search}%") ? 1 :
+                    2)
+                .ThenBy(c => c.Name)
+                .Select(c => new CardOracleDto
+                {
+                    OracleId = c.OracleId,
+                    Name = c.Name,
+                    TypeLine = c.TypeLine
+                }) 
+                .Take(20)
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<CardVariantDto>> GetVariantsByOracleIdAsync(Guid oracleId)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Variants
+                .Where(v => v.OracleId == oracleId)
+                .OrderByDescending(v => v.Released)
+                .ThenBy(v => v.CollNum)
+                .Select(v => new CardVariantDto
+                {
+                    ScryfallId = v.ScryfallId,
+                    SetName = v.SetName,
+                    SetCode = v.SetCode,
+                    CollNum = v.CollNum
+                })
+                .ToListAsync();
+        }
+
+
 
         public async Task<Dictionary<Guid, CardVariantDto>> GetVariantsByIdsAsync(IEnumerable<Guid> variantIds)
         {
@@ -36,7 +87,8 @@ namespace Spellbox.Services
                     Artist = v.Artist,
                     Rarity = v.Rarity,
                     Released = v.Released,
-                    FlavorTexts = v.FlavorTexts
+                    FlavorTexts = v.FlavorTexts,
+                    Finishes = v.Finishes
                 })
                 .ToDictionaryAsync(v => v.ScryfallId);
         }
@@ -102,6 +154,43 @@ namespace Spellbox.Services
                 FlavorTexts = v.FlavorTexts,
                 Thumbs = v.Thumbs,
                 Images = v.Images,
+                Finishes = v.Finishes
+            };
+        }
+
+        public async Task<CardViewerDto?> GetCardViewerBySetCollAsync(
+            string setCode,
+            string collNum
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var variant = await db.Variants
+                .SingleOrDefaultAsync(v =>
+                    v.SetCode == setCode!.ToLower() &&
+                    v.CollNum == collNum);
+                
+            if (variant is null)
+                return null;
+
+            (CardOracleDto oracle, List<CardFaceDto> faces) = await GetSingleOracleAsync(variant.OracleId);
+
+            return new CardViewerDto
+            {
+                OracleId = oracle.OracleId,
+                Name = oracle.Name,
+                Faces = faces,
+                ScryfallId = variant.ScryfallId,
+                SetCode = variant.SetCode,
+                CollNum = variant.CollNum,
+                SetName = variant.SetName,
+                Artist = variant.Artist,
+                Released = variant.Released,
+                Rarity = variant.Rarity,
+                FlavorTexts = variant.FlavorTexts,
+                Thumbs = variant.Thumbs,
+                Images = variant.Images,
+                Finishes = variant.Finishes
             };
         }
 
@@ -144,6 +233,7 @@ namespace Spellbox.Services
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
         public string SetName { get; init; } = null!;
+        public List<string> Finishes { get; init; } = null!;
         public string? Artist { get; init; }
         public string Released { get; init; } = null!;
         public string Rarity { get; init; } = null!;

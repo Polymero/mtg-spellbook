@@ -19,7 +19,7 @@
     <MudButton Variant="Variant.Filled"
                Color="Color.Info"
                @onclick="OpenAddCollectionCardDialog">
-        Add Card to Collection
+        Add Card(s) to Collection
     </MudButton>
 </MudPaper>
 
@@ -76,6 +76,16 @@
                             </MudLink>
                             <MudText Typo="Typo.caption">
                                 <i>(@binder.Quantity cards - last updated: @binder.UpdatedAt.ToShortDateString())</i>
+                            </MudText>
+                            <MudText Typo="Typo.caption">
+                                @if (binder.PriceMissing > 0)
+                                {
+                                    <span>€@binder.PriceValue.ToString("0.00") + @binder.PriceMissing?</span>
+                                }
+                                else
+                                {
+                                    <span>€@binder.PriceValue.ToString("0.00")</span>
+                                }
                             </MudText>
                             <MudDivider Class="my-2" />
                             <MudText>
@@ -148,8 +158,8 @@
 
 @inject CollectionService CollectionService
 @inject IDialogService DialogService
-@inject NavigationManager Nav
-@inject UserSessionService UserSession
+@inject IPricingRouter PricingRouter
+@inject IUserSessionService UserSession
 @code {
 
     // UI caches
@@ -167,6 +177,9 @@
         Unassigned = await CollectionService.GetQuantityUnassigned();
         BinderCache = await CollectionService.GetAllBinders();
         DeckCache = await CollectionService.GetAllDecks();
+
+        foreach (var binder in BinderCache)
+            (binder.PriceValue, binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(binder.Id);
     }
 
 
@@ -219,19 +232,19 @@
     {
         var parameters = new DialogParameters
         {
-            ["BinderCache"] = BinderCache,
-            ["DeckCache"] = DeckCache
+            
         };
 
         var options = new DialogOptions
         {
             CloseButton = true,
-            CloseOnEscapeKey = true,
+            CloseOnEscapeKey = false,
+            BackdropClick = false,
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddCollectionCardDialog>("Add Card", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddCardsToCollectionDialog>("Add Card", parameters, options);
         var result = await dialog.Result;
     }
 

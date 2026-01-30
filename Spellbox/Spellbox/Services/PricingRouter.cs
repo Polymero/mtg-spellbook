@@ -19,6 +19,10 @@ namespace Spellbox.Services
         Task<Dictionary<Guid, decimal?>> GetPriceBatchAsync(
             IEnumerable<CollectionAllocationDto> allocationDtos
         );
+
+        Task<(decimal, int)> GetBinderValueAsync(
+            Guid binderId
+        );
     }
 
 
@@ -68,6 +72,23 @@ namespace Spellbox.Services
 
             return await service.GetPriceBatchAsync(
                 allocationDtos,
+                prefs.NonFoilMetric,
+                prefs.FoilMetric
+            );
+        }
+
+
+        public async Task<(decimal, int)> GetBinderValueAsync(
+            Guid binderId
+        )
+        {
+            var prefs = (await _session.GetAsync()).PricingSettings;
+
+            var service = _services
+                .Single(s => s.Marketplace == prefs.Marketplace);
+
+            return await service.GetBinderValueAsync(
+                binderId,
                 prefs.NonFoilMetric,
                 prefs.FoilMetric
             );

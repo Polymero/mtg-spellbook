@@ -73,7 +73,7 @@ namespace Spellbox.Migrations
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\n                    (\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\n                    )\n                    ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\r\n                    )\r\n                    ");
                         });
                 });
 
@@ -233,6 +233,29 @@ namespace Spellbox.Migrations
                         .IsUnique();
 
                     b.ToTable("Zones");
+                });
+
+            modelBuilder.Entity("Spellbox.Model.UserPricingSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FoilMetric")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Marketplace")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NonFoilMetric")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserPricingSettings");
                 });
 
             modelBuilder.Entity("Spellbox.Model.UserProfile", b =>

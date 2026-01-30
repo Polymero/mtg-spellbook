@@ -23,19 +23,40 @@ namespace Spellbox.Migrations.CardMarketDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("PriceAverage")
+                    b.Property<decimal?>("Avg")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("PriceFoilLow")
+                    b.Property<decimal?>("Avg1")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("PriceFoilTrend")
+                    b.Property<decimal?>("Avg30")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("PriceLow")
+                    b.Property<decimal?>("Avg7")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("PriceTrend")
+                    b.Property<decimal?>("FoilAvg")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("FoilAvg1")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("FoilAvg30")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("FoilAvg7")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("FoilLow")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("FoilTrend")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("Low")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("Trend")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<DateTime>("UpdatedAt")

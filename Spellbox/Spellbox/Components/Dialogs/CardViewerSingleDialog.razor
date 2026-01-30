@@ -312,19 +312,6 @@
 
         _priceCache = await PricingRouter.GetPriceBatchAsync(Group.Allocations);
 
-        @* foreach (var allocation in Group.Allocations)
-        {
-            var price = await PricingService.GetPriceAsync(
-                allocation.VariantId,
-                allocation.Finish,
-                allocation.Language);
-
-            Console.WriteLine(
-                $"ALLOC {allocation.Id} → VAR {allocation.VariantId} → PRICE {price}");
-
-            _priceCache[allocation.Id] = price;
-        } *@
-
         StateHasChanged();
     }
 

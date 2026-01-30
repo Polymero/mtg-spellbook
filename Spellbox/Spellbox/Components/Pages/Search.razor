@@ -96,9 +96,9 @@
         string TypeLine
     );
 
-    public OracleCard searchCard { get; set; } = new OracleCard();
-    List<CVariant> searchVariants = new List<CVariant>();
-    public CVariant? chosenVariant { get; set; }
+    public CardOracle searchCard { get; set; } = new CardOracle();
+    List<CardVariant> searchVariants = new List<CardVariant>();
+    public CardVariant? chosenVariant { get; set; }
 
 
     private async Task<IEnumerable<OracleCardProj>> OracleSearchAsync(string value, CancellationToken token)
@@ -106,7 +106,7 @@
         if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
             return Enumerable.Empty<OracleCardProj>();
 
-        return await oracleContext.OracleCards
+        return await oracleContext.Oracles
             .AsNoTracking()
             .Where( c =>
                 EF.Functions.Like(c.Name, $"{value}%") ||
@@ -134,7 +134,7 @@
         // Clear chosen variant
         chosenVariant = null;
 
-        searchCard = await oracleContext.OracleCards
+        searchCard = await oracleContext.Oracles
             .Include(c => c.Variants)
             .Include(c => c.Faces)
             .SingleAsync(c => c.OracleId == proj.OracleId);

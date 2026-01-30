@@ -1,33 +1,33 @@
 /* _content/Spellbox/Components/Layout/CardGridView.razor.rz.scp.css */
 
-.card-grid-container[b-hoqfvrcn97] {
+.card-grid-container[b-222q0nahjh] {
     width: 100%;
     min-height: 100%;
     overflow-y: auto;
 }
 
-.card-row[b-hoqfvrcn97] {
+.card-row[b-222q0nahjh] {
     display: grid;
     gap: 12px;
     justify-content: center;
 }
 
-.card-tile[b-hoqfvrcn97] {
+.card-tile[b-222q0nahjh] {
     width: 224px;
     min-width: 224px;
     max-width: 224px;
 }
 
-.card-image[b-hoqfvrcn97] {
+.card-image[b-222q0nahjh] {
     width: 100%;
     height: auto;
     display: block;
     margin-bottom: 4px;
 }
 
-.text-truncate[b-hoqfvrcn97] {
+.text-truncate[b-222q0nahjh] {
     display: block;
-    width: 100%;
+    width: 224px;
     text-align: center;
     overflow: hidden;
     white-space: nowrap;

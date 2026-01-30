@@ -70,39 +70,64 @@
         </MudTd>
 
         <MudTd>
-            @r.Allocation.Language
+            @switch (r.Allocation.Language)
+            {
+                case CardLanguage.English:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>EN</b></MudChip>
+                    break;
+                case CardLanguage.Japanese:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>JP</b></MudChip>
+                    break;
+                case CardLanguage.Spanish:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>SP</b></MudChip>
+                    break;
+                default:
+                    <span>r.Allocation.Language</span>
+                    break;
+            }
         </MudTd>
 
         <MudTd>
-            @r.Allocation.Condition
+            @switch (r.Allocation.Condition)
+            {
+                case CardCondition.Mint:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>MT</b></MudChip>
+                    break;
+                case CardCondition.NearMint:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>NM</b></MudChip>
+                    break;
+                case CardCondition.Excellent:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>EX</b></MudChip>
+                    break;
+                case CardCondition.Good:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>GD</b></MudChip>
+                    break;
+                case CardCondition.LightPlayed:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>LP</b></MudChip>
+                    break;
+                case CardCondition.Played:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>PL</b></MudChip>
+                    break;
+                case CardCondition.Poor:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>PO</b></MudChip>
+                    break;
+                default:
+                    <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip>
+                    break;
+            }
         </MudTd>
-
         <MudTd>
             @if (r.Allocation.IsAltered)
             {
-                <MudChip T="string" 
-                        Variant="Variant.Text"
-                        Size="Size.Small">
-                    Alt
-                </MudChip>
+                <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
             }
-
-            @if (r.Allocation.IsSigned) 
+            @if (r.Allocation.IsSigned)
             {
-                <MudChip T="string" 
-                        Variant="Variant.Text"
-                        Size="Size.Small">
-                    Sig
-                </MudChip>
+                <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" />
             }
-            
             @if (r.Allocation.IsStamped)
             {
-                <MudChip T="string" 
-                        Variant="Variant.Text"
-                        Size="Size.Small">
-                    Dft
-                </MudChip>
+                <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
             }
         </MudTd>
         <MudTd>

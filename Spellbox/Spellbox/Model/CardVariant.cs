@@ -39,6 +39,7 @@ namespace Spellbox.Model
         public string SetName { get; init; } = null!;
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
+        public List<string> Finishes { get; init; } = null!;
         public string? Artist { get; init; }
         public string Released { get; init; } = null!;
         public string Rarity { get; init; } = null!;

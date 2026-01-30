@@ -17,7 +17,7 @@ namespace Spellbox.Migrations.OracleDb
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0-preview.6.24327.4");
 
-            modelBuilder.Entity("Spellbox.Model.CFace", b =>
+            modelBuilder.Entity("Spellbox.Model.CardFace", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -57,13 +57,47 @@ namespace Spellbox.Migrations.OracleDb
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OracleId");
+
                     b.HasIndex("OracleId", "Order")
                         .IsUnique();
 
-                    b.ToTable("CardFaces");
+                    b.ToTable("Faces");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.CVariant", b =>
+            modelBuilder.Entity("Spellbox.Model.CardOracle", b =>
+                {
+                    b.Property<Guid>("OracleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CMC")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorIdentity")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Keywords")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeLine")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("OracleId");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Oracles");
+                });
+
+            modelBuilder.Entity("Spellbox.Model.CardVariant", b =>
                 {
                     b.Property<Guid>("ScryfallId")
                         .ValueGeneratedOnAdd()
@@ -91,7 +125,7 @@ namespace Spellbox.Migrations.OracleDb
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("OracleCardId")
+                    b.Property<Guid>("OracleId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Rarity")
@@ -122,69 +156,52 @@ namespace Spellbox.Migrations.OracleDb
 
                     b.HasIndex("CardMarketProductId");
 
-                    b.HasIndex("OracleCardId");
+                    b.HasIndex("OracleId");
 
                     b.HasIndex("SearchName");
 
                     b.HasIndex("SetCode", "CollNum")
                         .IsUnique();
 
-                    b.ToTable("CardVariants");
+                    b.ToTable("Variants");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.OracleCard", b =>
+            modelBuilder.Entity("Spellbox.Services.ScryfallSyncState", b =>
                 {
-                    b.Property<Guid>("OracleId")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Key")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("CMC")
+                    b.Property<DateTime>("SyncedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ColorIdentity")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.HasKey("Key");
 
-                    b.Property<string>("Keywords")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TypeLine")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("OracleId");
-
-                    b.ToTable("OracleCards");
+                    b.ToTable("SyncStates");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.CFace", b =>
+            modelBuilder.Entity("Spellbox.Model.CardFace", b =>
                 {
-                    b.HasOne("Spellbox.Model.OracleCard", "OracleCard")
+                    b.HasOne("Spellbox.Model.CardOracle", "Oracle")
                         .WithMany("Faces")
                         .HasForeignKey("OracleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OracleCard");
+                    b.Navigation("Oracle");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.CVariant", b =>
+            modelBuilder.Entity("Spellbox.Model.CardVariant", b =>
                 {
-                    b.HasOne("Spellbox.Model.OracleCard", "OracleCard")
+                    b.HasOne("Spellbox.Model.CardOracle", "Oracle")
                         .WithMany("Variants")
-                        .HasForeignKey("OracleCardId")
+                        .HasForeignKey("OracleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OracleCard");
+                    b.Navigation("Oracle");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.OracleCard", b =>
+            modelBuilder.Entity("Spellbox.Model.CardOracle", b =>
                 {
                     b.Navigation("Faces");
 

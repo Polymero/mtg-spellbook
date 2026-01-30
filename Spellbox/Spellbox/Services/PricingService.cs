@@ -25,6 +25,12 @@ namespace Spellbox.Services
             PriceMetric nonFoilMetric,
             PriceMetric foilMetric
         );
+
+        Task<(decimal, int)> GetBinderValueAsync(
+            Guid binderId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        );
     }
 
 
@@ -32,13 +38,19 @@ namespace Spellbox.Services
     {        
         private readonly IDbContextFactory<OracleDbContext> _oracle;
         private readonly IDbContextFactory<CardMarketDbContext> _market;
+        private readonly IDbContextFactory<CollectionDbContext> _collection;
 
         public PricingMarketplace Marketplace => PricingMarketplace.CardMarket;
 
-        public CardMarketPricingService(IDbContextFactory<OracleDbContext> oracle, IDbContextFactory<CardMarketDbContext> market)
+        public CardMarketPricingService(
+            IDbContextFactory<OracleDbContext> oracle, 
+            IDbContextFactory<CardMarketDbContext> market,
+            IDbContextFactory<CollectionDbContext> collection
+        )
         {
             _oracle = oracle;
             _market = market;
+            _collection = collection;
         }
 
 
@@ -69,21 +81,33 @@ namespace Spellbox.Services
             if (price == null)
                 return null;
 
-            var metric = finish == CardFinish.NonFoil
-                ? nonFoilMetric
-                : foilMetric;
-
-            return metric switch
+            if (finish == CardFinish.NonFoil)
             {
-                PriceMetric.Low => price.Low,
-                PriceMetric.Avg => price.Avg,
-                PriceMetric.Trend => price.Trend,
-                PriceMetric.Avg1 => price.Avg1,
-                PriceMetric.Avg7 => price.Avg7,
-                PriceMetric.Avg30 => price.Avg30,
-
-                _ => null
-            };
+                return nonFoilMetric switch
+                {
+                    PriceMetric.Low => price.Low,
+                    PriceMetric.Avg => price.Avg,
+                    PriceMetric.Trend => price.Trend,
+                    PriceMetric.Avg1 => price.Avg1,
+                    PriceMetric.Avg7 => price.Avg7,
+                    PriceMetric.Avg30 => price.Avg30,
+                    _ => null
+                };
+            }
+            else
+            {
+                return foilMetric switch
+                {
+                    PriceMetric.Low => price.FoilLow,
+                    PriceMetric.Avg => price.FoilAvg,
+                    PriceMetric.Trend => price.FoilTrend,
+                    PriceMetric.Avg1 => price.FoilAvg1,
+                    PriceMetric.Avg7 => price.FoilAvg7,
+                    PriceMetric.Avg30 => price.FoilAvg30,
+                    _ => null
+                };
+            }
+            
         }
 
         public async Task<Dictionary<Guid, decimal?>> GetPriceBatchAsync(
@@ -135,24 +159,62 @@ namespace Spellbox.Services
                     continue;
                 }
 
-                var metric = allocation.Finish == CardFinish.NonFoil
-                    ? nonFoilMetric
-                    : foilMetric;
-
-                result[allocation.Id] = metric switch
+                if (allocation.Finish == CardFinish.NonFoil)
                 {
-                    PriceMetric.Low => price.Low,
-                    PriceMetric.Avg => price.Avg,
-                    PriceMetric.Trend => price.Trend,
-                    PriceMetric.Avg1 => price.Avg1,
-                    PriceMetric.Avg7 => price.Avg7,
-                    PriceMetric.Avg30 => price.Avg30,
-
-                    _ => null
-                };
+                    result[allocation.Id] = nonFoilMetric switch
+                    {
+                        PriceMetric.Low => price.Low,
+                        PriceMetric.Avg => price.Avg,
+                        PriceMetric.Trend => price.Trend,
+                        PriceMetric.Avg1 => price.Avg1,
+                        PriceMetric.Avg7 => price.Avg7,
+                        PriceMetric.Avg30 => price.Avg30,
+                        _ => null
+                    };
+                }
+                else
+                {
+                    result[allocation.Id] = foilMetric switch
+                    {
+                        PriceMetric.Low => price.FoilLow,
+                        PriceMetric.Avg => price.FoilAvg,
+                        PriceMetric.Trend => price.FoilTrend,
+                        PriceMetric.Avg1 => price.FoilAvg1,
+                        PriceMetric.Avg7 => price.FoilAvg7,
+                        PriceMetric.Avg30 => price.FoilAvg30,
+                        _ => null
+                    };
+                }
             }
 
             return result;
+        }
+
+
+        public async Task<(decimal, int)> GetBinderValueAsync(
+            Guid binderId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var collection = await _collection.CreateDbContextAsync();
+
+            var allocations = await collection.Allocations
+                .Where(a => a.BinderId == binderId)
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish
+                })
+                .ToListAsync();
+
+            var prices = await GetPriceBatchAsync(allocations, nonFoilMetric, foilMetric);
+
+            var total = prices.Values.Where(p => p.HasValue).Sum();
+            var missing = prices.Values.Count(p => !p.HasValue);
+
+            return (total ?? 0m, missing);
         }
 
     }

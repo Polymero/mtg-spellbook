@@ -134,6 +134,7 @@ namespace Spellbox.Services
         public int Quantity { get; set; }
 
         // from CVariant
+        public Guid OracleId { get; init; }
         public Guid VariantId { get; init; }
         public string Name { get; init; } = null!;
         public string SetCode { get; init; } = null!;

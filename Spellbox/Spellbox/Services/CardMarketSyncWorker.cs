@@ -22,6 +22,8 @@ namespace Spellbox.Services
 
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
+            await Task.Delay(TimeSpan.FromSeconds(10), ct);
+
             while (!ct.IsCancellationRequested)
             {
                 if (_isRunning)

@@ -76,6 +76,25 @@ namespace Spellbox.Model
         public Guid? SnapshotId { get; set; }
     }
 
+    public sealed class NewAllocationDto
+    {
+        public Guid OracleId { get; set; }
+        public Guid VariantId { get; set; }
+
+        public string Name { get; set; } = null!;
+        public string SetCode { get; set; } = null!;
+        public string CollNum { get; set; } = null!;
+
+        public CardFinish Finish { get; set; } = CardFinish.NonFoil;
+        public CardLanguage Language { get; set; } = CardLanguage.English;
+        public CardCondition Condition { get; set; } = CardCondition.NearMint;
+        public bool IsAltered { get; set; } = false;
+        public bool IsSigned { get; set; } = false;
+        public bool IsStamped { get; set; } = false;
+
+        public decimal? BoughtFor { get; set; }
+    }
+
     public enum AllocationIndex
     {
         Unassigned = 0,
