@@ -638,7 +638,20 @@
 
     private async Task SubmitAsync()
     {
+        if (SubmissionBatch.Count == 0)
+            return;
 
+        if (!CanSubmitToCollection)
+            return;
+
+        await CollectionService.SubmitBatchAsync(
+            SubmissionBatch,
+            _selectedBinder?.Id,
+            _selectedDeck?.ActiveSnapshotId
+        );
+
+        MudDialog.Close(DialogResult.Ok(true));
+        Snackbar.Add("Cards succesfully added to the collection ~ !", Severity.Success);
     }
 
     private void Cancel() => MudDialog.Cancel();

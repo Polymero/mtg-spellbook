@@ -79,6 +79,71 @@ namespace Spellbox.Services
         }
 
 
+        public async Task SubmitBatchAsync(
+            IEnumerable<NewAllocationDto> submissionBatch,
+            Guid? binderId,
+            Guid? activeSnapshotId
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+            using var tx = await db.Database.BeginTransactionAsync();
+
+            var allocationIndex = 
+                binderId != null ? AllocationIndex.Binder :
+                activeSnapshotId != null ? AllocationIndex.Deck :
+                AllocationIndex.Unassigned;
+
+            var groups = submissionBatch
+                .ToLookup(s => Tuple.Create(s.OracleId, s.VariantId));
+
+            foreach (var group in groups)
+            {
+                (var oracleId, var variantId) = group.Key;
+
+                // Get existing collection card
+                var collectionCard = await db.CollectionCards.FirstOrDefaultAsync(c => 
+                    c.OracleId == oracleId && c.VariantId == variantId);
+
+                // Create entry if unavailable
+                if (collectionCard == null)
+                {
+                    collectionCard = new CollectionCard
+                    {
+                        Id = Guid.NewGuid(),
+                        OracleId = oracleId,
+                        VariantId = variantId
+                    };
+                    db.CollectionCards.Add(collectionCard);
+                }
+
+                foreach (var newAlloc in group)
+                {
+                    db.Allocations.Add(new CollectionAllocation
+                    {
+                        Id = Guid.NewGuid(),
+                        CollectionCardId = collectionCard.Id,
+                        AllocationIndex = allocationIndex,
+                        BinderId = binderId,
+                        SnapshotId = activeSnapshotId,
+                        Finish = newAlloc.Finish,
+                        Language = newAlloc.Language,
+                        Condition = newAlloc.Condition,
+                        IsAltered = newAlloc.IsAltered,
+                        IsSigned = newAlloc.IsSigned,
+                        IsStamped = newAlloc.IsStamped,
+                        BoughtFor = newAlloc.BoughtFor,
+                        AddedAt = DateTime.UtcNow,
+                        AllocatedAt = DateTime.UtcNow
+                    });
+                }
+
+            }
+
+            await db.SaveChangesAsync();
+            await tx.CommitAsync();
+        }
+
+
         // Collection overview
         public async Task<int> GetQuantityUnassigned()
         {
