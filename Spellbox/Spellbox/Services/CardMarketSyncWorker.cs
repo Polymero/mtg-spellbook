@@ -38,9 +38,10 @@ namespace Spellbox.Services
                 try
                 {
                     using var scope = _scopeFactory.CreateScope();
-
                     var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<CardMarketDbContext>>();
+                    
                     using var pricingDb = await factory.CreateDbContextAsync();
+                    await pricingDb.Database.MigrateAsync(ct);
 
                     var state = await pricingDb.SyncStates
                         .SingleOrDefaultAsync(x => x.Key == "PriceGuide", ct);

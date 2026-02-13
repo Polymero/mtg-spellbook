@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -101,9 +102,17 @@ namespace Spellbox.Services
                 try
                 {
                     if (card.ValueKind == JsonValueKind.Object &&
-                        card.TryGetProperty("oracle_id", out var p))
+                        card.TryGetProperty("oracle_id", out var pId))
                     {
-                        oracleIdStr = p.GetString();
+                        oracleIdStr = pId.GetString();
+                    }
+                    else if (card.ValueKind == JsonValueKind.Object &&
+                             card.TryGetProperty("layout", out var pLayout))
+                    {
+                        if (pLayout.GetString() == "reversible_card")
+                        {
+                            variantBatch.AddRange(await ParseReversibleCard(card));
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -408,6 +417,70 @@ namespace Spellbox.Services
             }
 
             return variant;
+        }
+
+        private async Task<List<CardVariant>> ParseReversibleCard(
+            JsonElement card
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var variants = new List<CardVariant>();
+
+            if (card.TryGetProperty("reprint", out var reprint) &&
+                !reprint.GetBoolean())
+                return variants;
+
+            if (card.TryGetProperty("card_faces", out var faces) &&
+                faces.ValueKind == JsonValueKind.Array)
+            {
+                var scryfallIdStr = card.GetProperty("id").GetString()!;
+
+                int i = 0;
+                foreach (var face in faces.EnumerateArray())
+                {
+                    var oracleId = Guid.Parse(face.GetProperty("oracle_id").GetString()!);
+
+                    var parent = await db.Oracles
+                        .Where(o => o.OracleId == oracleId)
+                        .SingleOrDefaultAsync();
+
+                    if (parent is null)
+                        continue;
+
+                    var img = face.GetProperty("image_uris");
+
+                    variants.Add(new CardVariant
+                    {
+                        ScryfallId = Guid.Parse(scryfallIdStr[..^1] + i.ToString()),
+                        OracleId = oracleId,
+
+                        SetName = card.GetPropertyOrEmptyString("set_name"),
+                        SetCode = card.GetPropertyOrEmptyString("set"),
+                        CollNum = card.GetPropertyOrEmptyString("collector_number") + "ab"[i],
+                        Finishes = card.TryGetProperty("finishes", out var finishes) &&
+                                finishes.ValueKind == JsonValueKind.Array
+                            ? finishes.EnumerateArray()
+                                .Select(f => f.GetString())
+                                .Where(f => !string.IsNullOrWhiteSpace(f))
+                                .ToList()!
+                            : new List<string>(),
+                        Released = card.GetPropertyOrEmptyString("released_at"),
+                        Rarity = card.GetPropertyOrEmptyString("rarity"),
+                        CardMarketProductId = card.GetPropertyOrNullInt("cardmarket_id"),
+
+                        SearchName = face.GetPropertyOrEmptyString("name"),
+                        Artist = face.GetPropertyOrEmptyString("artist"),
+                        FlavorTexts = new List<string> { face.GetPropertyOrEmptyString("flavor_text") },
+                        Thumbs = new List<string> { img.GetPropertyOrEmptyString("small").ToString() },
+                        Images = new List<string> { img.GetPropertyOrEmptyString("normal").ToString() }
+                    });
+
+                    i++;
+                }
+            }
+
+            return variants;
         }
 
 

@@ -314,6 +314,29 @@ namespace Spellbox.Services
         }
 
 
+        // Collection viewing
+        public async Task<List<CollectionAllocationDto>> GetAllAllocationsAsync()
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    OracleId = a.CollectionCard.OracleId,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish,
+                    Language = a.Language,
+                    Condition = a.Condition,
+                    IsAltered = a.IsAltered,
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor
+                })
+                .ToListAsync();
+        }
+
+
         // Card viewer
         public async Task<CollectionAllocationDto> GetSingleAllocationAsync(Guid allocationId)
         {
@@ -459,13 +482,58 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<List<Guid>> GetAllDistinctVariantsAsync()
+        // public async Task<List<Guid>> GetAllDistinctVariantsAsync()
+        // {
+        //     using var db = await _factory.CreateDbContextAsync();
+
+        //     return await db.CollectionCards
+        //         .Select(c => c.VariantId)
+        //         .Distinct()
+        //         .ToListAsync();
+        // }
+
+
+        public async Task<List<CollectionAllocationDto>> GetCardDetailsAllocationDtosAsync(
+            Guid? oracleId = null,
+            Guid? variantId = null,
+            Guid? binderId = null,
+            Guid? snapshotId = null
+        )
         {
+            if (oracleId is null && variantId is null)
+                return [];
+
+            if (binderId is not null && snapshotId is not null)
+                return [];
+
             using var db = await _factory.CreateDbContextAsync();
 
-            return await db.CollectionCards
-                .Select(c => c.VariantId)
-                .Distinct()
+            return await db.Allocations
+                .Where(a =>
+                    (!oracleId.HasValue || a.CollectionCard.OracleId == oracleId) &&
+                    (!variantId.HasValue || a.CollectionCard.VariantId == variantId) &&
+                    (!binderId.HasValue || a.BinderId == binderId) &&
+                    (!snapshotId.HasValue || a.SnapshotId == snapshotId)
+                )
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    BinderId = a.Binder != null ? a.BinderId : null,
+                    BinderName = a.Binder != null ? a.Binder.Name : null,
+                    DeckId = a.DeckSnapshot != null ? a.DeckSnapshot.DeckId : null,
+                    DeckName = a.DeckSnapshot != null ? a.DeckSnapshot.Deck.Name : null,
+                    OracleId = a.CollectionCard.OracleId,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish,
+                    Language = a.Language,
+                    Condition = a.Condition,
+                    IsAltered = a.IsAltered,
+                    IsSigned = a.IsSigned,
+                    IsStamped = a.IsStamped,
+                    BoughtFor = a.BoughtFor,
+                    AddedAt = a.AddedAt,
+                    AllocatedAt = a.AllocatedAt
+                })
                 .ToListAsync();
         }
 

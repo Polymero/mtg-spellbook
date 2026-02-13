@@ -26,25 +26,7 @@ namespace Spellbox.Migrations.CardMarketDb
                     b.Property<decimal?>("Avg")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("Avg1")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<decimal?>("Avg30")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<decimal?>("Avg7")
-                        .HasColumnType("decimal(10,2)");
-
                     b.Property<decimal?>("FoilAvg")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<decimal?>("FoilAvg1")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<decimal?>("FoilAvg30")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<decimal?>("FoilAvg7")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<decimal?>("FoilLow")
@@ -58,9 +40,6 @@ namespace Spellbox.Migrations.CardMarketDb
 
                     b.Property<decimal?>("Trend")
                         .HasColumnType("decimal(10,2)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("ProductId");
 

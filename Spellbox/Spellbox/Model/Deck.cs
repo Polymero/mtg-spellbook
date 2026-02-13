@@ -29,6 +29,8 @@ namespace Spellbox.Model
         
         public Guid ActiveSnapshotId { get; init; }
         public int Quantity { get; init; }
+        public decimal PriceValue { get; set; }
+        public int PriceMissing { get; set; }
     }
 
     public enum DeckType

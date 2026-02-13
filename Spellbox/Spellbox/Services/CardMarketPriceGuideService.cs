@@ -5,88 +5,145 @@ using EFCore.BulkExtensions;
 
 using Spellbox.Contexts;
 using Spellbox.Model;
+using System.Runtime.CompilerServices;
+using Spellbox.Utilities;
 
 
 namespace Spellbox.Services
 {
     public sealed class CardMarketPriceGuideService
     {
-        private readonly HttpClient _http;
-        private readonly IDbContextFactory<CardMarketDbContext> _factory;
-
+        private const int BatchSize = 1000;
         private const string PriceGuideUrl = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_1.json";
 
-        public CardMarketPriceGuideService(HttpClient http, IDbContextFactory<CardMarketDbContext> factory)
+        private readonly HttpClient _http;
+        private readonly IDbContextFactory<CardMarketDbContext> _factory;
+        private readonly ILogger<CardMarketPriceGuideService> _logger;
+
+        public CardMarketPriceGuideService(
+            HttpClient http, 
+            IDbContextFactory<CardMarketDbContext> factory,
+            ILogger<CardMarketPriceGuideService> logger
+        )
         {
             _http = http;
             _factory = factory;
+            _logger = logger;
         }
 
+
+        // Public methods
 
         public async Task RefreshAsync(CancellationToken ct = default)
         {
-            using var stream = await _http.GetStreamAsync(PriceGuideUrl, ct);
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
+            var guideBatch = new List<CardMarketPriceCache>();
 
-            var resp = await JsonSerializer.DeserializeAsync<CardMarketPriceGuideResponse>(stream, options, ct);
-
-            if (resp == null || resp.PriceGuides.Count == 0)
-                throw new InvalidOperationException("Failed to parse CardMarket price guide JSON.");
-
-            using var db = await _factory.CreateDbContextAsync(ct);
-            db.ChangeTracker.AutoDetectChangesEnabled = false;
-
-            const int batchSize = 2000;
-            var buffer = new List<CardMarketPriceCache>(batchSize);
-
-            var bulkConfig = new BulkConfig
-            {
-                PreserveInsertOrder = true,
-                SetOutputIdentity = false,
-                BatchSize = batchSize,
-                UseTempDB = false,
-                BulkCopyTimeout = 0
-            };
-
-            foreach (var entry in resp.PriceGuides)
+            await foreach (var guide in StreamPriceGuidesAsync(PriceGuideUrl, ct))
             {
                 ct.ThrowIfCancellationRequested();
+                
+                int? productId = null;
 
-                buffer.Add(new CardMarketPriceCache
+                try
                 {
-                    ProductId = entry.ProductId,
-                    Low = entry.Low,
-                    Avg = entry.Avg,
-                    Trend = entry.Trend,
-                    Avg1 = entry.Avg1,
-                    Avg7 = entry.Avg7,
-                    Avg30 = entry.Avg30,
-                    FoilLow = entry.LowFoil,
-                    FoilAvg = entry.AvgFoil,
-                    FoilTrend = entry.TrendFoil,
-                    FoilAvg1 = entry.Avg1Foil,
-                    FoilAvg7 = entry.Avg7Foil,
-                    FoilAvg30 = entry.Avg30Foil,
-                    UpdatedAt = DateTime.UtcNow
-                });
-
-                if (buffer.Count == batchSize)
+                    if (guide.ValueKind == JsonValueKind.Object &&
+                        guide.TryGetProperty("idProduct", out var id))
+                    {
+                        productId = id.GetInt32();
+                    }
+                }
+                catch (Exception ex)
                 {
-                    await db.BulkInsertOrUpdateAsync(buffer, bulkConfig, cancellationToken:ct);
+                    _logger.LogWarning(ex, "Corrupt JSON. Skipping guide...");
+                    continue;
+                }
 
-                    buffer.Clear();
-                    await Task.Yield();
+                if (productId is null)
+                {
+                    _logger.LogWarning("Null idProduct. Skipping guide...");
+                    continue;
+                }
+
+                try
+                {
+                    guideBatch.Add(new CardMarketPriceCache
+                    {
+                        ProductId = productId.Value,
+                        Avg = guide.GetPropertyOrNullDecimal("avg"),
+                        Low = guide.GetPropertyOrNullDecimal("low"),
+                        Trend = guide.GetPropertyOrNullDecimal("trend"),
+                        FoilAvg = guide.GetPropertyOrNullDecimal("avg-foil"),
+                        FoilLow = guide.GetPropertyOrNullDecimal("low-foil"),
+                        FoilTrend = guide.GetPropertyOrNullDecimal("trend-foil"),
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to project price guide, skipping...");
+                    continue;
+                }
+
+                if (guideBatch.Count >= BatchSize)
+                {
+                    await FlushAsync(guideBatch, ct);
                 }
             }
 
-            if (buffer.Count > 0)
+            if (guideBatch.Count > 0)
+                await FlushAsync(guideBatch, ct);
+        }
+
+
+        // Private methods
+
+        private async IAsyncEnumerable<JsonElement> StreamPriceGuidesAsync(
+            string url,
+            [EnumeratorCancellation] CancellationToken ct
+        )
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = await _http.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                ct
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var jdoc = await JsonDocument.ParseAsync(stream, new JsonDocumentOptions
             {
-                await db.BulkInsertOrUpdateAsync(buffer, bulkConfig, cancellationToken:ct);
+                AllowTrailingCommas = true
+            }, ct);
+
+            foreach (var element in jdoc.RootElement.GetProperty("priceGuides").EnumerateArray())
+            {
+                ct.ThrowIfCancellationRequested();
+                yield return element;
             }
         }
+
+        private async Task FlushAsync(
+            List<CardMarketPriceCache> batch,
+            CancellationToken ct
+        )
+        {
+            if (batch.Count == 0)
+                return;
+
+            using var db = await _factory.CreateDbContextAsync(ct);
+            await db.Database.MigrateAsync(ct);
+
+            await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+            foreach (var cache in batch)
+                await SqliteUpserts.UpsertCardMarketPriceCacheAsync(db, cache, ct);
+
+            await tx.CommitAsync(ct);
+
+            batch.Clear();
+        }
+
     }
 
 

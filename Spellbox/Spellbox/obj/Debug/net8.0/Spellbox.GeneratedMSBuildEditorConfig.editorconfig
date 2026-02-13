@@ -49,6 +49,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXEFkZERlY2tEaWFsb2cucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Nika/mtg-spellbook/Spellbox/Spellbox/Components/Dialogs/CardDetailsViewerDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXENhcmREZXRhaWxzVmlld2VyRGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Nika/mtg-spellbook/Spellbox/Spellbox/Components/Dialogs/CardViewerSingleDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXENhcmRWaWV3ZXJTaW5nbGVEaWFsb2cucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -79,6 +83,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Nika/mtg-spellbook/Spellbox/Spellbox/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Nika/mtg-spellbook/Spellbox/Spellbox/Components/Pages/PricingMissing.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQcmljaW5nTWlzc2luZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Nika/mtg-spellbook/Spellbox/Spellbox/Components/Pages/Search.razor]

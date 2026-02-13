@@ -148,5 +148,42 @@ DO UPDATE SET
 ", ct);
         }
 
+
+        public static Task UpsertCardMarketPriceCacheAsync(
+            CardMarketDbContext db,
+            CardMarketPriceCache cache,
+            CancellationToken ct = default
+        )
+        {
+            return db.Database.ExecuteSqlInterpolatedAsync($@"
+INSERT INTO PriceCaches (
+    ProductId,
+    Low,
+    Avg,
+    Trend,
+    FoilLow,
+    FoilAvg,
+    FoilTrend
+)
+VALUES (
+    {cache.ProductId},
+    {cache.Low},
+    {cache.Avg},
+    {cache.Trend},
+    {cache.FoilLow},
+    {cache.FoilAvg},
+    {cache.FoilTrend}
+)
+ON CONFLICT(ProductId)
+DO UPDATE SET
+    Low = excluded.Low,
+    Avg = excluded.Avg,
+    Trend = excluded.Trend,
+    FoilLow = excluded.FoilLow,
+    FoilAvg = excluded.FoilAvg,
+    FoilTrend = excluded.FoilTrend
+", ct);
+        }
+
     }
 }

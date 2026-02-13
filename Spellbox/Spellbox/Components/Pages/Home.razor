@@ -15,6 +15,21 @@
 </MudPaper>
 
 <MudPaper Elevation="0"
+          Class="my-12 mud-transparent">
+    <MudText Typo="Typo.h5"
+             Align="Align.Center">
+        @if (_collectionPriceMissing > 0)
+        {
+            <span>Collection value: €@_collectionPriceValue.ToString("0.00") + @_collectionPriceMissing?</span>
+        }
+        else
+        {
+            <span>Collection value: €@_collectionPriceValue.ToString("0.00")</span>
+        }
+    </MudText>
+</MudPaper>
+
+<MudPaper Elevation="0"
           Class="my-8 d-flex justify-center mud-transparent">
     <MudButton Variant="Variant.Filled"
                Color="Color.Info"
@@ -26,10 +41,10 @@
 
 <MudStack Class="my-8">
 
-    @if (Unassigned > 0)
+    @if (Unassigned is not null && Unassigned.Quantity > 0)
     {
         <MudText Align="Align.Center">
-            You have @Unassigned <MudLink Href="/unassigned">unassigned</MudLink> card(s) just hanging around. Give them a home!
+            You have @Unassigned.Quantity <MudLink Href="/unassigned">unassigned</MudLink> card(s) just hanging around. Give them a home!
         </MudText>
     }
 
@@ -165,21 +180,42 @@
     // UI caches
     private List<CollectionBinderDto> BinderCache { get; set; } = new List<CollectionBinderDto>();
     private List<DeckDto> DeckCache { get; set; } = new List<DeckDto>();
-    private int Unassigned;
+    
+    private sealed record UnassignedDto
+    (
+        int Quantity,
+        decimal PriceValue,
+        int PriceMissing
+    );
+    private UnassignedDto? Unassigned;
 
     private string _displayName = null!;
+    private decimal _collectionPriceValue;
+    private int _collectionPriceMissing;
 
     protected override async Task OnInitializedAsync()
     {
         var session = await UserSession.GetAsync();
         _displayName = session.DisplayName;
 
-        Unassigned = await CollectionService.GetQuantityUnassigned();
-        BinderCache = await CollectionService.GetAllBinders();
-        DeckCache = await CollectionService.GetAllDecks();
+        var uQuantity = await CollectionService.GetQuantityUnassigned();
+        (var uValue, var uMissing) = await PricingRouter.GetUnassignedValueAsync();
+        Unassigned = new UnassignedDto(uQuantity, uValue, uMissing);
 
+        BinderCache = await CollectionService.GetAllBinders();
         foreach (var binder in BinderCache)
             (binder.PriceValue, binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(binder.Id);
+
+        DeckCache = await CollectionService.GetAllDecks();
+        foreach (var deck in DeckCache)
+            (deck.PriceValue, deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(deck.ActiveSnapshotId);
+
+        _collectionPriceValue = Unassigned.PriceValue + 
+            BinderCache.Sum(b => b.PriceValue) +
+            DeckCache.Sum(d => d.PriceValue);
+        _collectionPriceMissing = Unassigned.PriceMissing +
+            BinderCache.Sum(b => b.PriceMissing) +
+            DeckCache.Sum(d => d.PriceMissing);
     }
 
 

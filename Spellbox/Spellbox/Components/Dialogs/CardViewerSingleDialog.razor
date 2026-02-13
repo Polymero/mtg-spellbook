@@ -231,9 +231,30 @@
                     <MudTh>
                         @if (a.BoughtFor.HasValue)
                         {
-                            <span>
-                                €@a.BoughtFor.Value.ToString("0.00")
-                            </span>
+                            @if (_priceCache.TryGetValue(a.Id, out var price) &&
+                                 price.HasValue && price.Value > 0m && a.BoughtFor > 0m)
+                            {
+                                var shift = 100 * (price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
+
+                                @if (shift < 0m)
+                                {
+                                    <span>
+                                        €@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        €@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText>
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                <span>
+                                    €@a.BoughtFor.Value.ToString("0.00")
+                                </span>
+                            }
                         }
                         else
                         {

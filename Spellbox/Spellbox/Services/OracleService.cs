@@ -8,7 +8,6 @@ namespace Spellbox.Services
 {
     public sealed class OracleService
     {
-
         private readonly IDbContextFactory<OracleDbContext> _factory;
 
         public OracleService(IDbContextFactory<OracleDbContext> factory)
@@ -134,7 +133,7 @@ namespace Spellbox.Services
 
         public async Task<CardViewerDto> GetCardInfoByVariantIdAsync(Guid variantId)
         {
-            var variant = await GetVariantsByIdsAsync(new List<Guid> { variantId });
+            var variant = await GetVariantsByIdsAsync([variantId]);
             var v = variant[variantId];
 
             (CardOracleDto oracle, List<CardFaceDto> faces) = await GetSingleOracleAsync(v.OracleId);
@@ -195,28 +194,26 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<List<CardVariantDto>> GetVariantsWithMissingCardMarketIdByIdsAsync(IEnumerable<Guid> variantIds)
+        public async Task ApplyPricingEditsAsync(
+            List<PricingEditDto> editDtos
+        )
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            return await db.Variants
-                .Where(v => variantIds.Contains(v.ScryfallId) &&
-                       v.CardMarketProductId == null)
-                .Select(v => new CardVariantDto
-                {
-                    ScryfallId = v.ScryfallId,
-                    OracleId = v.OracleId,
-                    Name = v.SearchName,
-                    SetName = v.SetName,
-                    SetCode = v.SetCode,
-                    CollNum = v.CollNum,
-                    Thumbs = v.Thumbs,
-                    Images = v.Images,
-                    CardMarketProductId = v.CardMarketProductId
-                })
-                .ToListAsync();
-        }
+            var variantIds = editDtos.Select(e => e.VariantId);
 
+            var variants = await db.Variants
+                .AsTracking()
+                .Where(v => variantIds.Contains(v.ScryfallId))
+                .ToDictionaryAsync(v => v.ScryfallId);
+
+            foreach (var editDto in editDtos)
+            {
+                variants[editDto.VariantId].CardMarketProductId = editDto.CardMarketProductId;
+            }
+
+            await db.SaveChangesAsync();
+        }
     }
 
     public sealed class CardViewerDto

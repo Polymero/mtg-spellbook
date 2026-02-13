@@ -133,9 +133,30 @@
         <MudTd>
             @if (r.Allocation.BoughtFor.HasValue)
             {
-                <span>
-                    €@r.Allocation.BoughtFor.Value.ToString("0.00")
-                </span>
+                @if (_priceCache.TryGetValue(r.Allocation.Id, out var price) &&
+                        price.HasValue && price.Value > 0m && r.Allocation.BoughtFor > 0m)
+                {
+                    var shift = 100 * (price.Value - r.Allocation.BoughtFor.Value) / r.Allocation.BoughtFor.Value;
+
+                    @if (shift < 0m)
+                    {
+                        <span>
+                            €@r.Allocation.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText>
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            €@r.Allocation.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText>
+                        </span>
+                    }
+                }
+                else
+                {
+                    <span>
+                        €@r.Allocation.BoughtFor.Value.ToString("0.00")
+                    </span>
+                }
             }
             else
             {

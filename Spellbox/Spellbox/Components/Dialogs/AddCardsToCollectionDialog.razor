@@ -553,6 +553,9 @@
 
     private async void OracleSelectFuncAsync(CardOracleDto oracleDto)
     {
+        if (oracleDto is null)
+            return;
+            
         _availableVariants = await OracleService.GetVariantsByOracleIdAsync(oracleDto.OracleId);
 
         _selectedVariant = await OracleService.GetCardInfoByVariantIdAsync(_availableVariants.First().ScryfallId);
@@ -629,6 +632,8 @@
                 BoughtFor = _newAlloc.BoughtFor
             });
         }
+
+        Snackbar.Add("Card(s) added to current batch ~ !", Severity.Info);
 
         _setCode = null;
         _collNum = null;

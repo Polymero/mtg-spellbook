@@ -40,14 +40,14 @@ namespace Spellbox.Contexts
             entity.Property(e => e.Trend)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.Avg1)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.Avg1)
+            //       .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.Avg7)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.Avg7)
+            //       .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.Avg30)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.Avg30)
+            //       .HasColumnType("decimal(10,2)");
 
             entity.Property(e => e.FoilLow)
                   .HasColumnType("decimal(10,2)");
@@ -58,17 +58,17 @@ namespace Spellbox.Contexts
             entity.Property(e => e.FoilTrend)
                   .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.FoilAvg1)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.FoilAvg1)
+            //       .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.FoilAvg7)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.FoilAvg7)
+            //       .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.FoilAvg30)
-                  .HasColumnType("decimal(10,2)");
+            // entity.Property(e => e.FoilAvg30)
+            //       .HasColumnType("decimal(10,2)");
 
-            entity.Property(e => e.UpdatedAt)
-                  .IsRequired();
+            // entity.Property(e => e.UpdatedAt)
+            //       .IsRequired();
         }
     }
 

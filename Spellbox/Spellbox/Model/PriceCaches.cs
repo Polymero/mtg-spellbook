@@ -10,17 +10,32 @@ namespace Spellbox.Model
         public decimal? Low { get; set; }
         public decimal? Avg { get; set; }
         public decimal? Trend { get; set; }
-        public decimal? Avg1 { get; set; }
-        public decimal? Avg7 { get; set; }
-        public decimal? Avg30 { get; set; }
+        // public decimal? Avg1 { get; set; }
+        // public decimal? Avg7 { get; set; }
+        // public decimal? Avg30 { get; set; }
 
         public decimal? FoilLow { get; set; }
         public decimal? FoilAvg { get; set; }
         public decimal? FoilTrend { get; set; }
-        public decimal? FoilAvg1 { get; set; }
-        public decimal? FoilAvg7 { get; set; }
-        public decimal? FoilAvg30 { get; set; }
+        // public decimal? FoilAvg1 { get; set; }
+        // public decimal? FoilAvg7 { get; set; }
+        // public decimal? FoilAvg30 { get; set; }
 
-        public DateTime UpdatedAt { get; set; }
+        // public DateTime UpdatedAt { get; set; }
+    }
+
+    public class PricingEditDto
+    {
+        public int? CardMarketProductId { get; set; }
+
+        public Guid OracleId { get; init; }
+        public Guid VariantId { get; init; }
+        public string Name { get; init; } = null!;
+        public string SetName { get; init; } = null!;
+        public string SetCode { get; init; } = null!;
+        public string CollNum { get; init; } = null!;
+
+        public decimal? PriceNonFoil { get; set; }
+        public decimal? PriceFoil { get; set; }
     }
 }

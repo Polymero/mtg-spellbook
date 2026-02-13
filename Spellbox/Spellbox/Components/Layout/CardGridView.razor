@@ -151,11 +151,19 @@
 
     private async Task OpenCardDialog(CollectionVariantGroupDto group)
     {
-        var parameters = new DialogParameters
+        @* var parameters = new DialogParameters
         {
             ["Group"] = group,
             ["SubcollectionName"] = SubcollectionName,
             ["OnEditSuccess"] = EventCallback.Factory.Create<EditCallback>(this, HandleEditSuccess)
+        }; *@
+
+        var parameters = new DialogParameters
+        {
+            ["OracleId"] = group.OracleId,
+            ["VariantId"] = group.VariantId,
+            ["BinderId"] = group.Allocations.First().BinderId,
+            ["SnapshotId"] = group.Allocations.First().DeckId
         };
 
         var options = new DialogOptions
@@ -167,7 +175,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var dialog = await DialogService.ShowAsync<CardDetailsViewerDialog>("Card Viewer", parameters, options);
         var result = await dialog.Result;
 
         if (!result!.Canceled &&

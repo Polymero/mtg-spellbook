@@ -1,0 +1,151 @@
+﻿@page "/pricing_missing"
+
+<PageTitle>Pricing Missing</PageTitle>
+
+
+<MudText Typo="Typo.h4"
+         Class="my-8">
+    Collection Cards with Missing PriceId
+</MudText>
+
+<MudTable Items="@PricingEdits"
+          Dense="true"
+          Hover="true"
+          T="PricingEditDto">
+
+    <HeaderContent>
+        <MudTh>
+            Name
+        </MudTh>
+        <MudTh>
+            Set Code
+        </MudTh>
+        <MudTh>
+            PriceId
+        </MudTh>
+        <MudTh>
+            
+        </MudTh>
+        <MudTh>
+            <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
+        </MudTh>
+        <MudTh>
+            <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
+        </MudTh>
+    </HeaderContent>
+
+    <RowTemplate Context="e">
+        <MudTd>
+            @e.Name
+        </MudTd>
+        <MudTd>
+            @String.Format("{0} {1}", e.SetCode?.ToUpper(), e.CollNum)
+        </MudTd>
+        <MudTd>
+            <MudNumericField T="int?"
+                             Label="PriceId"
+                             @bind-Value="e.CardMarketProductId"
+                             HideSpinButtons="true"
+                             Immediate="true" />
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       Size="Size.Small"
+                       Disabled="@(!e.CardMarketProductId.HasValue)"
+                       OnClick="@(() => CheckPriceIdAsync(e))">
+                Check
+            </MudButton>
+        </MudTd>
+        <MudTd>
+            @if (e.CardMarketProductId.HasValue)
+            {
+                @if (e.PriceNonFoil.HasValue)
+                {
+                    <span>€@e.PriceNonFoil.Value.ToString("0.00")</span>
+                }
+                else
+                {
+                    <span>€—</span>
+                }
+            }
+            else
+            {
+                <span>—</span>
+            }
+        </MudTd>
+        <MudTd>
+            @if (e.CardMarketProductId.HasValue)
+            {
+                @if (e.PriceFoil.HasValue)
+                {
+                    <span>€@e.PriceFoil.Value.ToString("0.00")</span>
+                }
+                else
+                {
+                    <span>€—</span>
+                }
+            }
+            else
+            {
+                <span>—</span>
+            }
+        </MudTd>
+    </RowTemplate>
+
+</MudTable>
+
+<MudGrid Class="my-8"
+         Justify="Justify.Center">
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Success"
+               OnClick="ApplyPricingEditsAsync">
+        Apply Changes
+    </MudButton>
+</MudGrid>
+
+
+
+
+@inject CrossService CrossService
+@inject OracleService OracleService
+@inject IPricingRouter PricingRouter
+@inject ISnackbar Snackbar
+@code {
+
+    // UI Caches
+    private List<PricingEditDto> PricingEdits = new List<PricingEditDto>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        PricingEdits = await PricingRouter.GetPricingEditsAsync();
+    }
+
+    private async Task CheckPriceIdAsync(PricingEditDto editDto)
+    {
+        if (editDto.CardMarketProductId is null)
+            return; 
+
+        var price = await PricingRouter.GetPriceByPriceIdAsync(editDto.CardMarketProductId.Value);
+
+        if (price is null)
+        {
+            Snackbar.Add("PriceId check failed...", Severity.Error);
+            return;
+        }
+
+        (editDto.PriceNonFoil, editDto.PriceFoil) = price.Value;
+    }
+
+    private async Task ApplyPricingEditsAsync()
+    {
+        if (PricingEdits.Count == 0)
+            return;
+
+        await OracleService.ApplyPricingEditsAsync(PricingEdits);
+
+        Snackbar.Add("Pricing edits succesfully applied ~ !", Severity.Success);
+    }
+
+}

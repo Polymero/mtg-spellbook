@@ -19,8 +19,10 @@ public static class JsonExtensions
             ? i
             : null;
 
-    public static decimal? GetPropertyOrNullDecimal(this JsonElement e, string name)
-        => e.TryGetProperty(name, out var p) && p.TryGetDecimal(out var d)
+    public static decimal? GetPropertyOrNullDecimal(this JsonElement e, string name) =>
+        e.TryGetProperty(name, out var p) && 
+        p.ValueKind != JsonValueKind.Null &&
+        p.TryGetDecimal(out var d)
             ? d
             : null;
 }

@@ -11,6 +11,12 @@ namespace Spellbox.Services
     {
         PricingMarketplace Marketplace { get; }
 
+        Task<(decimal?, decimal?)?> GetPriceByPriceIdAsync(
+            int priceId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        );
+
         Task<decimal?> GetPriceAsync(
             Guid variantId,
             CardFinish finish,
@@ -26,8 +32,24 @@ namespace Spellbox.Services
             PriceMetric foilMetric
         );
 
+        Task<(decimal, int)> GetUnassignedValueAsync(
+            PriceMetric nonFoildMetric,
+            PriceMetric foilMetric
+        );
+
         Task<(decimal, int)> GetBinderValueAsync(
             Guid binderId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        );
+
+        Task<(decimal, int)> GetDeckValueAsync(
+            Guid activeSnapshotId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        );
+
+        Task<List<PricingEditDto>> GetPricingEditsAsync(
             PriceMetric nonFoilMetric,
             PriceMetric foilMetric
         );
@@ -51,6 +73,39 @@ namespace Spellbox.Services
             _oracle = oracle;
             _market = market;
             _collection = collection;
+        }
+
+
+        public async Task<(decimal?, decimal?)?> GetPriceByPriceIdAsync(
+            int priceId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var marketDb = await _market.CreateDbContextAsync();
+
+            var price = await marketDb.PriceCaches
+                .SingleOrDefaultAsync(p => p.ProductId == priceId);
+
+            if (price == null)
+                return null;
+
+            return (
+                nonFoilMetric switch
+                {
+                    PriceMetric.Low => price.Low,
+                    PriceMetric.Avg => price.Avg,
+                    PriceMetric.Trend => price.Trend,
+                    _ => null
+                },
+                foilMetric switch
+                {
+                    PriceMetric.Low => price.FoilLow,
+                    PriceMetric.Avg => price.FoilAvg,
+                    PriceMetric.Trend => price.FoilTrend,
+                    _ => null
+                }
+            );
         }
 
 
@@ -88,9 +143,6 @@ namespace Spellbox.Services
                     PriceMetric.Low => price.Low,
                     PriceMetric.Avg => price.Avg,
                     PriceMetric.Trend => price.Trend,
-                    PriceMetric.Avg1 => price.Avg1,
-                    PriceMetric.Avg7 => price.Avg7,
-                    PriceMetric.Avg30 => price.Avg30,
                     _ => null
                 };
             }
@@ -101,9 +153,6 @@ namespace Spellbox.Services
                     PriceMetric.Low => price.FoilLow,
                     PriceMetric.Avg => price.FoilAvg,
                     PriceMetric.Trend => price.FoilTrend,
-                    PriceMetric.Avg1 => price.FoilAvg1,
-                    PriceMetric.Avg7 => price.FoilAvg7,
-                    PriceMetric.Avg30 => price.FoilAvg30,
                     _ => null
                 };
             }
@@ -166,9 +215,6 @@ namespace Spellbox.Services
                         PriceMetric.Low => price.Low,
                         PriceMetric.Avg => price.Avg,
                         PriceMetric.Trend => price.Trend,
-                        PriceMetric.Avg1 => price.Avg1,
-                        PriceMetric.Avg7 => price.Avg7,
-                        PriceMetric.Avg30 => price.Avg30,
                         _ => null
                     };
                 }
@@ -179,9 +225,6 @@ namespace Spellbox.Services
                         PriceMetric.Low => price.FoilLow,
                         PriceMetric.Avg => price.FoilAvg,
                         PriceMetric.Trend => price.FoilTrend,
-                        PriceMetric.Avg1 => price.FoilAvg1,
-                        PriceMetric.Avg7 => price.FoilAvg7,
-                        PriceMetric.Avg30 => price.FoilAvg30,
                         _ => null
                     };
                 }
@@ -190,6 +233,31 @@ namespace Spellbox.Services
             return result;
         }
 
+
+        public async Task<(decimal, int)> GetUnassignedValueAsync(
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var collection = await _collection.CreateDbContextAsync();
+
+            var allocations = await collection.Allocations
+                .Where(a => a.AllocationIndex == AllocationIndex.Unassigned)
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish
+                })
+                .ToListAsync();
+
+            var prices = await GetPriceBatchAsync(allocations, nonFoilMetric, foilMetric);
+
+            var total = prices.Values.Where(p => p.HasValue).Sum();
+            var missing = prices.Values.Count(p => !p.HasValue);
+
+            return (total ?? 0m, missing);
+        }
 
         public async Task<(decimal, int)> GetBinderValueAsync(
             Guid binderId,
@@ -215,6 +283,65 @@ namespace Spellbox.Services
             var missing = prices.Values.Count(p => !p.HasValue);
 
             return (total ?? 0m, missing);
+        }
+
+        public async Task<(decimal, int)> GetDeckValueAsync(
+            Guid activeSnapshotId,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var collection = await _collection.CreateDbContextAsync();
+
+            var allocations = await collection.Allocations
+                .Where(a => a.SnapshotId == activeSnapshotId)
+                .Select(a => new CollectionAllocationDto
+                {
+                    Id = a.Id,
+                    VariantId = a.CollectionCard.VariantId,
+                    Finish = a.Finish
+                })
+                .ToListAsync();
+
+            var prices = await GetPriceBatchAsync(allocations, nonFoilMetric, foilMetric);
+
+            var total = prices.Values.Where(p => p.HasValue).Sum();
+            var missing = prices.Values.Count(p => !p.HasValue);
+
+            return (total ?? 0m, missing);
+        }
+
+
+        public async Task<List<PricingEditDto>> GetPricingEditsAsync(
+            PriceMetric noinFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var collection = await _collection.CreateDbContextAsync();
+
+            var variantIds = await collection.CollectionCards
+                .Select(c => c.VariantId)
+                .Distinct()
+                .ToListAsync();
+
+            using var oracle = await _oracle.CreateDbContextAsync();
+
+            return await oracle.Variants
+                .Where(v => 
+                    variantIds.Contains(v.ScryfallId) &&
+                    v.CardMarketProductId == null
+                )
+                .Select(v => new PricingEditDto
+                {
+                    OracleId = v.OracleId,
+                    VariantId = v.ScryfallId,
+                    Name = v.SearchName,
+                    SetName = v.SetName,
+                    SetCode = v.SetCode,
+                    CollNum = v.CollNum,
+                    CardMarketProductId = v.CardMarketProductId
+                })
+                .ToListAsync();
         }
 
     }
