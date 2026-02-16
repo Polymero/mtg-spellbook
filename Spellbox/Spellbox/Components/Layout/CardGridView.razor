@@ -1,5 +1,20 @@
 
 
+<MudToggleGroup T="bool"
+                @bind-Value="_expandVariants"
+                @bind-Value:after="this.BuildRows"
+                Size="Size.Small">
+    <MudToggleItem Value="false">
+        <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+            Oracle
+    </MudToggleItem>
+    <MudToggleItem Value="true">
+        <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+            Variant
+    </MudToggleItem>
+</MudToggleGroup>
+
+
 <div class="card-grid-container pa-2" @ref="_containerRef">
 
     @if (_rows.Count == 0)
@@ -14,13 +29,13 @@
 
             <ChildContent Context="row">
                 <div class="card-row" style="grid-template-columns: repeat(@_cardsPerRow, 224px);">
-                    @foreach (var group in row)
+                    @foreach (var card in row)
                     {
                         <MudPaper Class="card-tile" 
                                   Elevation="1"
-                                  @onclick="@(() => OpenCardDialog(group))">
+                                  @onclick="@(() => OpenCardDialog(card))">
 
-                            <MudImage Src="@group.Images[0]"
+                            <MudImage Src="@card.Images[0]"
                                       Alt="img" 
                                       Width="@CardWidth"
                                       Class="card-image"
@@ -31,12 +46,12 @@
                                          Color="Color.Primary"
                                          Size="Size.Small">
                                     <MudText Typo="Typo.caption">
-                                        @String.Format("{0}x", group.Quantity)
+                                        @String.Format("{0}x", card.Quantity)
                                     </MudText>
                                 </MudChip>
                                 <MudText Typo="Typo.caption" 
                                          Class="text-truncate">
-                                    @group.Name
+                                    @card.Name
                                 </MudText>
                             </div>
 
@@ -56,7 +71,7 @@
 @code {
 
     [Parameter]
-    public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
+    public IReadOnlyList<CollectionGroupedOracleDto> Groups { get; set; } = null!;
     [Parameter]
     public string SubcollectionName { get; set; } = null!;
     [Parameter]
@@ -72,10 +87,24 @@
     // Rendering
     private ElementReference _containerRef;
     private int _cardsPerRow = 1;
-    private List<List<CollectionVariantGroupDto>> _rows = new List<List<CollectionVariantGroupDto>>();
+    private List<List<RenderCard>> _rows = new();
     private IJSObjectReference? _module;
     private IJSObjectReference? _resizeObserver;
     private DotNetObjectReference<CardGridView>? _objRef;
+
+    private bool _expandVariants = false;
+
+    private sealed class RenderCard
+    {
+        public Guid OracleId { get; init; }
+        public Guid? VariantId { get; init; } = null;
+
+        public string Name { get; init; } = null!;
+        public int Quantity { get; init; }
+
+        public List<string> Images { get; init; } = [];
+        public IReadOnlyList<CollectionAllocationDto> Allocations { get; init; } = [];
+    }
 
 
     protected override void OnParametersSet()
@@ -121,7 +150,47 @@
 
     private void BuildRows()
     {
-        _rows = Groups
+        IEnumerable<RenderCard> flatCards;
+
+        if (_expandVariants)
+        {
+            flatCards = Groups
+                .SelectMany(o => o.Variants
+                    .Select(v => new RenderCard
+                        {
+                            OracleId = o.OracleId,
+                            VariantId = v.VariantId,
+                            Name = o.Name,
+                            Quantity = v.Allocations.Count(),
+                            Images = v.Images,
+                            Allocations = v.Allocations
+                        }));
+        }
+        else
+        {
+            flatCards = Groups
+                .Select(o =>
+                {
+                    var allocations = o.Variants
+                        .SelectMany(v => v.Allocations)
+                        .ToList();
+
+                    var representative = o.Variants
+                        .First();
+
+                    return new RenderCard
+                    {
+                        OracleId = o.OracleId,
+                        VariantId = representative.VariantId,
+                        Name = o.Name,
+                        Quantity = allocations.Count(),
+                        Images = representative.Images,
+                        Allocations = allocations
+                    };
+                });
+        }
+
+        _rows = flatCards
             .Select((card, index) => new { card, index })
             .GroupBy(x => x.index / _cardsPerRow)
             .Select(g => g.Select(x => x.card).ToList())
@@ -149,21 +218,12 @@
     }
 
 
-    private async Task OpenCardDialog(CollectionVariantGroupDto group)
+    private async Task OpenCardDialog(RenderCard card)
     {
-        @* var parameters = new DialogParameters
-        {
-            ["Group"] = group,
-            ["SubcollectionName"] = SubcollectionName,
-            ["OnEditSuccess"] = EventCallback.Factory.Create<EditCallback>(this, HandleEditSuccess)
-        }; *@
-
         var parameters = new DialogParameters
         {
-            ["OracleId"] = group.OracleId,
-            ["VariantId"] = group.VariantId,
-            ["BinderId"] = group.Allocations.First().BinderId,
-            ["SnapshotId"] = group.Allocations.First().DeckId
+            ["VariantId"] = card.VariantId,
+            ["Allocations"] = card.Allocations
         };
 
         var options = new DialogOptions

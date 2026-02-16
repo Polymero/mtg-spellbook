@@ -43,7 +43,7 @@ else
         }
         else
         {
-            <CardTableView Groups="_groups" SubcollectionName="@_binder.Name" />
+            @* <CardTableView Groups="_groups" SubcollectionName="@_binder.Name" /> *@
         }
 
     </MudPaper>
@@ -60,7 +60,7 @@ else
 
     // UI Caches
     private CollectionBinderDto? _binder;
-    private List<CollectionVariantGroupDto> _groups = new List<CollectionVariantGroupDto>();
+    private List<CollectionGroupedOracleDto> _groups = new List<CollectionGroupedOracleDto>();
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
@@ -74,7 +74,7 @@ else
     protected override async Task OnParametersSetAsync()
     {
         _binder = await CollectionService.GetBinderDetails(BinderId);
-        _groups = await CrossService.GetBinderVariantGroupsAsync(BinderId);
+        _groups = await CrossService.GetBinderGroupsAsync(BinderId);
         StateHasChanged();
     }
 
@@ -83,12 +83,12 @@ else
     {
         if (callback.IsDeleted)
         {
-            _groups.RemoveAll(g => g.VariantId == callback.VariantId);
+            @* _groups.RemoveAll(g => g.VariantId == callback.VariantId); *@
         }
         else
         {
-            var group = _groups.Single(g => g.VariantId == callback.VariantId);
-            await CollectionService.UpdateVariantGroupAsync(group);
+            @* var group = _groups.Single(g => g.VariantId == callback.VariantId); *@
+            @* await CollectionService.UpdateVariantGroupAsync(group); *@
         }
 
         StateHasChanged();

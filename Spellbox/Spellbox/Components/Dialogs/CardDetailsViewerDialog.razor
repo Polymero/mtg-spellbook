@@ -10,16 +10,11 @@
         else
         {
 
-            <MudText Typo="Typo.h4"
-                     Class="py-2">
-                @_viewerDto.Oracle.Name
-            </MudText>
-
-            <MudGrid Class="mt-0">
+            <MudGrid>
 
                 <!-- Card image -->
                 <MudItem xs="5"
-                         Class="my-auto">
+                         Class="my-4">
                     <MudImage Src=@(_viewerDto.Variant.Images[0]) 
                               Alt="IMG" 
                               Fluid="true"
@@ -29,9 +24,14 @@
                 <!-- Card data -->
                 <MudItem xs="7">
 
+                    <MudText Typo="Typo.h4"
+                            Class="pt-4 pb-6">
+                        @_viewerDto.Oracle.Name
+                    </MudText>
+
                     <MudText Typo="Typo.h6"
-                             Class="mb-1">
-                        Info
+                            Class="mb-1">
+                        Oracle Info
                     </MudText>
 
                     @foreach (var f in _viewerDto.Faces.OrderBy(f => f.Order))
@@ -111,8 +111,13 @@
                     <!-- Additional variant data -->
                     @if (VariantId.HasValue)
                     {
-                        <MudPaper Class="pa-2 mb-2"
+                        <MudPaper Class="my-6"
                                 Elevation="0">
+
+                            <MudText Typo="Typo.h6"
+                                     Class="mb-1">
+                                Variant Info
+                            </MudText>
 
                             <!-- Set -->
                             <MudText Typo="Typo.body1">
@@ -155,7 +160,7 @@
             
                 <HeaderContent>
                     <MudTh>
-                        Allocation
+                        Location
                     </MudTh>
                     <MudTh>
                         Finish
@@ -215,20 +220,46 @@
                         @a.Language
                     </MudTh>
                     <MudTh>
-                        @a.Condition
+                        @switch (a.Condition)
+                        {
+                            case CardCondition.Mint:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>MT</b></MudChip>
+                                break;
+                            case CardCondition.NearMint:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>NM</b></MudChip>
+                                break;
+                            case CardCondition.Excellent:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>EX</b></MudChip>
+                                break;
+                            case CardCondition.Good:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>GD</b></MudChip>
+                                break;
+                            case CardCondition.LightPlayed:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>LP</b></MudChip>
+                                break;
+                            case CardCondition.Played:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>PL</b></MudChip>
+                                break;
+                            case CardCondition.Poor:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>PO</b></MudChip>
+                                break;
+                            default:
+                                <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip>
+                                break;
+                        }
                     </MudTh>
                     <MudTh>
                         @if (a.IsAltered)
                         {
-                            <MudText Typo="Typo.caption">
-                                Alt
-                            </MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
                         }
                         @if (a.IsSigned)
                         {
-                            <MudText Typo="Typo.caption">
-                                Sig
-                            </MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" />
+                        }
+                        @if (a.IsStamped)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
                         }
                     </MudTh>
                     <MudTh>
@@ -313,13 +344,9 @@
     private MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public Guid? OracleId { get; set; } = null;
-    [Parameter]
     public Guid? VariantId { get; set; } = null;
     [Parameter]
-    public Guid? BinderId { get; set; } = null;
-    [Parameter]
-    public Guid? SnapshotId { get; set; } = null;
+    public List<CollectionAllocationDto> Allocations { get; set; } = [];
     [Parameter]
     public EventCallback<EditCallback> OnEditSuccess { get; set; }
 
@@ -329,10 +356,11 @@
     
     protected override async Task OnParametersSetAsync()
     {
-        if (OracleId is null && VariantId is null)
+        if (!VariantId.HasValue)
             return;
 
-        _viewerDto = await CrossService.GetCardDetailsViewerDtoAsync(OracleId, VariantId, BinderId, SnapshotId);
+        _viewerDto = await CrossService.GetCardDetailsViewerDtoAsync(VariantId.Value);
+        _viewerDto.Allocations = Allocations;
 
         _priceCache.Clear();
         _priceCache = await PricingRouter.GetPriceBatchAsync(_viewerDto.Allocations);

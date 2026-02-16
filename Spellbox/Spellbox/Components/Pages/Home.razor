@@ -20,11 +20,11 @@
              Align="Align.Center">
         @if (_collectionPriceMissing > 0)
         {
-            <span>Collection value: €@_collectionPriceValue.ToString("0.00") + @_collectionPriceMissing?</span>
+            <span>Your collection: @_collectionQuantity cards (€@_collectionPriceValue.ToString("0.00") + @_collectionPriceMissing?)</span>
         }
         else
         {
-            <span>Collection value: €@_collectionPriceValue.ToString("0.00")</span>
+            <span>Your collection: @_collectionQuantity cards (€@_collectionPriceValue.ToString("0.00"))</span>
         }
     </MudText>
 </MudPaper>
@@ -190,6 +190,7 @@
     private UnassignedDto? Unassigned;
 
     private string _displayName = null!;
+    private int _collectionQuantity;
     private decimal _collectionPriceValue;
     private int _collectionPriceMissing;
 
@@ -210,6 +211,9 @@
         foreach (var deck in DeckCache)
             (deck.PriceValue, deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(deck.ActiveSnapshotId);
 
+        _collectionQuantity = Unassigned.Quantity +
+            BinderCache.Sum(b => b.Quantity) +
+            DeckCache.Sum(d => d.Quantity);
         _collectionPriceValue = Unassigned.PriceValue + 
             BinderCache.Sum(b => b.PriceValue) +
             DeckCache.Sum(d => d.PriceValue);

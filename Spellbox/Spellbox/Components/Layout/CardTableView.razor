@@ -70,7 +70,7 @@
         </MudTd>
 
         <MudTd>
-            @switch (r.Allocation.Language)
+            @* @switch (r.Allocation.Language)
             {
                 case CardLanguage.English:
                     <MudChip T="string" Label="true" Size="Size.Small"><b>EN</b></MudChip>
@@ -84,7 +84,8 @@
                 default:
                     <span>r.Allocation.Language</span>
                     break;
-            }
+            } *@
+            @r.Allocation.Language
         </MudTd>
 
         <MudTd>

@@ -18,7 +18,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddDbContextFactory<OracleDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("OracleDb"));
-    // options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 builder.Services.AddDbContextFactory<CollectionDbContext>(options =>
 {

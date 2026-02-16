@@ -127,7 +127,8 @@ namespace Spellbox.Model
         Russian = 8,
         Korean = 9,
         ChineseSimplified = 10,
-        ChineseTraditional = 11
+        ChineseTraditional = 11,
+        Phyrexian = 12
     }
 
     public enum CardCondition

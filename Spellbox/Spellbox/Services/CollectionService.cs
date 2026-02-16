@@ -231,6 +231,7 @@ namespace Spellbox.Services
             using var db = await _factory.CreateDbContextAsync();
 
             return await db.Binders
+                .AsNoTracking()
                 .Where(b => b.Id == binderId)
                 .Select(b => new CollectionBinderDto
                 {
@@ -251,6 +252,7 @@ namespace Spellbox.Services
             var binder = await GetBinderDetails(binderId);
 
             return await db.Allocations
+                .AsNoTracking()
                 .Where(a => a.BinderId == binderId)
                 .Select(a => new CollectionAllocationDto
                 {
@@ -298,6 +300,7 @@ namespace Spellbox.Services
                 .FirstOrDefaultAsync();
 
             return await db.Allocations
+                .AsNoTracking()
                 .Where(a => a.SnapshotId == activeSnapshotId)
                 .Select(a => new CollectionAllocationDto
                 {

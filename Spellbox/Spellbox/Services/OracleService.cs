@@ -66,6 +66,23 @@ namespace Spellbox.Services
         }
 
 
+        public async Task<Dictionary<Guid, CardOracleDto>> GetOraclesByIdsAsync(IEnumerable<Guid> oracleIds)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Oracles
+                .Where(o => oracleIds.Contains(o.OracleId))    
+                .Select(o => new CardOracleDto
+                {
+                    OracleId = o.OracleId,
+                    Name = o.Name,
+                    TypeLine = o.TypeLine,
+                    Keywords = o.Keywords,
+                    CMC = o.CMC,
+                    ColorIdentity = o.ColorIdentity
+                })
+                .ToDictionaryAsync(o => o.OracleId);
+        }
 
         public async Task<Dictionary<Guid, CardVariantDto>> GetVariantsByIdsAsync(IEnumerable<Guid> variantIds)
         {
