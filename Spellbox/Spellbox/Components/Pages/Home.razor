@@ -83,31 +83,41 @@
             @foreach (var binder in BinderCache)
             {
                 <MudItem xs="12">
-                    <MudCard Outlined="true">
+                    @* <MudCard Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudLink Typo="Typo.h6"
+                                         Href=@String.Format("/binders/{0}", binder.Id)>
+                                    @binder.Name
+                                </MudLink>
+                                <MudText Typo="Typo.caption">
+                                    <i>(@binder.Quantity cards - last updated: @binder.UpdatedAt.ToShortDateString())</i>
+                                </MudText>
+                                <MudText Typo="Typo.caption">
+                                    @if (binder.PriceMissing > 0)
+                                    {
+                                        <span>€@binder.PriceValue.ToString("0.00") + @binder.PriceMissing?</span>
+                                    }
+                                    else
+                                    {
+                                        <span>€@binder.PriceValue.ToString("0.00")</span>
+                                    }
+                                </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                                               Color="Color.Default"
+                                               Size="Size.Small" 
+                                               Class="align-end"
+                                               OnClick="@(() => OpenEditBinderDialog(binder.Id))" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
                         <MudCardContent>
-                            <MudLink Typo="Typo.h6"
-                                     Href=@String.Format("/binders/{0}", binder.Id)>
-                                @binder.Name
-                            </MudLink>
-                            <MudText Typo="Typo.caption">
-                                <i>(@binder.Quantity cards - last updated: @binder.UpdatedAt.ToShortDateString())</i>
-                            </MudText>
-                            <MudText Typo="Typo.caption">
-                                @if (binder.PriceMissing > 0)
-                                {
-                                    <span>€@binder.PriceValue.ToString("0.00") + @binder.PriceMissing?</span>
-                                }
-                                else
-                                {
-                                    <span>€@binder.PriceValue.ToString("0.00")</span>
-                                }
-                            </MudText>
-                            <MudDivider Class="my-2" />
-                            <MudText>
-                                @binder.Description
-                            </MudText>
+                            @binder.Description
                         </MudCardContent>
-                    </MudCard>
+                    </MudCard> *@
+                    <CollectionSummaryCard Binder="binder"
+                                           OnEdit="OpenEditBinderDialog" />
                 </MudItem>
             }   
         }
@@ -199,9 +209,7 @@
         var session = await UserSession.GetAsync();
         _displayName = session.DisplayName;
 
-        var uQuantity = await CollectionService.GetQuantityUnassigned();
-        (var uValue, var uMissing) = await PricingRouter.GetUnassignedValueAsync();
-        Unassigned = new UnassignedDto(uQuantity, uValue, uMissing);
+        Unassigned = await LoadUnassigned();
 
         BinderCache = await CollectionService.GetAllBinders();
         foreach (var binder in BinderCache)
@@ -222,6 +230,14 @@
             DeckCache.Sum(d => d.PriceMissing);
     }
 
+    private async Task<UnassignedDto> LoadUnassigned()
+    {
+        var quantity = await CollectionService.GetQuantityUnassigned();
+        (var value, var missing) = await PricingRouter.GetUnassignedValueAsync();
+
+        return new UnassignedDto(quantity, value, missing);
+    }
+
 
     // Open dialog to add a binder to the collection database
     private async Task OpenAddBinderDialog()
@@ -240,6 +256,47 @@
         if (!result!.Canceled && result.Data is CollectionBinderDto newBinder)
         {
             BinderCache.Add(newBinder);
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenEditBinderDialog(Guid binderId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["BinderId"] = binderId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditBinderDialog>("Edit Binder", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditBinderCallback callback)
+        {
+            if (callback.IsUpdated)
+            {
+                var index = BinderCache
+                    .FindIndex(b => b.Id == callback.Binder.Id);
+
+                (callback.Binder.PriceValue, callback.Binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(callback.Binder.Id);
+
+                if (index >= 0)
+                    BinderCache[index] = callback.Binder;
+            }
+
+            if (callback.IsDeleted)
+            {
+                BinderCache.RemoveAll(b => b.Id == callback.Binder.Id);
+
+                Unassigned = await LoadUnassigned();
+            }
+
             StateHasChanged();
         }
     }

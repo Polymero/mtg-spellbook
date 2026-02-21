@@ -1,12 +1,14 @@
 @using MudBlazor
 @using Spellbox.Components.Dialogs
 @using Spellbox.Model
+@using System.Collections.ObjectModel
 
 <MudTable Items="@_tableRows"
           Dense="true"
           Hover="true"
-          T="BinderTableRowDto"
-          OnRowClick="RowClicked">
+          T="RenderRow"
+          OnRowClick="RowClicked"
+          Virtualize="true">
 
     <HeaderContent>
         <MudTh>
@@ -39,21 +41,18 @@
     </HeaderContent>
 
     <RowTemplate Context="r">
-
         <MudTd>
-            @if (r.IsFirst)
+            @if (r.Name is not null)
             {
                 @r.Name
             }
         </MudTd>
-
         <MudTd>
-            @if (r.IsFirst)
+            @if (r.SetCode is not null && r.CollNum is not null)
             {
-                @String.Format("{0} {1}", r.SetCode?.ToUpper(), r.CollNum)
+                @String.Format("{0} {1}", r.SetCode.ToUpper(), r.CollNum)
             }
         </MudTd>
-
         <MudTd>
             @if (r.Allocation.Finish == CardFinish.NonFoil)
             {
@@ -68,7 +67,6 @@
                 @r.Allocation.Finish
             }
         </MudTd>
-
         <MudTd>
             @* @switch (r.Allocation.Language)
             {
@@ -87,7 +85,6 @@
             } *@
             @r.Allocation.Language
         </MudTd>
-
         <MudTd>
             @switch (r.Allocation.Condition)
             {
@@ -203,83 +200,88 @@
 @code {
 
     [Parameter]
-    public IReadOnlyList<CollectionVariantGroupDto> Groups { get; set; } = null!;
+    public IReadOnlyList<CollectionGroupedOracleDto> Groups { get; set; } = null!;
     [Parameter]
-    public string SubcollectionName { get; set; } = null!;
+    public IReadOnlyDictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = null!;
     [Parameter]
-    public EventCallback<EditCallback> OnEditSuccess { get; set; }
+    public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
+    [Parameter]
+    public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
 
     // UI cache
-    private List<BinderTableRowDto> _tableRows { get; set; } = new List<BinderTableRowDto>();
+    private List<RenderRow> _tableRows { get; set; } = [];
     private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
 
 
-    public sealed class BinderTableRowDto
+    public sealed class RenderRow
     {
-        public bool IsFirst { get; init; }
+        // Oracle-level
+        public string? Name { get; init; }
 
         // Variant-level
-        public string? Name { get; init; }
         public string? SetCode { get; init; } 
         public string? CollNum { get; init; }
         
-        // Copy-level
+        // Allocation-level
         public CollectionAllocationDto Allocation { get; init; } = null!;
     }
 
-    private async Task BuildRowsAsync(
-        IEnumerable<CollectionVariantGroupDto> groups
-    )
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _priceCache = await PricingRouter.GetPriceBatchAsync(AllocationIndex.Values);
+
+        BuildRows();
+    }
+
+    private void BuildRows()
     {
         _tableRows.Clear();
-        _priceCache.Clear();
-    
-        var allocs = groups
-            .SelectMany(g => g.Allocations)
-            .ToList();
-            
-        _priceCache = await PricingRouter.GetPriceBatchAsync(allocs);
 
-        foreach (var group in groups)
+        foreach (var oracleGroup in Groups)
         {
-            var first = true;
+            var oracleFirst = true;
 
-            foreach (var copy in group.Allocations)
+            foreach (var variantGroup in oracleGroup.Variants)
             {
-                _tableRows.Add(new BinderTableRowDto
-                {
-                    IsFirst = first,
-                    Name = first ? group.Name : null,
-                    SetCode = first ? group.SetCode : null,
-                    CollNum = first ? group.CollNum : null,
-                    Allocation = copy
-                });
+                var variantFirst = true;
 
-                first = false;
+                foreach (var allocation in variantGroup.Allocations)
+                {
+                    _tableRows.Add(new RenderRow
+                    {
+                        Name = oracleFirst ? oracleGroup.Name : null,
+
+                        SetCode = variantFirst ? variantGroup.SetCode : null,
+                        CollNum = variantFirst ? variantGroup.CollNum : null,
+
+                        Allocation = allocation
+                    });
+
+                    oracleFirst = false;
+                    variantFirst = false;
+                }
             }
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+
+    public async Task RowClicked(TableRowClickEventArgs<RenderRow> row)
     {
-        await BuildRowsAsync(Groups);
+        if (!VariantIndex.TryGetValue(row.Item!.Allocation.VariantId, out var variantGroup))
+            return;
+
+        await OpenCardDialog(variantGroup);
     }
 
 
-    public async Task RowClicked(TableRowClickEventArgs<BinderTableRowDto> row)
-    {
-        var group = Groups.Single(g => g.VariantId == row.Item!.Allocation.VariantId);
-        await OpenCardDialog(group);
-    }
-
-
-    private async Task OpenCardDialog(CollectionVariantGroupDto group)
+    private async Task OpenCardDialog(CollectionGroupedVariantDto group)
     {
         var parameters = new DialogParameters
         {
-            ["Group"] = group,
-            ["SubcollectionName"] = SubcollectionName,
-            ["OnEditSuccess"] = EventCallback.Factory.Create<EditCallback>(this, HandleEditSuccess)
+            ["VariantId"] = group.VariantId,
+            ["Allocations"] = group.Allocations,
+            ["OnEditSuccess"] = EventCallback.Factory.Create<EditAllocationCallback>(this, HandleEditSuccess)
         };
 
         var options = new DialogOptions
@@ -291,11 +293,11 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<CardViewerSingleDialog>("Card Viewer", parameters, options);
+        var dialog = await DialogService.ShowAsync<CardDetailsViewerDialog>("Card Viewer", parameters, options);
         var result = await dialog.Result;
 
         if (!result!.Canceled &&
-            result.Data is EditCallback callback)
+            result.Data is EditAllocationCallback callback)
         {
             await OnEditSuccess.InvokeAsync(callback);
             StateHasChanged();
@@ -321,7 +323,7 @@
         var result = await dialog.Result;
 
         if (!result!.Canceled &&
-            result.Data is EditCallback callback)
+            result.Data is EditAllocationCallback callback)
         {
             StateHasChanged();
 
@@ -330,7 +332,7 @@
     }
 
 
-    private async Task HandleEditSuccess(EditCallback callback)
+    private async Task HandleEditSuccess(EditAllocationCallback callback)
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();

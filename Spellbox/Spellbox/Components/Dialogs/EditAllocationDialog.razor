@@ -195,10 +195,9 @@
 
     private async Task SaveAsync()
     {
-        await CollectionService.UpdateAllocationAsync(_editDto);
-        MudDialog.Close(DialogResult.Ok(new EditCallback(
-            _editDto.VariantId,
-            _editDto.AllocationId,
+        var updatedDto = await CollectionService.UpdateAllocationAsync(_editDto);
+        MudDialog.Close(DialogResult.Ok(new EditAllocationCallback(
+            updatedDto,
             true, 
             false
         )));
@@ -207,9 +206,12 @@
     private async Task DeleteAsync()
     {
         await CollectionService.DeleteAllocationAsync(_editDto.AllocationId);
-        MudDialog.Close(DialogResult.Ok(new EditCallback(
-            _editDto.VariantId,
-            _editDto.AllocationId,
+        MudDialog.Close(DialogResult.Ok(new EditAllocationCallback(
+            new CollectionAllocationDto
+            {
+                Id = _editDto.AllocationId,
+                VariantId = _editDto.VariantId
+            },
             false,
             true
         )));

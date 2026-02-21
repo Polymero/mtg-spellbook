@@ -1,0 +1,17 @@
+.collection-card[b-2mu59mvc6i] {
+    min-height: 120px;
+}
+
+.cover-container[b-2mu59mvc6i] {
+    max-width: 400px;
+    max-height: 140px;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.cover-image[b-2mu59mvc6i] {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 20%;
+}

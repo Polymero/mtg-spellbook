@@ -1,0 +1,100 @@
+﻿
+<MudDialog>
+
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Edit Binder
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudTextField @bind-Value="_editDto.Name"
+                      Label="Name" 
+                      Required="true"
+                      Immediate="true"
+                      Typo="Typo.h5" />
+
+        <MudTextField @bind-Value="_editDto.Description" 
+                      Label="Description" 
+                      Lines="3"
+                      Immediate="true"
+                      AutoGrow />
+
+        <MudTextField @bind-Value="_editDto.CoverImage"
+                      Label="Cover Image" />
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Error"
+                   Variant="Variant.Outlined"
+                   OnClick="DeleteAsync">
+            Delete
+        </MudButton>
+
+        <MudSpacer />
+
+        <MudButton Class="mx-2 my-1"
+                   Variant="Variant.Text"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   OnClick="SaveAsync">
+            Save Changes
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@inject CollectionService CollectionService
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid BinderId { get; set; }
+
+    private EditableBinderDto _editDto = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _editDto = await CollectionService.GetEditableBinderAsync(BinderId);
+    }
+
+
+    private async Task SaveAsync()
+    {
+        var updatedDto = await CollectionService.UpdateBinderAsync(_editDto);
+        MudDialog.Close(DialogResult.Ok(new EditBinderCallback(
+            updatedDto,
+            true,
+            false
+        )));
+    }
+
+    private async Task DeleteAsync()
+    {
+        await CollectionService.DeleteBinderAsync(_editDto.Id);
+        MudDialog.Close(DialogResult.Ok(new EditBinderCallback(
+            new CollectionBinderDto
+            {
+                Id = _editDto.Id
+            },
+            false,
+            true
+        )));
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

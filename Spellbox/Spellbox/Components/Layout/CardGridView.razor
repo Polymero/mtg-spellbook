@@ -73,9 +73,11 @@
     [Parameter]
     public IReadOnlyList<CollectionGroupedOracleDto> Groups { get; set; } = null!;
     [Parameter]
-    public string SubcollectionName { get; set; } = null!;
+    public IReadOnlyDictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = null!;
     [Parameter]
-    public EventCallback<EditCallback> OnEditSuccess { get; set; }
+    public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
+    [Parameter]
+    public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
 
     // Constants
     private const int CardWidth = 224;
@@ -223,7 +225,8 @@
         var parameters = new DialogParameters
         {
             ["VariantId"] = card.VariantId,
-            ["Allocations"] = card.Allocations
+            ["Allocations"] = card.Allocations,
+            ["OnEditSuccess"] = EventCallback.Factory.Create<EditAllocationCallback>(this, HandleEditSuccess)
         };
 
         var options = new DialogOptions
@@ -239,14 +242,14 @@
         var result = await dialog.Result;
 
         if (!result!.Canceled &&
-            result.Data is EditCallback callback)
+            result.Data is EditAllocationCallback callback)
         {
             await OnEditSuccess.InvokeAsync(callback);
             StateHasChanged();
         }
     }
 
-    private async Task HandleEditSuccess(EditCallback callback)
+    private async Task HandleEditSuccess(EditAllocationCallback callback)
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();

@@ -16,11 +16,9 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<List<CollectionGroupedOracleDto>> GetBinderGroupsAsync(Guid binderId)
+        private async Task<List<CollectionGroupedOracleDto>> GroupAllocations(IEnumerable<CollectionAllocationDto> allocations)
         {
-            var allocations = await _collection.GetBinderAllocationsAsync(binderId);
-
-            if (allocations.Count == 0)
+            if (allocations.Count() == 0)
                 return [];
 
             var oracleIds = allocations
@@ -77,168 +75,22 @@ namespace Spellbox.Services
                 .ToList();
         }
 
+        public async Task<List<CollectionGroupedOracleDto>> GetUnassignedGroupsAsync()
+        {
+            var allocations = await _collection.GetUnassignedAllocationsAsync();
+            return await GroupAllocations(allocations);
+        }
 
-        public async Task<List<CollectionVariantGroupDto>> GetBinderVariantGroupsAsync(
-            Guid binderId
-        )
+        public async Task<List<CollectionGroupedOracleDto>> GetBinderGroupsAsync(Guid binderId)
         {
             var allocations = await _collection.GetBinderAllocationsAsync(binderId);
-
-            if (allocations.Count == 0)
-                return new List<CollectionVariantGroupDto>();
-
-            var variantGroups = allocations
-                .GroupBy(a => a.VariantId)
-                .ToList();
-
-            var variantIds = variantGroups
-                .Select(g => g.Key)
-                .ToList();
-            
-            var variants = await _oracle.GetVariantsByIdsAsync(variantIds);
-
-            return variantGroups.Select(g =>
-            {
-                var variant = variants[g.Key];
-
-                return new CollectionVariantGroupDto
-                {
-                    OracleId = variant.OracleId,
-                    VariantId = g.Key,
-                    Name = variant.Name,
-                    SetCode = variant.SetCode,
-                    CollNum = variant.CollNum,
-                    Thumbs = variant.Thumbs,
-                    Images = variant.Images,
-
-                    Quantity = g.Count(),
-
-                    Allocations = g.Select(a => new CollectionAllocationDto
-                    {
-                        Id = a.Id,
-                        BinderId = a.BinderId,
-                        BinderName = a.BinderName,
-                        DeckId = a.DeckId,
-                        DeckName = a.DeckName,
-                        Finish = a.Finish,
-                        Language = a.Language,
-                        Condition = a.Condition,
-                        IsAltered = a.IsAltered,
-                        IsSigned = a.IsSigned,
-                        IsStamped = a.IsStamped,
-                        BoughtFor = a.BoughtFor,
-                        OracleId = variant.OracleId,
-                        VariantId = variant.ScryfallId
-                    }).ToList()
-                };
-            }).OrderBy(g => g.Name).ToList();
+            return await GroupAllocations(allocations);
         }
 
-        public async Task<List<CollectionVariantGroupDto>> GetUnassignedVariantGroupsAsync()
+        public async Task<List<CollectionGroupedOracleDto>> GetCollectionGroupsAsync()
         {
-            var allocs = await _collection.GetUnassignedAllocationsAsync();
-
-            if (allocs.Count == 0)
-                return new List<CollectionVariantGroupDto>();
-
-            var variantGroups = allocs
-                .GroupBy(a => a.VariantId)
-                .ToList();
-
-            var variantIds = variantGroups
-                .Select(g => g.Key)
-                .ToList();
-            
-            var variants = await _oracle.GetVariantsByIdsAsync(variantIds);
-
-            return variantGroups.Select(g =>
-            {
-                var variant = variants[g.Key];
-
-                return new CollectionVariantGroupDto
-                {
-                    VariantId = g.Key,
-                    Name = variant.Name,
-                    SetCode = variant.SetCode,
-                    CollNum = variant.CollNum,
-                    Thumbs = variant.Thumbs,
-                    Images = variant.Images,
-
-                    Quantity = g.Count(),
-
-                    Allocations = g.Select(a => new CollectionAllocationDto
-                    {
-                        Id = a.Id,
-                        BinderId = a.BinderId,
-                        BinderName = a.BinderName,
-                        DeckId = a.DeckId,
-                        DeckName = a.DeckName,
-                        Finish = a.Finish,
-                        Language = a.Language,
-                        Condition = a.Condition,
-                        IsAltered = a.IsAltered,
-                        IsSigned = a.IsSigned,
-                        IsStamped = a.IsStamped,
-                        BoughtFor = a.BoughtFor,
-                        OracleId = variant.OracleId,
-                        VariantId = variant.ScryfallId
-                    }).ToList()
-                };
-            }).OrderBy(g => g.Name).ToList();
-        }
-
-        public async Task<List<CollectionVariantGroupDto>> GetCollectionVariantGroupsAsync()
-        {
-            var allocs = await _collection.GetAllAllocationsAsync();
-
-            if (allocs.Count == 0)
-                return new List<CollectionVariantGroupDto>();
-
-            var variantGroups = allocs
-                .GroupBy(a => a.VariantId)
-                .ToList();
-
-            var variantIds = variantGroups
-                .Select(g => g.Key)
-                .ToList();
-            
-            var variants = await _oracle.GetVariantsByIdsAsync(variantIds);
-
-            return variantGroups.Select(g =>
-            {
-                var variant = variants[g.Key];
-
-                return new CollectionVariantGroupDto
-                {
-                    OracleId = variant.OracleId,
-                    VariantId = g.Key,
-                    Name = variant.Name,
-                    SetCode = variant.SetCode,
-                    CollNum = variant.CollNum,
-                    Thumbs = variant.Thumbs,
-                    Images = variant.Images,
-
-                    Quantity = g.Count(),
-
-                    Allocations = g.Select(a => new CollectionAllocationDto
-                    {
-                        Id = a.Id,
-                        BinderId = a.BinderId,
-                        BinderName = a.BinderName,
-                        DeckId = a.DeckId,
-                        DeckName = a.DeckName,
-                        Finish = a.Finish,
-                        Language = a.Language,
-                        Condition = a.Condition,
-                        IsAltered = a.IsAltered,
-                        IsSigned = a.IsSigned,
-                        IsStamped = a.IsStamped,
-                        BoughtFor = a.BoughtFor,
-                        OracleId = variant.OracleId,
-                        VariantId = variant.ScryfallId
-                    }).ToList()
-                };
-            }).OrderBy(g => g.Name).ToList();
+            var allocations = await _collection.GetAllAllocationsAsync();
+            return await GroupAllocations(allocations);
         }
 
 
@@ -246,12 +98,12 @@ namespace Spellbox.Services
             Guid variantId
         )
         {
-            CardOracleDto oracle = new();
-            List<CardFaceDto> faces = [];
-            CardVariantDto variant;
+            // CardOracleDto oracle = new();
+            // List<CardFaceDto> faces = [];
+            // CardVariantDto variant;
 
-            variant = (await _oracle.GetVariantsByIdsAsync([variantId]))[variantId];
-            (oracle, faces) = await _oracle.GetSingleOracleAsync(variant.OracleId);
+            var variant = (await _oracle.GetVariantsByIdsAsync([variantId]))[variantId];
+            (var oracle, var faces) = await _oracle.GetSingleOracleAsync(variant.OracleId);
 
             return new CardDetailsViewerDto
             {

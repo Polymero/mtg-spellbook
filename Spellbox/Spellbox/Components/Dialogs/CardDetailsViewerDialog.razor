@@ -163,6 +163,9 @@
                         Location
                     </MudTh>
                     <MudTh>
+                        Set Code
+                    </MudTh>
+                    <MudTh>
                         Finish
                     </MudTh>
                     <MudTh>
@@ -201,6 +204,9 @@
                                 <i>Unassigned</i>
                             </MudText>
                         }
+                    </MudTh>
+                    <MudTh>
+                        @String.Format("{0} {1}", _variantInfo[a.VariantId].SetCode.ToUpper(), _variantInfo[a.VariantId].CollNum)
                     </MudTh>
                     <MudTh>
                         @if (a.Finish == CardFinish.NonFoil)
@@ -337,6 +343,7 @@
 
 @inject CrossService CrossService
 @inject IDialogService DialogService
+@inject OracleService OracleService
 @inject IPricingRouter PricingRouter
 @code {
 
@@ -348,11 +355,12 @@
     [Parameter]
     public List<CollectionAllocationDto> Allocations { get; set; } = [];
     [Parameter]
-    public EventCallback<EditCallback> OnEditSuccess { get; set; }
+    public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
 
 
     private CardDetailsViewerDto _viewerDto = new();
-    private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
+    private Dictionary<Guid, CardVariantDto> _variantInfo = new();
+    private Dictionary<Guid, decimal?> _priceCache = new();
     
     protected override async Task OnParametersSetAsync()
     {
@@ -361,6 +369,11 @@
 
         _viewerDto = await CrossService.GetCardDetailsViewerDtoAsync(VariantId.Value);
         _viewerDto.Allocations = Allocations;
+
+        _variantInfo = await OracleService.GetVariantsByIdsAsync(Allocations
+            .Select(a => a.VariantId)
+            .Distinct()
+            .ToList());
 
         _priceCache.Clear();
         _priceCache = await PricingRouter.GetPriceBatchAsync(_viewerDto.Allocations);
@@ -386,16 +399,26 @@
         var dialog = await DialogService.ShowAsync<EditAllocationDialog>("Edit Allocation", parameters, options);
         var result = await dialog.Result;
 
-        if (!result!.Canceled && result.Data is EditCallback callback)
+        if (!result!.Canceled && result.Data is EditAllocationCallback callback)
         {
             if (callback.IsUpdated)
             {
-                ;
+                var index = _viewerDto.Allocations
+                    .FindIndex(a => a.Id == callback.Allocation.Id);
+
+                if (index >= 0)
+                    _viewerDto.Allocations[index] = callback.Allocation;
             }
 
             if (callback.IsDeleted)
             {
-                ;
+                _viewerDto.Allocations.RemoveAll(a => a.Id == callback.Allocation.Id);
+
+                if (_viewerDto.Allocations.Count == 0)
+                    {
+                        MudDialog.Close(DialogResult.Ok(callback));
+                        return;
+                    }
             }
 
             StateHasChanged();

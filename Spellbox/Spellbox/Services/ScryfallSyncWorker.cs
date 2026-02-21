@@ -40,9 +40,10 @@ namespace Spellbox.Services
                     using var scope = _scopeFactory.CreateScope();
 
                     var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<OracleDbContext>>();
-                    using var oracleDb = await factory.CreateDbContextAsync();
+                    using var oracleDb = await factory.CreateDbContextAsync(ct);
 
                     var state = await oracleDb.SyncStates
+                        .AsTracking()
                         .SingleOrDefaultAsync(x => x.Key == "Scryfall", ct);
 
                     if (state is null)

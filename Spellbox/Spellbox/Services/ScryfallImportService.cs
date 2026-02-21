@@ -174,7 +174,7 @@ namespace Spellbox.Services
         private async Task<string> GetDownloadUrlAsync(CancellationToken ct)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, BulkUri);
-            request.Headers.Add("Aceept", "application/json;q=0.9,*/*;q=0.8");
+            request.Headers.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
             request.Headers.Add("User-Agent", "SpellboxAPI");
 
             using var resp = await _http.SendAsync(

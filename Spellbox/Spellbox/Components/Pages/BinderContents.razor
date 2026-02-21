@@ -37,13 +37,17 @@ else
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
-            <CardGridView Groups="_groups" 
-                          SubcollectionName="@_binder.Name"
-                          OnEditSuccess="ReloadAsync" />
+            <CardGridView Groups="_groups"
+                          VariantIndex="_variantIndex"
+                          AllocationIndex="_allocationIndex"
+                          OnEditSuccess="UpdateCache" />
         }
         else
         {
-            @* <CardTableView Groups="_groups" SubcollectionName="@_binder.Name" /> *@
+            <CardTableView Groups="_groups"
+                           VariantIndex="_variantIndex"
+                           AllocationIndex="_allocationIndex"
+                           OnEditSuccess="UpdateCache" />
         }
 
     </MudPaper>
@@ -60,7 +64,9 @@ else
 
     // UI Caches
     private CollectionBinderDto? _binder;
-    private List<CollectionGroupedOracleDto> _groups = new List<CollectionGroupedOracleDto>();
+    private List<CollectionGroupedOracleDto> _groups =[];
+    private Dictionary<Guid, CollectionGroupedVariantDto> _variantIndex = new();
+    private Dictionary<Guid, CollectionAllocationDto> _allocationIndex = new();
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
@@ -75,23 +81,98 @@ else
     {
         _binder = await CollectionService.GetBinderDetails(BinderId);
         _groups = await CrossService.GetBinderGroupsAsync(BinderId);
+
+        BuildIndexes(_groups);
         StateHasChanged();
     }
 
+    private void BuildIndexes(IEnumerable<CollectionGroupedOracleDto> groups)
+    {
+        _variantIndex.Clear();
+        _allocationIndex.Clear();
 
-    private async Task ReloadAsync(EditCallback callback)
+        foreach (var oracle in groups)
+        {
+            foreach (var variant in oracle.Variants)
+            {
+                _variantIndex[variant.VariantId] = variant;
+
+                foreach (var allocation in variant.Allocations)
+                {
+                    _allocationIndex[allocation.Id] = allocation;
+                }
+            }
+        }
+    }
+
+
+    private void UpdateCache(EditAllocationCallback callback)
     {
         if (callback.IsDeleted)
-        {
-            @* _groups.RemoveAll(g => g.VariantId == callback.VariantId); *@
-        }
-        else
-        {
-            @* var group = _groups.Single(g => g.VariantId == callback.VariantId); *@
-            @* await CollectionService.UpdateVariantGroupAsync(group); *@
-        }
+            RemoveAllocation(callback.Allocation);
+
+        else if (callback.IsUpdated)
+            UpdateAllocation(callback.Allocation, removeIfMoved: true);
 
         StateHasChanged();
+    }
+
+    private void RemoveAllocation(CollectionAllocationDto deletedAllocation)
+    {
+        if (!_allocationIndex.TryGetValue(deletedAllocation.Id, out var allocation))
+            return;
+
+        var variant = _variantIndex[allocation.VariantId];
+
+        variant.Allocations.Remove(allocation);
+
+        _allocationIndex.Remove(allocation.Id);
+
+        if (variant.Allocations.Count == 0)
+            RemoveVariant(variant);
+    }
+
+    private void RemoveVariant(CollectionGroupedVariantDto variant)
+    {
+        var oracle = _groups
+        .Where(g => g.Variants.Contains(variant))
+        .Single();
+
+        oracle.Variants.Remove(variant);
+
+        _variantIndex.Remove(variant.VariantId);
+
+        if (oracle.Variants.Count == 0)
+            RemoveOracle(oracle);
+    }
+
+    private void RemoveOracle(CollectionGroupedOracleDto oracle)
+    {
+        _groups.Remove(oracle);
+    }
+
+    private void UpdateAllocation(CollectionAllocationDto updatedAllocation, bool removeIfMoved = false)
+    {
+        if (!_allocationIndex.TryGetValue(updatedAllocation.Id, out var allocation))
+            return;
+
+        if (removeIfMoved && (allocation.BinderId != updatedAllocation.BinderId || allocation.DeckId != updatedAllocation.DeckId))
+            {
+                RemoveAllocation(updatedAllocation);
+                return;
+            }
+
+        var variant = _variantIndex[updatedAllocation.VariantId];
+
+        var index = variant.Allocations
+            .FindIndex(a => a.Id == updatedAllocation.Id);
+
+        if (index >= 0)
+        {
+            variant.Allocations[index] = updatedAllocation;
+
+            _allocationIndex[updatedAllocation.Id] = updatedAllocation;
+        }
     }
 
 }
