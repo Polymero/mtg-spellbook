@@ -1,15 +1,17 @@
-.collection-card[b-2mu59mvc6i] {
+.collection-card[b-a5cn2bf5ym] {
     min-height: 120px;
 }
 
-.cover-container[b-2mu59mvc6i] {
+.cover-container[b-a5cn2bf5ym] {
+    width: 400px;
+    height: 140px;
     max-width: 400px;
     max-height: 140px;
     overflow: hidden;
     border-radius: 2px;
 }
 
-.cover-image[b-2mu59mvc6i] {
+.cover-image[b-a5cn2bf5ym] {
     width: 100%;
     height: 100%;
     object-fit: cover;

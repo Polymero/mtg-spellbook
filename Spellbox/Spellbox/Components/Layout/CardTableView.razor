@@ -3,12 +3,22 @@
 @using Spellbox.Model
 @using System.Collections.ObjectModel
 
-<MudTable Items="@_tableRows"
+<MudTable ServerData="BuildRowsAsync"
           Dense="true"
           Hover="true"
-          T="RenderRow"
-          OnRowClick="RowClicked"
-          Virtualize="true">
+          OnRowClick="RowClicked">
+          
+    <ToolBarContent>
+        <MudText>
+        
+        </MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchValue"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Small"
+                      Class="mt-0" />
+    </ToolBarContent>
 
     <HeaderContent>
         <MudTh>
@@ -18,10 +28,14 @@
             Variant
         </MudTh>
         <MudTh>
-            Finish
+            <MudTableSortLabel SortBy="new Func<RenderRow, object>(r => r.Allocation.Finish)">
+                Finish
+            </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            Lang
+            <MudTableSortLabel SortBy="new Func<RenderRow, object>(r => r.Allocation.Language)">
+                Lang
+            </MudTableSortLabel>
         </MudTh>
         <MudTh>
             Cond
@@ -33,7 +47,9 @@
             Bought
         </MudTh>
         <MudTh>
-            Price
+            <MudTableSortLabel SortBy="new Func<RenderRow, object>(r => -_priceCache[r.Allocation.Id] ?? 0m)">
+                Price
+            </MudTableSortLabel>
         </MudTh>
         <MudTh>
         
@@ -42,13 +58,13 @@
 
     <RowTemplate Context="r">
         <MudTd>
-            @if (r.Name is not null)
+            @if (r.Name != lastRowName)
             {
                 @r.Name
             }
         </MudTd>
         <MudTd>
-            @if (r.SetCode is not null && r.CollNum is not null)
+            @if (r.Name != lastRowName && $"{r.SetCode} {r.CollNum}" != lastRowSetCode)
             {
                 @String.Format("{0} {1}", r.SetCode.ToUpper(), r.CollNum)
             }
@@ -68,21 +84,6 @@
             }
         </MudTd>
         <MudTd>
-            @* @switch (r.Allocation.Language)
-            {
-                case CardLanguage.English:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>EN</b></MudChip>
-                    break;
-                case CardLanguage.Japanese:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>JP</b></MudChip>
-                    break;
-                case CardLanguage.Spanish:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>SP</b></MudChip>
-                    break;
-                default:
-                    <span>r.Allocation.Language</span>
-                    break;
-            } *@
             @r.Allocation.Language
         </MudTd>
         <MudTd>
@@ -191,7 +192,16 @@
                            OnClick="@(() => EditAsync(r.Allocation.Id))" />
         </MudTd>
 
+        @{
+            lastRowName = r.Name;
+            lastRowSetCode = $"{r.SetCode} {r.CollNum}";
+        }
+
     </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
 </MudTable>
 
 
@@ -212,15 +222,19 @@
     private List<RenderRow> _tableRows { get; set; } = [];
     private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
 
+    private string searchValue = "";
+    private string lastRowName = "";
+    private string lastRowSetCode = "";
+
 
     public sealed class RenderRow
     {
         // Oracle-level
-        public string? Name { get; init; }
+        public string Name { get; init; } = null!;
 
         // Variant-level
-        public string? SetCode { get; init; } 
-        public string? CollNum { get; init; }
+        public string SetCode { get; init; } = null!;
+        public string CollNum { get; init; } = null!;
         
         // Allocation-level
         public CollectionAllocationDto Allocation { get; init; } = null!;
@@ -240,29 +254,27 @@
 
         foreach (var oracleGroup in Groups)
         {
-            var oracleFirst = true;
-
             foreach (var variantGroup in oracleGroup.Variants)
             {
-                var variantFirst = true;
-
                 foreach (var allocation in variantGroup.Allocations)
                 {
                     _tableRows.Add(new RenderRow
                     {
-                        Name = oracleFirst ? oracleGroup.Name : null,
+                        Name = oracleGroup.Name,
 
-                        SetCode = variantFirst ? variantGroup.SetCode : null,
-                        CollNum = variantFirst ? variantGroup.CollNum : null,
+                        SetCode = variantGroup.SetCode,
+                        CollNum = variantGroup.CollNum,
 
                         Allocation = allocation
                     });
-
-                    oracleFirst = false;
-                    variantFirst = false;
                 }
             }
         }
+    }
+
+    private async Task<TableData<RenderRow>> BuildRowsAsync(TableState state)
+    {
+        
     }
 
 
@@ -273,7 +285,6 @@
 
         await OpenCardDialog(variantGroup);
     }
-
 
     private async Task OpenCardDialog(CollectionGroupedVariantDto group)
     {
@@ -331,11 +342,27 @@
         }
     }
 
-
     private async Task HandleEditSuccess(EditAllocationCallback callback)
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();
+    }
+
+
+    private bool TableFilter(RenderRow row) => FilterFunction(row, searchValue);
+
+    private bool FilterFunction(RenderRow row, string value)
+    {
+        if (String.IsNullOrWhiteSpace(value))
+            return true;
+
+        if (row.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if ($"{row.SetCode} {row.CollNum}".Contains(value, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 
 }

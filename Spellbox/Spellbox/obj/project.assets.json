@@ -5580,24 +5580,25 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Nika\\.nuget\\packages\\": {}
+    "/home/nika/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\Spellbox.csproj",
+      "projectUniqueName": "/home/nika/mtg-spellbook/Spellbox/Spellbox/Spellbox.csproj",
       "projectName": "Spellbox",
-      "projectPath": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\Spellbox.csproj",
-      "packagesPath": "C:\\Users\\Nika\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Nika\\mtg-spellbook\\Spellbox\\Spellbox\\obj\\",
+      "projectPath": "/home/nika/mtg-spellbook/Spellbox/Spellbox/Spellbox.csproj",
+      "packagesPath": "/home/nika/.nuget/packages/",
+      "outputPath": "/home/nika/mtg-spellbook/Spellbox/Spellbox/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Nika\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/nika/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "/home/nika/.dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -5671,7 +5672,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/nika/.dotnet/sdk/8.0.303/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

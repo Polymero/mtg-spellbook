@@ -3,6 +3,8 @@
 }
 
 .cover-container {
+    width: 400px;
+    height: 140px;
     max-width: 400px;
     max-height: 140px;
     overflow: hidden;
