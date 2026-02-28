@@ -1,20 +1,5 @@
 
 
-<MudToggleGroup T="bool"
-                @bind-Value="_expandVariants"
-                @bind-Value:after="this.BuildRows"
-                Size="Size.Small">
-    <MudToggleItem Value="false">
-        <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-            Oracle
-    </MudToggleItem>
-    <MudToggleItem Value="true">
-        <MudIcon Icon="@Icons.Material.Filled.Filter1" />
-            Variant
-    </MudToggleItem>
-</MudToggleGroup>
-
-
 <div class="card-grid-container pa-2" @ref="_containerRef">
 
     @if (_rows.Count == 0)
@@ -78,6 +63,8 @@
     public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
     [Parameter]
     public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
+    [Parameter]
+    public bool ExpandVariants { get; set; } = false;
 
     // Constants
     private const int CardWidth = 224;
@@ -93,8 +80,6 @@
     private IJSObjectReference? _module;
     private IJSObjectReference? _resizeObserver;
     private DotNetObjectReference<CardGridView>? _objRef;
-
-    private bool _expandVariants = false;
 
     private sealed class RenderCard
     {
@@ -154,7 +139,7 @@
     {
         IEnumerable<RenderCard> flatCards;
 
-        if (_expandVariants)
+        if (ExpandVariants)
         {
             flatCards = Groups
                 .SelectMany(o => o.Variants

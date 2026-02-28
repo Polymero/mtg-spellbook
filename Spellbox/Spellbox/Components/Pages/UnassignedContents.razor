@@ -151,7 +151,7 @@ else
         if (!_allocationIndex.TryGetValue(updatedAllocation.Id, out var allocation))
             return;
 
-        if (removeIfMoved && (allocation.BinderId != updatedAllocation.BinderId || allocation.DeckId != updatedAllocation.DeckId))
+        if (removeIfMoved && (allocation.BinderId != updatedAllocation.BinderId || allocation.ZoneId != updatedAllocation.ZoneId))
             {
                 RemoveAllocation(updatedAllocation);
                 return;

@@ -116,10 +116,10 @@
                 <MudSelect T="Guid?"
                            Label="Deck"
                            Clearable="true"
-                           @bind-Value=_editDto.SnapshotId>
+                           @bind-Value=_editDto.ZoneId>
                     @foreach (var d in _decks)
                     {
-                        <MudSelectItem Value="@( (Guid?) d.ActiveSnapshotId)">
+                        <MudSelectItem Value="@( (Guid?) d.ActiveMainboardId)">
                             @d.Name
                         </MudSelectItem>
                     }

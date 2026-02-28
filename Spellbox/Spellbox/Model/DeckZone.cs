@@ -12,7 +12,8 @@ namespace Spellbox.Model
 
         public DeckZoneType ZoneType { get; set; }
 
-        public ICollection<DeckCard> Cards { get; set; } = new List<DeckCard>();
+        public ICollection<DeckCard> Cards { get; set; } = [];
+        public ICollection<CollectionAllocation> Allocations { get; set; } = [];
     }
 
     public enum DeckZoneType
@@ -23,4 +24,5 @@ namespace Spellbox.Model
         Sideboard = 3,
         Maybeboard = 4
     }
+
 }

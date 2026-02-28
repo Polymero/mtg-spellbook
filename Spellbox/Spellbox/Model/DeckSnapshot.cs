@@ -10,18 +10,13 @@ namespace Spellbox.Model
         public Guid DeckId { get; set; }
         public Deck Deck { get; set; } = null!;
 
-        public string DeckName { get; set; } = null!;
-
         public bool IsActive { get; set; }
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public ICollection<DeckZone> Zones { get; set; } = new List<DeckZone>();
 
-        // Only populated if IsActive is true
-        public ICollection<CollectionAllocation> Allocations { get; set; } = new List<CollectionAllocation>();
-
+        public ICollection<DeckZone> Zones { get; set; } = [];
     }
 }

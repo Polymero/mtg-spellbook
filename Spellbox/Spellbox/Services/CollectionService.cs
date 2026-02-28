@@ -21,7 +21,7 @@ namespace Spellbox.Services
         public async Task SubmitBatchAsync(
             IEnumerable<NewAllocationDto> submissionBatch,
             Guid? binderId,
-            Guid? activeSnapshotId
+            Guid? zoneId
         )
         {
             using var db = await _factory.CreateDbContextAsync();
@@ -29,7 +29,7 @@ namespace Spellbox.Services
 
             var allocationIndex = 
                 binderId != null ? AllocationIndex.Binder :
-                activeSnapshotId != null ? AllocationIndex.Deck :
+                zoneId != null ? AllocationIndex.Deck :
                 AllocationIndex.Unassigned;
 
             var groups = submissionBatch
@@ -63,7 +63,7 @@ namespace Spellbox.Services
                         CollectionCardId = collectionCard.Id,
                         AllocationIndex = allocationIndex,
                         BinderId = binderId,
-                        SnapshotId = activeSnapshotId,
+                        ZoneId = zoneId,
                         Finish = newAlloc.Finish,
                         Language = newAlloc.Language,
                         Condition = newAlloc.Condition,
@@ -125,17 +125,27 @@ namespace Spellbox.Services
                     Name = d.Name,
                     Type = d.Type,
                     Description = d.Description,
+                    CoverImage = d.CoverImage,
                     CreatedAt = d.CreatedAt,
                     UpdatedAt = d.UpdatedAt,
 
                     ActiveSnapshotId = d.Snapshots
-                        .Where(s => s.IsActive)
-                        .Select(s => s.Id)
-                        .FirstOrDefault(),
+                        .First(s => s.IsActive)
+                        .Id,
+                    ActiveMainboardId = d.Snapshots
+                        .First(s => s.IsActive)
+                        .Zones
+                        .First(z => z.ZoneType == DeckZoneType.Mainboard)
+                        .Id,
 
                     Quantity = d.Snapshots
-                        .Where(s => s.IsActive)
-                        .Sum(s => s.Allocations.Count)
+                        .First(s => s.IsActive)
+                        .Zones
+                        .Sum(z => z.Allocations.Count) +
+                        d.Snapshots
+                            .First(s => s.IsActive)
+                            .Zones
+                            .Sum(z => z.Cards.Count)
                 })
                 .ToListAsync();
         }
@@ -228,34 +238,55 @@ namespace Spellbox.Services
                     Name = d.Name,
                     Type = d.Type,
                     Description = d.Description,
+                    CoverImage = d.CoverImage,
+                    
+                    ActiveSnapshotId = d.Snapshots
+                        .Single(s => s.IsActive)
+                        .Id,
+                    ActiveMainboardId = d.Snapshots
+                        .Single(s => s.IsActive)
+                        .Zones
+                        .Single(z => z.ZoneType == DeckZoneType.Mainboard)
+                        .Id,
+
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
                 })
                 .SingleAsync();
         }
 
-        public async Task<List<CollectionAllocationDto>> GetDeckAllocationsAsync(Guid deckId)
+        public async Task<Dictionary<DeckZoneType, List<CollectionAllocationDto>>> GetZoneAllocationsAsync(
+            Guid snapshotId
+        )
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            var activeSnapshotId = await db.Snapshots
-                .Where(s => (s.DeckId == deckId) && s.IsActive)
-                .Select(s => s.Id)
-                .FirstOrDefaultAsync();
-
-            return await db.Allocations
+            var zones = await db.Zones
                 .AsNoTracking()
-                .Where(a => a.SnapshotId == activeSnapshotId)
-                .Select(a => new CollectionAllocationDto
+                .Where(z => z.SnapshotId == snapshotId)
+                .Select(z => new
                 {
-                    Id = a.Id,
-                    OracleId = a.CollectionCard.OracleId,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned
+                    z.ZoneType,
+                    Allocations = z.Allocations
+                        .Select(a => new CollectionAllocationDto
+                        {
+                            Id = a.Id,
+                            ZoneId = a.ZoneId,
+                            DeckName = a.Zone!.Snapshot.Deck.Name,
+                            OracleId = a.CollectionCard.OracleId,
+                            VariantId = a.CollectionCard.VariantId,
+                            Finish = a.Finish,
+                            Language = a.Language,
+                            Condition = a.Condition,
+                            IsAltered = a.IsAltered,
+                            IsSigned = a.IsSigned,
+                            IsStamped = a.IsStamped,
+                            BoughtFor = a.BoughtFor
+                        }).ToList()
                 })
                 .ToListAsync();
+
+            return zones.ToDictionary(z => z.ZoneType, z => z.Allocations);
         }
 
 
@@ -271,8 +302,8 @@ namespace Spellbox.Services
                     Id = a.Id,
                     BinderId = a.Binder != null ? a.BinderId : null,
                     BinderName = a.Binder != null ? a.Binder.Name : null,
-                    DeckId = a.DeckSnapshot != null ? a.DeckSnapshot.DeckId : null,
-                    DeckName = a.DeckSnapshot != null ? a.DeckSnapshot.Deck.Name : null,
+                    ZoneId = a.Zone != null ? a.ZoneId : null,
+                    DeckName = a.Zone != null ? a.Zone.Snapshot.Deck.Name : null,
                     OracleId = a.CollectionCard.OracleId,
                     VariantId = a.CollectionCard.VariantId,
                     Finish = a.Finish,
@@ -306,7 +337,8 @@ namespace Spellbox.Services
                     IsStamped = a.IsStamped,
                     BoughtFor = a.BoughtFor,
                     BinderId = a.BinderId,
-                    SnapshotId = a.SnapshotId
+                    DeckId = a.DeckId,
+                    ZoneId = a.ZoneId
                 })
                 .SingleAsync();
         }
@@ -328,16 +360,16 @@ namespace Spellbox.Services
                 alloc.BoughtFor = editDto.BoughtFor;
 
                 alloc.BinderId = null;
-                alloc.SnapshotId = null;
+                alloc.ZoneId = null;
 
                 if (editDto.BinderId.HasValue)
                 {
                     alloc.BinderId = editDto.BinderId;
                     alloc.AllocationIndex = AllocationIndex.Binder;
                 }
-                else if (editDto.SnapshotId.HasValue)
+                else if (editDto.ZoneId.HasValue)
                 {
-                    alloc.SnapshotId = editDto.SnapshotId;
+                    alloc.ZoneId = editDto.ZoneId;
                     alloc.AllocationIndex = AllocationIndex.Deck;
                 }
                 else
@@ -348,8 +380,7 @@ namespace Spellbox.Services
                 await db.SaveChangesAsync();
             }
             
-            // await db.DisposeAsync();
-            // using var db = await _factory.CreateDbContextAsync();
+            // Remake db?
 
             return await db.Allocations
                 .Where(a => a.Id == editDto.AllocationId)
@@ -358,8 +389,8 @@ namespace Spellbox.Services
                     Id = a.Id,
                     BinderId = a.Binder != null ? a.BinderId : null,
                     BinderName = a.Binder != null ? a.Binder.Name : null,
-                    DeckId = a.DeckSnapshot != null ? a.DeckSnapshot.DeckId : null,
-                    DeckName = a.DeckSnapshot != null ? a.DeckSnapshot.Deck.Name : null,
+                    ZoneId = a.Zone != null ? a.ZoneId : null,
+                    DeckName = a.Zone != null ? a.Zone.Snapshot.Deck.Name : null,
                     OracleId = a.CollectionCard.OracleId,
                     VariantId = a.CollectionCard.VariantId,
                     Finish = a.Finish,
@@ -399,6 +430,43 @@ namespace Spellbox.Services
 
 
         // Binder Editing
+        public async Task<CollectionBinderDto> AddBinderAsync(EditableBinderDto binder)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var binderId = Guid.NewGuid();
+
+            db.Binders.Add(new CollectionBinder
+            {
+               Id = binderId,
+               Name = binder.Name.Trim(),
+               Description = String.IsNullOrWhiteSpace(binder.Description) ? null : binder.Description.Trim(),
+               CoverImage = binder.CoverImage,
+
+               CreatedAt = DateTime.UtcNow,
+               UpdatedAt = DateTime.UtcNow
+            });
+
+            await db.SaveChangesAsync();
+
+            // Remake db?
+
+            return await db.Binders
+                .Where(b => b.Id == binderId)
+                .Select(b => new CollectionBinderDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    Description = b.Description,
+                    CoverImage = b.CoverImage,
+                    CreatedAt = b.CreatedAt,
+                    UpdatedAt = b.UpdatedAt,
+
+                    Quantity = b.Cards.Count()
+                })
+                .SingleAsync();
+        }
+
         public async Task<EditableBinderDto> GetEditableBinderAsync(Guid binderId)
         {
             using var db = await _factory.CreateDbContextAsync();
@@ -478,6 +546,163 @@ namespace Spellbox.Services
         }
 
 
+        // Deck Editing
+        public async Task<DeckDto> AddDeckAsync(EditableDeckDto deck)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var newDeck = new Deck
+            {
+                Id = Guid.NewGuid(),
+                Name = deck.Name,
+                Type = deck.Type,
+                Description = String.IsNullOrWhiteSpace(deck.Description) ? null : deck.Description.Trim(),
+                CoverImage = deck.CoverImage,
+
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var newSnapshot = new DeckSnapshot
+            {
+                Id = Guid.NewGuid(),
+                DeckId = newDeck.Id,
+                IsActive = true,
+                Name = "First",
+                Description = null,
+
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            var newZones = from zoneType in Enum.GetValues<DeckZoneType>() 
+                select new DeckZone
+                {
+                    Id = Guid.NewGuid(),
+                    SnapshotId = newSnapshot.Id,
+                    ZoneType = zoneType
+                };
+
+            db.Decks.Add(newDeck);
+            db.Snapshots.Add(newSnapshot);
+            db.Zones.AddRange(newZones);
+
+            await db.SaveChangesAsync();
+
+            // Remake db?
+
+            return await db.Decks
+                .Where(d => d.Id == newDeck.Id)
+                .Select(d => new DeckDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Type = d.Type,
+                    Description = d.Description,
+                    CoverImage = d.CoverImage,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt
+                })
+                .SingleAsync();
+        }
+
+        public async Task<EditableDeckDto> GetEditableDeckAsync(Guid deckId)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Decks
+                .Where(d => d.Id == deckId)
+                .Select(d => new EditableDeckDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Type = d.Type,
+                    Description = d.Description,
+                    CoverImage = d.CoverImage
+                })
+                .SingleAsync();
+        }
+
+        public async Task<DeckDto> UpdateDeckAsync(EditableDeckDto editDto)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var deck = await db.Decks
+                .FindAsync(editDto.Id);
+
+            if (deck is not null)
+            {
+                deck.Name = editDto.Name.Trim();
+                deck.Type = editDto.Type;
+                deck.Description = editDto.Description?.Trim();
+                deck.CoverImage = editDto.CoverImage;
+
+                deck.UpdatedAt = DateTime.UtcNow;
+
+                await db.SaveChangesAsync();
+            }
+
+            // Remake db?
+
+            return await db.Decks
+                .Where(d => d.Id == editDto.Id)
+                .Select(d => new DeckDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Type = d.Type,
+                    Description = d.Description,
+                    CoverImage = d.CoverImage,
+                    CreatedAt = d.CreatedAt,
+                    UpdatedAt = d.UpdatedAt,
+                })
+                .SingleAsync();
+        }
+
+        public async Task DeleteDeckAsync(Guid deckId)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var deck = await db.Decks
+                .FindAsync(deckId);
+
+            if (deck is null)
+                return;
+
+            var snapshots = await db.Snapshots
+                .Where(s => s.DeckId == deckId)
+                .ToListAsync();
+
+            var snapshotIds = snapshots
+                .Select(s => s.Id);
+
+            var zones = await db.Zones
+                .Where(z => snapshotIds.Contains(z.SnapshotId))
+                .ToListAsync();
+
+            var zoneIds = zones
+                .Select(z => z.Id);
+
+            // Remove related entities
+            db.Decks.Remove(deck);
+            db.Snapshots.RemoveRange(snapshots);
+            db.Zones.RemoveRange(zones);
+
+            // De-allocate current cards
+            var allocations = await db.Allocations
+                .Where(a => a.ZoneId.HasValue && zoneIds.Contains(a.ZoneId.Value))
+                .ToListAsync();
+
+            foreach (var alloc in allocations)
+            {
+                alloc.AllocationIndex = AllocationIndex.Unassigned;
+                alloc.DeckId = null;
+                alloc.ZoneId = null;
+                alloc.AllocatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+        }
 
     }
 }

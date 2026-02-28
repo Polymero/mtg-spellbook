@@ -45,6 +45,9 @@ namespace Spellbox.Migrations
                     b.Property<int>("Condition")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("DeckId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Finish")
                         .HasColumnType("INTEGER");
 
@@ -60,7 +63,7 @@ namespace Spellbox.Migrations
                     b.Property<int>("Language")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("SnapshotId")
+                    b.Property<Guid?>("ZoneId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -69,11 +72,13 @@ namespace Spellbox.Migrations
 
                     b.HasIndex("CollectionCardId");
 
-                    b.HasIndex("SnapshotId");
+                    b.HasIndex("DeckId");
+
+                    b.HasIndex("ZoneId");
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)\r\n                    )\r\n                    ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)\r\n                    )\r\n                    ");
                         });
                 });
 
@@ -133,6 +138,9 @@ namespace Spellbox.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CoverImage")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -190,10 +198,6 @@ namespace Spellbox.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("DeckId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DeckName")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -299,16 +303,22 @@ namespace Spellbox.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Spellbox.Model.DeckSnapshot", "DeckSnapshot")
+                    b.HasOne("Spellbox.Model.Deck", "Deck")
+                        .WithMany()
+                        .HasForeignKey("DeckId");
+
+                    b.HasOne("Spellbox.Model.DeckZone", "Zone")
                         .WithMany("Allocations")
-                        .HasForeignKey("SnapshotId")
+                        .HasForeignKey("ZoneId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Binder");
 
                     b.Navigation("CollectionCard");
 
-                    b.Navigation("DeckSnapshot");
+                    b.Navigation("Deck");
+
+                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("Spellbox.Model.DeckCard", b =>
@@ -361,13 +371,13 @@ namespace Spellbox.Migrations
 
             modelBuilder.Entity("Spellbox.Model.DeckSnapshot", b =>
                 {
-                    b.Navigation("Allocations");
-
                     b.Navigation("Zones");
                 });
 
             modelBuilder.Entity("Spellbox.Model.DeckZone", b =>
                 {
+                    b.Navigation("Allocations");
+
                     b.Navigation("Cards");
                 });
 #pragma warning restore 612, 618

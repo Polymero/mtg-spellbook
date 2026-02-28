@@ -3,22 +3,25 @@
 @using Spellbox.Model
 @using System.Collections.ObjectModel
 
-<MudTable ServerData="BuildRowsAsync"
+<MudTable Items="_tableRows"
+          T="RenderRow"
           Dense="true"
           Hover="true"
           OnRowClick="RowClicked">
           
-    <ToolBarContent>
+    @* <ToolBarContent>
         <MudText>
         
         </MudText>
         <MudSpacer />
-        <MudTextField @bind-Value="searchValue"
+        <MudTextField @bind-Value="_search"
+                      Placeholder="Search..."
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       IconSize="Size.Small"
-                      Class="mt-0" />
-    </ToolBarContent>
+                      Class="mt-0"
+                      ValueChanged="OnSearch" />
+    </ToolBarContent> *@
 
     <HeaderContent>
         <MudTh>
@@ -47,7 +50,7 @@
             Bought
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="new Func<RenderRow, object>(r => -_priceCache[r.Allocation.Id] ?? 0m)">
+            <MudTableSortLabel SortBy="new Func<RenderRow, object>(r => -r.Allocation.Price ?? 0m)">
                 Price
             </MudTableSortLabel>
         </MudTh>
@@ -58,13 +61,13 @@
 
     <RowTemplate Context="r">
         <MudTd>
-            @if (r.Name != lastRowName)
+            @if (r.Name is not null)
             {
                 @r.Name
             }
         </MudTd>
         <MudTd>
-            @if (r.Name != lastRowName && $"{r.SetCode} {r.CollNum}" != lastRowSetCode)
+            @if (r.Name is not null && r.SetCode is not null && r.CollNum is not null)
             {
                 @String.Format("{0} {1}", r.SetCode.ToUpper(), r.CollNum)
             }
@@ -132,10 +135,9 @@
         <MudTd>
             @if (r.Allocation.BoughtFor.HasValue)
             {
-                @if (_priceCache.TryGetValue(r.Allocation.Id, out var price) &&
-                        price.HasValue && price.Value > 0m && r.Allocation.BoughtFor > 0m)
+                @if (r.Allocation.Price.HasValue && r.Allocation.Price.Value > 0m && r.Allocation.BoughtFor > 0m)
                 {
-                    var shift = 100 * (price.Value - r.Allocation.BoughtFor.Value) / r.Allocation.BoughtFor.Value;
+                    var shift = 100 * (r.Allocation.Price.Value - r.Allocation.BoughtFor.Value) / r.Allocation.BoughtFor.Value;
 
                     @if (shift < 0m)
                     {
@@ -165,25 +167,18 @@
             }
         </MudTd>
         <MudTd>
-            @if (!_priceCache.TryGetValue(r.Allocation.Id, out var price))
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate />
-                }
-                else
-                {
-                    @if (price.HasValue)
-                    {
-                        <span>
-                            €@price.Value.ToString("0.00")
-                        </span>
-                    }
-                    else
-                    {
-                        <span>
-                            —
-                        </span>
-                    }
-                }
+            @if (r.Allocation.Price.HasValue)
+            {
+                <span>
+                    €@r.Allocation.Price.Value.ToString("0.00")
+                </span>
+            }
+            else
+            {
+                <span>
+                    —
+                </span>
+            }
         </MudTd>
         <MudTd>
             <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -191,17 +186,12 @@
                            Size="Size.Small" 
                            OnClick="@(() => EditAsync(r.Allocation.Id))" />
         </MudTd>
-
-        @{
-            lastRowName = r.Name;
-            lastRowSetCode = $"{r.SetCode} {r.CollNum}";
-        }
-
     </RowTemplate>
 
     <PagerContent>
-        <MudTablePager />
+        <MudTablePager PageSizeOptions="new[] {25, 50, 100, 250}" />
     </PagerContent>
+
 </MudTable>
 
 
@@ -220,11 +210,6 @@
 
     // UI cache
     private List<RenderRow> _tableRows { get; set; } = [];
-    private Dictionary<Guid, decimal?> _priceCache = new Dictionary<Guid, decimal?>();
-
-    private string searchValue = "";
-    private string lastRowName = "";
-    private string lastRowSetCode = "";
 
 
     public sealed class RenderRow
@@ -243,8 +228,6 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _priceCache = await PricingRouter.GetPriceBatchAsync(AllocationIndex.Values);
-
         BuildRows();
     }
 
@@ -270,11 +253,6 @@
                 }
             }
         }
-    }
-
-    private async Task<TableData<RenderRow>> BuildRowsAsync(TableState state)
-    {
-        
     }
 
 
@@ -346,23 +324,6 @@
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();
-    }
-
-
-    private bool TableFilter(RenderRow row) => FilterFunction(row, searchValue);
-
-    private bool FilterFunction(RenderRow row, string value)
-    {
-        if (String.IsNullOrWhiteSpace(value))
-            return true;
-
-        if (row.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if ($"{row.SetCode} {row.CollNum}".Contains(value, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        return false;
     }
 
 }

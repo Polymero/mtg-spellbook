@@ -1,16 +1,16 @@
-@* @page "/decks/{DeckId:guid}"
-@using MudBlazor
-@using Spellbox.Model
+@page "/decks/{DeckId:guid}"
 
+@if (_deck == null)
+{
+    <PageTitle>Spellbox</PageTitle>
 
-<MudPaper Class="pa-4">
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
 
-    @if (_deck == null)
-    {
-        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-    }
-    else
-    {
+    <MudPaper Class="pa-4">
+        
         <MudText Typo="Typo.h4">
             @_deck.Name
         </MudText>
@@ -19,34 +19,51 @@
             @_deck.Description
         </MudText>
 
-        <MudDivider />
+    </MudPaper>
 
-        <MudTable Items="_cards" 
-                  Dense="true"
-                  Hover="true">
-            <HeaderContent>
-                <MudTh>Card</MudTh>
-                <MudTh>Variant</MudTh>
-                <MudTh>Finish</MudTh>
-                <MudTh>Lang</MudTh>
-                <MudTh>Cond</MudTh>
-                <MudTh>Alt</MudTh>
-                <MudTh>Sig</MudTh>
-            </HeaderContent>
+    <MudToggleGroup T="bool"
+                    @bind-Value="_expandVariants"
+                    Size="Size.Small">
+        <MudToggleItem Value="false">
+            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                Oracle
+        </MudToggleItem>
+        <MudToggleItem Value="true">
+            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                Variant
+        </MudToggleItem>
+    </MudToggleGroup>
 
-            <RowTemplate Context="c">
-                <MudTd>@c.Name</MudTd>
-                <MudTd>@String.Format("{0} ({1})", c.SetCode.ToUpper(), c.CollNum)</MudTd>
-                <MudTd>@c.Finish</MudTd>
-                <MudTd>@c.Language</MudTd>
-                <MudTd>@c.Condition</MudTd>
-                <MudTd>@if (c.IsAltered) {<MudText>Yes</MudText>}</MudTd>
-                <MudTd>@if (c.IsSigned) {<MudText>Yes</MudText>}</MudTd>
-            </RowTemplate>
-        </MudTable>
-    }
+    <MudPaper Class="pa-4">
 
-</MudPaper>
+        <MudText Typo="Typo.h6">
+            Commander(s)
+        </MudText>
+
+        <CardGridView Groups="_zones[DeckZoneType.Commanders].Groups"
+                      VariantIndex="_zones[DeckZoneType.Commanders].VariantIndex"
+                      AllocationIndex="_zones[DeckZoneType.Commanders].AllocationIndex"
+                      OnEditSuccess="UpdateCache"
+                      ExpandVariants="_expandVariants" />
+
+    </MudPaper>
+
+    <MudPaper Class="pa-4">
+
+        <MudText Typo="Typo.h6">
+            Mainboard
+        </MudText>
+
+        <CardGridView Groups="_zones[DeckZoneType.Mainboard].Groups"
+                      VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
+                      AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
+                      OnEditSuccess="UpdateCache"
+                      ExpandVariants="_expandVariants" />
+
+    </MudPaper>
+
+
+}
 
 
 @inject CrossService CrossService
@@ -57,13 +74,65 @@
     public Guid DeckId { get; set; }
 
     private DeckDto? _deck;
-    private List<CollectionCardDetailsDto> _cards = new List<CollectionCardDetailsDto>();
+    private Dictionary<DeckZoneType, ZoneDto> _zones = new ();
+
+    private bool _expandVariants = false;
+
+    private sealed class ZoneDto
+    {
+        public DeckZoneType ZoneType { get; init; }
+        public List<CollectionGroupedOracleDto> Groups { get; init; } = [];
+
+        public Dictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = new();
+        public Dictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = new();
+    }
 
 
     protected override async Task OnParametersSetAsync()
     {
         _deck = await CollectionService.GetDeckDetails(DeckId);
-        _cards = await CrossService.GetDeckCardsAsync(DeckId);
+        var _zoneGroups = await CrossService.GetSnapshotZoneGroupsAsync(_deck.ActiveSnapshotId);
+
+        _zones = _zoneGroups.Select(kvp =>
+        {
+            var zoneDto = new ZoneDto
+            {
+                ZoneType = kvp.Key,
+                Groups = kvp.Value
+            };
+
+            BuildIndexes(zoneDto);
+
+            return new KeyValuePair<DeckZoneType,ZoneDto>(kvp.Key, zoneDto);
+        }).ToDictionary();
+
+        StateHasChanged();
     }
 
-} *@
+    private void BuildIndexes(ZoneDto zone)
+    {
+        var groups = zone.Groups;
+        zone.VariantIndex.Clear();
+        zone.AllocationIndex.Clear();
+
+        foreach (var oracle in groups)
+        {
+            foreach (var variant in oracle.Variants)
+            {
+                zone.VariantIndex[variant.VariantId] = variant;
+
+                foreach (var allocation in variant.Allocations)
+                {
+                    zone.AllocationIndex[allocation.Id] = allocation;
+                }
+            }
+        }
+    }
+
+
+    private void UpdateCache(EditAllocationCallback callback)
+    {
+
+    }
+
+}

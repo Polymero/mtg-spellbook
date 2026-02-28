@@ -271,10 +271,9 @@
                     <MudTh>
                         @if (a.BoughtFor.HasValue)
                         {
-                            @if (_priceCache.TryGetValue(a.Id, out var price) &&
-                                 price.HasValue && price.Value > 0m && a.BoughtFor > 0m)
+                            @if (a.Price.HasValue && a.Price.Value > 0m && a.BoughtFor > 0m)
                             {
-                                var shift = 100 * (price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
+                                var shift = 100 * (a.Price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
 
                                 @if (shift < 0m)
                                 {
@@ -304,24 +303,17 @@
                         }
                     </MudTh>
                     <MudTh>
-                        @if (!_priceCache.TryGetValue(a.Id, out var price))
+                        @if (a.Price.HasValue)
                         {
-                            <MudProgressCircular Size="Size.Small" Indeterminate />
+                            <span>
+                                €@a.Price.Value.ToString("0.00")
+                            </span>
                         }
                         else
                         {
-                            @if (price.HasValue)
-                            {
-                                <span>
-                                    €@price.Value.ToString("0.00")
-                                </span>
-                            }
-                            else
-                            {
-                                <span>
-                                    —
-                                </span>
-                            }
+                            <span>
+                                —
+                            </span>
                         }
                     </MudTh>
                     <MudTh>
@@ -360,7 +352,6 @@
 
     private CardDetailsViewerDto _viewerDto = new();
     private Dictionary<Guid, CardVariantDto> _variantInfo = new();
-    private Dictionary<Guid, decimal?> _priceCache = new();
     
     protected override async Task OnParametersSetAsync()
     {
@@ -374,9 +365,6 @@
             .Select(a => a.VariantId)
             .Distinct()
             .ToList());
-
-        _priceCache.Clear();
-        _priceCache = await PricingRouter.GetPriceBatchAsync(_viewerDto.Allocations);
 
         StateHasChanged();
     }

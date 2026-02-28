@@ -83,40 +83,7 @@
             @foreach (var binder in BinderCache)
             {
                 <MudItem xs="12">
-                    @* <MudCard Outlined="true">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudLink Typo="Typo.h6"
-                                         Href=@String.Format("/binders/{0}", binder.Id)>
-                                    @binder.Name
-                                </MudLink>
-                                <MudText Typo="Typo.caption">
-                                    <i>(@binder.Quantity cards - last updated: @binder.UpdatedAt.ToShortDateString())</i>
-                                </MudText>
-                                <MudText Typo="Typo.caption">
-                                    @if (binder.PriceMissing > 0)
-                                    {
-                                        <span>€@binder.PriceValue.ToString("0.00") + @binder.PriceMissing?</span>
-                                    }
-                                    else
-                                    {
-                                        <span>€@binder.PriceValue.ToString("0.00")</span>
-                                    }
-                                </MudText>
-                            </CardHeaderContent>
-                            <CardHeaderActions>
-                                <MudIconButton Icon="@Icons.Material.Filled.Settings"
-                                               Color="Color.Default"
-                                               Size="Size.Small" 
-                                               Class="align-end"
-                                               OnClick="@(() => OpenEditBinderDialog(binder.Id))" />
-                            </CardHeaderActions>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            @binder.Description
-                        </MudCardContent>
-                    </MudCard> *@
-                    <CollectionSummaryCard Binder="binder"
+                    <CollectionBinderCard Binder="binder"
                                            OnEdit="OpenEditBinderDialog" />
                 </MudItem>
             }   
@@ -163,17 +130,8 @@
             @foreach (var deck in DeckCache)
             {
                 <MudItem xs="12">
-                    <MudCard Outlined="true">
-                        <MudCardContent>
-                            <MudLink Typo="Typo.h6"
-                                     Href=@String.Format("/decks/{0}", deck.Id)>
-                                @deck.Name 
-                            </MudLink>
-                            <MudText>
-                                @deck.Type (@deck.UpdatedAt.ToShortDateString()) - @deck.Description
-                            </MudText>
-                        </MudCardContent>
-                    </MudCard>
+                    <CollectionDeckCard Deck="deck"
+                                        OnEdit="OpenEditDeckDialog" />
                 </MudItem>
             }   
         }
@@ -217,7 +175,7 @@
 
         DeckCache = await CollectionService.GetAllDecks();
         foreach (var deck in DeckCache)
-            (deck.PriceValue, deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(deck.ActiveSnapshotId);
+            (deck.PriceValue, deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(deck.Id);
 
         _collectionQuantity = Unassigned.Quantity +
             BinderCache.Sum(b => b.Quantity) +
@@ -323,6 +281,47 @@
         }
     }
 
+    private async Task OpenEditDeckDialog(Guid deckId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["DeckId"] = deckId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditDeckDialog>("Edit Deck", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditDeckCallback callback)
+        {
+            if (callback.IsUpdated)
+            {
+                var index = DeckCache
+                    .FindIndex(b => b.Id == callback.Deck.Id);
+
+                (callback.Deck.PriceValue, callback.Deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(callback.Deck.Id);
+
+                if (index >= 0)
+                    DeckCache[index] = callback.Deck;
+            }
+
+            if (callback.IsDeleted)
+            {
+                DeckCache.RemoveAll(b => b.Id == callback.Deck.Id);
+
+                Unassigned = await LoadUnassigned();
+            }
+
+            StateHasChanged();
+        }
+    }
+
 
     // Open dialog to add a physical copy of a card to the collection database
     private async Task OpenAddCollectionCardDialog()
@@ -341,7 +340,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddCardsToCollectionDialog>("Add Card", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddAllocationDialog>("Add Card", parameters, options);
         var result = await dialog.Result;
     }
 

@@ -14,8 +14,11 @@ namespace Spellbox.Model
 
         public Guid? BinderId { get; set; }
         public CollectionBinder? Binder { get; set; }
-        public Guid? SnapshotId { get; set; }
-        public DeckSnapshot? DeckSnapshot { get; set; }
+
+        public Guid? ZoneId { get; set; }
+        public DeckZone? Zone { get; set; }
+        public Guid? DeckId { get; set; }
+        public Deck? Deck { get; set; }
 
         public CardFinish Finish { get; set; } = CardFinish.Unknown;
         public CardLanguage Language { get; set; } = CardLanguage.Unknown;
@@ -34,10 +37,11 @@ namespace Spellbox.Model
     public sealed class CollectionAllocationDto
     {
         public Guid Id { get; init; }
+        public AllocationType Type { get; init; } = AllocationType.Collection;
 
         public Guid? BinderId { get; init; }
         public string? BinderName { get; init; }
-        public Guid? DeckId { get; init; }
+        public Guid? ZoneId { get; init; }
         public string? DeckName { get; init; }
 
         // from CollectionCard
@@ -56,6 +60,8 @@ namespace Spellbox.Model
 
         public DateTime AddedAt { get; init; }
         public DateTime AllocatedAt { get; init; }
+
+        public decimal? Price { get; set; }
     }
 
     public sealed class EditableAllocationDto
@@ -74,6 +80,8 @@ namespace Spellbox.Model
 
         public Guid? BinderId { get; set; }
         public Guid? SnapshotId { get; set; }
+        public Guid? ZoneId { get; set; }
+        public Guid? DeckId { get; set; }
     }
 
     public sealed class NewAllocationDto
@@ -141,5 +149,11 @@ namespace Spellbox.Model
         Excellent = 5,
         NearMint = 6,
         Mint = 7
+    }
+
+    public enum AllocationType
+    {
+        Collection = 0,
+        Ghost = 1
     }
 }

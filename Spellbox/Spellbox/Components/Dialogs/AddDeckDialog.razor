@@ -9,7 +9,7 @@
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="deckName"
+        <MudTextField @bind-Value="_newDeck.Name"
                       Label="Name"
                       Required="true"
                       Immediate="true"
@@ -18,7 +18,7 @@
 
         <MudSelect T="DeckType"
                     Label="Type"
-                    @bind-Value="deckType">
+                    @bind-Value="_newDeck.Type">
             @foreach (var v in Enum.GetValues<DeckType>())
             {
                 <MudSelectItem Value="v">
@@ -27,11 +27,14 @@
             }
         </MudSelect>
 
-        <MudTextField @bind-Value="deckDescription"
+        <MudTextField @bind-Value="_newDeck.Description"
                       Label="Description"
                       Lines="3"
                       Immediate="true"
                       AutoGrow />
+
+        <MudTextField @bind-Value="_newDeck.CoverImage"
+                      Label="Cover Image" />
     </DialogContent>
 
     <DialogActions>
@@ -40,8 +43,8 @@
         </MudButton>
 
         <MudButton Color="Color.Success"
-                   OnClick="SaveDeck"
-                   Disabled="@string.IsNullOrWhiteSpace(deckName)">
+                   OnClick="AddDeck"
+                   Disabled="@string.IsNullOrWhiteSpace(_newDeck.Name)">
             Add
         </MudButton>
     </DialogActions>
@@ -49,37 +52,27 @@
 </MudDialog>
 
 
-@inject IDbContextFactory<CollectionDbContext> CollectionDbFactory
+@inject CollectionService CollectionService
 @inject ISnackbar Snackbar
 @code {
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = null!;
 
-    private string deckName { get; set; } = string.Empty;
-    private DeckType deckType { get; set; } = DeckType.Unassigned;
-    private string deckDescription { get; set; } = string.Empty;
+    private EditableDeckDto _newDeck = new();
 
 
-    private async Task SaveDeck()
+    private async Task AddDeck()
     {
-        using var db = await CollectionDbFactory.CreateDbContextAsync();
+        var newDto = await CollectionService.AddDeckAsync(_newDeck);
+        MudDialog.Close(DialogResult.Ok(new EditDeckCallback(
+            newDto,
+            true,
+            false,
+            false
+        )));
 
-        var deck = new Deck
-        {
-            Id = Guid.NewGuid(),
-            Name = deckName,
-            Type = deckType,
-            Description = string.IsNullOrWhiteSpace(deckDescription) ? null : deckDescription.Trim(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        db.Decks.Add(deck);
-        await db.SaveChangesAsync();
-
-        MudDialog.Close(DialogResult.Ok(deck));
-        Snackbar.Add("Deck added!", Severity.Success);
+        Snackbar.Add($"Deck '{newDto.Name}' added!", Severity.Success);
     }
 
 

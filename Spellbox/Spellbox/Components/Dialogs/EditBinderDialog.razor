@@ -25,7 +25,6 @@
     </DialogContent>
 
     <DialogActions>
-
         <MudButton Class="mx-2 my-1"
                    Color="Color.Error"
                    Variant="Variant.Outlined"
@@ -47,7 +46,6 @@
                    OnClick="SaveAsync">
             Save Changes
         </MudButton>
-
     </DialogActions>
 
 </MudDialog>
@@ -76,6 +74,7 @@
         var updatedDto = await CollectionService.UpdateBinderAsync(_editDto);
         MudDialog.Close(DialogResult.Ok(new EditBinderCallback(
             updatedDto,
+            false,
             true,
             false
         )));
@@ -89,6 +88,7 @@
             {
                 Id = _editDto.Id
             },
+            false,
             false,
             true
         )));

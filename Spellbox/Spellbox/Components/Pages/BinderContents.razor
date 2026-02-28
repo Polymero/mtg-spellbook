@@ -33,6 +33,19 @@ else
         </MudToggleItem>
     </MudToggleGroup>
 
+    <MudToggleGroup T="bool"
+                    @bind-Value="_expandVariants"
+                    Size="Size.Small">
+        <MudToggleItem Value="false">
+            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                Oracle
+        </MudToggleItem>
+        <MudToggleItem Value="true">
+            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                Variant
+        </MudToggleItem>
+    </MudToggleGroup>
+
     <MudPaper Class="pa-4">
 
         @if (_displayMode == CardDisplayMode.Grid)
@@ -40,7 +53,8 @@ else
             <CardGridView Groups="_groups"
                           VariantIndex="_variantIndex"
                           AllocationIndex="_allocationIndex"
-                          OnEditSuccess="UpdateCache" />
+                          OnEditSuccess="UpdateCache"
+                          ExpandVariants="_expandVariants" />
         }
         else
         {
@@ -70,6 +84,7 @@ else
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
+    private bool _expandVariants = false;
 
     public enum CardDisplayMode
     {
@@ -156,7 +171,7 @@ else
         if (!_allocationIndex.TryGetValue(updatedAllocation.Id, out var allocation))
             return;
 
-        if (removeIfMoved && (allocation.BinderId != updatedAllocation.BinderId || allocation.DeckId != updatedAllocation.DeckId))
+        if (removeIfMoved && (allocation.BinderId != updatedAllocation.BinderId || allocation.ZoneId != updatedAllocation.ZoneId))
             {
                 RemoveAllocation(updatedAllocation);
                 return;

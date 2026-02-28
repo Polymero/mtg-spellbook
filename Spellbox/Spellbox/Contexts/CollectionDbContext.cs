@@ -103,7 +103,8 @@ namespace Spellbox.Contexts
 
             entity.HasIndex(e => e.CollectionCardId);
             entity.HasIndex(e => e.BinderId);
-            entity.HasIndex(e => e.SnapshotId);
+            entity.HasIndex(e => e.ZoneId);
+            entity.HasIndex(e => e.DeckId);
 
             entity.HasOne(e => e.CollectionCard)
                   .WithMany(c => c.Allocations)
@@ -116,9 +117,9 @@ namespace Spellbox.Contexts
                     "CK_CollectionAllocation_AllocationIndex",
                     @"
                     (
-                        (AllocationIndex = 0 AND BinderId IS NULL AND SnapshotId IS NULL) OR
-                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND SnapshotId IS NULL) OR
-                        (AllocationIndex = 2 AND BinderId IS NULL AND SnapshotId IS NOT NULL)
+                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR
+                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR
+                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)
                     )
                     "
                 );
@@ -179,9 +180,6 @@ namespace Spellbox.Contexts
         {
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.DeckName)
-                  .IsRequired();
-
             entity.Property(e => e.IsActive)
                   .IsRequired();
 
@@ -203,10 +201,10 @@ namespace Spellbox.Contexts
                   .HasForeignKey(z => z.SnapshotId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(e => e.Allocations)
-                  .WithOne(a => a.DeckSnapshot)
-                  .HasForeignKey(a => a.SnapshotId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Deck)
+                  .WithMany(d => d.Snapshots)
+                  .HasForeignKey(e => e.DeckId)
+                  .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
@@ -226,6 +224,16 @@ namespace Spellbox.Contexts
             entity.HasMany(e => e.Cards)
                   .WithOne(c => c.Zone)
                   .HasForeignKey(c => c.ZoneId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.Allocations)
+                  .WithOne(a => a.Zone)
+                  .HasForeignKey(a => a.ZoneId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Snapshot)
+                  .WithMany(s => s.Zones)
+                  .HasForeignKey(e => e.SnapshotId)
                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
@@ -252,6 +260,11 @@ namespace Spellbox.Contexts
                 e.VariantId
             })
             .IsUnique();
+
+            entity.HasOne(e => e.Zone)
+                  .WithMany(s => s.Cards)
+                  .HasForeignKey(e => e.ZoneId)
+                  .OnDelete(DeleteBehavior.Cascade);
         }
     }
 

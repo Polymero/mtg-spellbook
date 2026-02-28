@@ -15,4 +15,13 @@ namespace Spellbox.Model
 
         public int Quantity { get; set; }
     }
+
+    public class DeckCardDto
+    {
+        public Guid Id { get; init; }
+        public Guid ZoneId { get; init; }
+        public Guid OracleId { get; init; }
+        public Guid VariantId { get; init; }
+        public int Quantity { get; init; }
+    }
 }

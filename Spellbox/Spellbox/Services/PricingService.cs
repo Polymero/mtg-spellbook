@@ -286,7 +286,7 @@ namespace Spellbox.Services
         }
 
         public async Task<(decimal, int)> GetDeckValueAsync(
-            Guid activeSnapshotId,
+            Guid DeckId,
             PriceMetric nonFoilMetric,
             PriceMetric foilMetric
         )
@@ -294,7 +294,7 @@ namespace Spellbox.Services
             using var collection = await _collection.CreateDbContextAsync();
 
             var allocations = await collection.Allocations
-                .Where(a => a.SnapshotId == activeSnapshotId)
+                .Where(a => a.DeckId == DeckId)
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
