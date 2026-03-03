@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Spellbox.Contexts;
@@ -250,7 +251,16 @@ namespace Spellbox.Services
                         .Id,
 
                     CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt
+                    UpdatedAt = d.UpdatedAt,
+
+                    Quantity = d.Snapshots
+                        .First(s => s.IsActive)
+                        .Zones
+                        .Sum(z => z.Allocations.Count) +
+                        d.Snapshots
+                            .First(s => s.IsActive)
+                            .Zones
+                            .Sum(z => z.Cards.Count)
                 })
                 .SingleAsync();
         }
@@ -412,20 +422,20 @@ namespace Spellbox.Services
                 .Include(a => a.CollectionCard)
                 .SingleAsync(a => a.Id == allocationId);
 
-            if (alloc != null)
-            {
-                db.Allocations.Remove(alloc);
+            if (alloc is null)
+                return;
 
-                var inUse = await db.Allocations
-                    .AnyAsync(a => 
-                        a.CollectionCardId == alloc.CollectionCardId
-                        && a.Id != allocationId);
+            db.Allocations.Remove(alloc);
 
-                if (!inUse)
-                    db.CollectionCards.Remove(alloc.CollectionCard);
+            var inUse = await db.Allocations
+                .AnyAsync(a => 
+                    a.CollectionCardId == alloc.CollectionCardId
+                    && a.Id != allocationId);
 
-                await db.SaveChangesAsync();
-            }
+            if (!inUse)
+                db.CollectionCards.Remove(alloc.CollectionCard);
+
+            await db.SaveChangesAsync();
         }
 
 
@@ -449,22 +459,7 @@ namespace Spellbox.Services
 
             await db.SaveChangesAsync();
 
-            // Remake db?
-
-            return await db.Binders
-                .Where(b => b.Id == binderId)
-                .Select(b => new CollectionBinderDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    CoverImage = b.CoverImage,
-                    CreatedAt = b.CreatedAt,
-                    UpdatedAt = b.UpdatedAt,
-
-                    Quantity = b.Cards.Count()
-                })
-                .SingleAsync();
+            return await GetBinderDetails(binderId);
         }
 
         public async Task<EditableBinderDto> GetEditableBinderAsync(Guid binderId)
@@ -490,33 +485,18 @@ namespace Spellbox.Services
             var binder = await db.Binders
                 .FindAsync(editDto.Id);
 
-            if (binder is not null)
-            {
-                binder.Name = editDto.Name.Trim();
-                binder.Description = editDto.Description?.Trim();
-                binder.CoverImage = editDto.CoverImage;
+            if (binder is null)
+                return new CollectionBinderDto();
 
-                binder.UpdatedAt = DateTime.UtcNow;
+            binder.Name = editDto.Name.Trim();
+            binder.Description = editDto.Description?.Trim();
+            binder.CoverImage = editDto.CoverImage;
 
-                await db.SaveChangesAsync();
-            }
+            binder.UpdatedAt = DateTime.UtcNow;
 
-            // Remake db?
+            await db.SaveChangesAsync();
 
-            return await db.Binders
-                .Where(b => b.Id == editDto.Id)
-                .Select(b => new CollectionBinderDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    CoverImage = b.CoverImage,
-                    CreatedAt = b.CreatedAt,
-                    UpdatedAt = b.UpdatedAt,
-
-                    Quantity = b.Cards.Count()
-                })
-                .SingleAsync();
+            return await GetBinderDetails(binder.Id);
         }
 
         public async Task DeleteBinderAsync(Guid binderId)
@@ -526,23 +506,55 @@ namespace Spellbox.Services
             var binder = await db.Binders
                 .FindAsync(binderId);
 
-            if (binder is not null)
-            {
-                db.Binders.Remove(binder);
+            if (binder is null)
+                return;
 
-                var allocations = await db.Allocations
+            db.Binders.Remove(binder);
+
+            var allocations = await db.Allocations
                 .Where(a => a.BinderId == binderId)
                 .ToListAsync();
 
-                foreach (var alloc in allocations)
-                {
-                    alloc.AllocationIndex = AllocationIndex.Unassigned;
-                    alloc.BinderId = null;
-                    alloc.AllocatedAt = DateTime.UtcNow;
-                }
+            foreach (var alloc in allocations)
+            {
+                alloc.AllocationIndex = AllocationIndex.Unassigned;
+                alloc.BinderId = null;
+                alloc.AllocatedAt = DateTime.UtcNow;
+            }
 
             await db.SaveChangesAsync();
+        }
+
+        public async Task<DeckDto> TransformBinderIntoDeckAsync(EditableBinderDto binderDto)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var deck = await AddDeckAsync(new EditableDeckDto
+            {
+                Id = binderDto.Id,
+                Name = binderDto.Name,
+                Type = DeckType.Unassigned,
+                Description = binderDto.Description,
+                CoverImage = binderDto.CoverImage
+            });
+
+            var allocations = await db.Allocations
+                .Where(a => a.BinderId == binderDto.Id)
+                .ToListAsync();
+
+            foreach (var alloc in allocations)
+            {
+                alloc.AllocationIndex = AllocationIndex.Deck;
+                alloc.BinderId = null;
+                alloc.ZoneId = deck.ActiveMainboardId;
+                alloc.AllocatedAt = DateTime.UtcNow;
             }
+
+            await db.SaveChangesAsync();
+
+            await DeleteBinderAsync(binderDto.Id);
+
+            return await GetDeckDetails(deck.Id);
         }
 
 
@@ -589,21 +601,7 @@ namespace Spellbox.Services
 
             await db.SaveChangesAsync();
 
-            // Remake db?
-
-            return await db.Decks
-                .Where(d => d.Id == newDeck.Id)
-                .Select(d => new DeckDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    Type = d.Type,
-                    Description = d.Description,
-                    CoverImage = d.CoverImage,
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt
-                })
-                .SingleAsync();
+            return await GetDeckDetails(newDeck.Id);
         }
 
         public async Task<EditableDeckDto> GetEditableDeckAsync(Guid deckId)
@@ -630,33 +628,19 @@ namespace Spellbox.Services
             var deck = await db.Decks
                 .FindAsync(editDto.Id);
 
-            if (deck is not null)
-            {
-                deck.Name = editDto.Name.Trim();
-                deck.Type = editDto.Type;
-                deck.Description = editDto.Description?.Trim();
-                deck.CoverImage = editDto.CoverImage;
+            if (deck is null)
+                return new DeckDto();
 
-                deck.UpdatedAt = DateTime.UtcNow;
+            deck.Name = editDto.Name.Trim();
+            deck.Type = editDto.Type;
+            deck.Description = editDto.Description?.Trim();
+            deck.CoverImage = editDto.CoverImage;
 
-                await db.SaveChangesAsync();
-            }
+            deck.UpdatedAt = DateTime.UtcNow;
 
-            // Remake db?
+            await db.SaveChangesAsync();
 
-            return await db.Decks
-                .Where(d => d.Id == editDto.Id)
-                .Select(d => new DeckDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    Type = d.Type,
-                    Description = d.Description,
-                    CoverImage = d.CoverImage,
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt,
-                })
-                .SingleAsync();
+            return await GetDeckDetails(deck.Id);
         }
 
         public async Task DeleteDeckAsync(Guid deckId)
@@ -702,6 +686,51 @@ namespace Spellbox.Services
             }
 
             await db.SaveChangesAsync();
+        }
+
+        public async Task<CollectionBinderDto> TransformDeckIntoBinderAsync(EditableDeckDto deckDto)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var binder = await AddBinderAsync(new EditableBinderDto
+            {
+                Id = deckDto.Id,
+                Name = deckDto.Name,
+                Description = deckDto.Description,
+                CoverImage = deckDto.CoverImage
+            });
+
+            var snapshots = await db.Snapshots
+                .Where(s => s.DeckId == deckDto.Id)
+                .ToListAsync();
+
+            var snapshotIds = snapshots
+                .Select(s => s.Id);
+
+            var zones = await db.Zones
+                .Where(z => snapshotIds.Contains(z.SnapshotId))
+                .ToListAsync();
+
+            var zoneIds = zones
+                .Select(z => z.Id);
+
+            var allocations = await db.Allocations
+                .Where(a => a.ZoneId.HasValue && zoneIds.Contains(a.ZoneId.Value))
+                .ToListAsync();
+
+            foreach (var alloc in allocations)
+            {
+                alloc.AllocationIndex = AllocationIndex.Binder;
+                alloc.ZoneId = null;
+                alloc.BinderId = binder.Id;
+                alloc.AllocatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+
+            await DeleteDeckAsync(deckDto.Id);
+
+            return await GetBinderDetails(binder.Id);
         }
 
     }

@@ -1,5 +1,5 @@
 
-.card-grid-container[b-222q0nahjh] {
+.card-grid-container[b-hoqfvrcn97] {
     width: 100%;
     min-height: 100%;
     overflow-y: auto;
@@ -8,27 +8,27 @@
     /* display: grid; */
 }
 
-.card-row[b-222q0nahjh] {
+.card-row[b-hoqfvrcn97] {
     display: inline-flex;
     gap: px;
     justify-content: space-evenly;
 }
 
-.card-tile[b-222q0nahjh] {
+.card-tile[b-hoqfvrcn97] {
     width: 224px;
     min-width: 224px;
     max-width: 224px;
     /* margin: auto; */
 }
 
-.card-image[b-222q0nahjh] {
+.card-image[b-hoqfvrcn97] {
     width: 100%;
     height: auto;
     display: block;
     margin-bottom: 4px;
 }
 
-.text-truncate[b-222q0nahjh] {
+.text-truncate[b-hoqfvrcn97] {
     display: block;
     width: 224px;
     text-align: center;

@@ -1,5 +1,4 @@
-﻿@using MudBlazor.Charts
-
+﻿
 
 <MudPaper Elevation="1" 
           Class="pa-3 collection-card" 
@@ -27,7 +26,7 @@
 
                     <MudStack Row="true" Spacing="2">
                         <MudText Typo="Typo.caption">
-                            <i>(@Deck.Quantity cards - last updated: @Deck.UpdatedAt.ToShortDateString())</i>
+                            <i>(@Deck.Type - @Deck.Quantity cards - last updated: @Deck.UpdatedAt.ToShortDateString())</i>
                         </MudText>
 
                         <MudText Typo="Typo.caption">

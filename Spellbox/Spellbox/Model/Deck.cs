@@ -30,7 +30,6 @@ namespace Spellbox.Model
         public DateTime UpdatedAt { get; init; }
         
         public Guid ActiveSnapshotId { get; init; }
-        // public List<Guid> ActiveZoneIds { get; init; } = [];
         public Guid ActiveMainboardId { get; init; }
         public int Quantity { get; init; }
         public decimal PriceValue { get; set; }

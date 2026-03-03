@@ -14,6 +14,17 @@
                       Immediate="true"
                       Typo="Typo.h5" />
 
+        <MudSelect T="DeckType"
+                   Label="Type"
+                   @bind-Value="_editDto.Type">
+            @foreach (var v in Enum.GetValues<DeckType>())
+            {
+                <MudSelectItem Value="v">
+                    @v
+                </MudSelectItem>
+            }
+        </MudSelect>
+
         <MudTextField @bind-Value="_editDto.Description" 
                       Label="Description" 
                       Lines="3"
@@ -30,6 +41,13 @@
                    Variant="Variant.Outlined"
                    OnClick="DeleteAsync">
             Delete
+        </MudButton>
+
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Warning"
+                   Variant="Variant.Outlined"
+                   OnClick="TransformAsync">
+            To Binder           
         </MudButton>
 
         <MudSpacer />
@@ -78,6 +96,8 @@
             true,
             false
         )));
+
+        Snackbar.Add($"Changes saved successfully ~ !", Severity.Success);
     }
 
     private async Task DeleteAsync()
@@ -91,6 +111,23 @@
             false,
             false,
             true
+        )));
+
+        Snackbar.Add($"Deck '{_editDto.Name}' deleted.", Severity.Success);
+    }
+
+    private async Task TransformAsync()
+    {
+        var binder = await CollectionService.TransformDeckIntoBinderAsync(_editDto);
+        MudDialog.Close(DialogResult.Ok(new EditDeckCallback(
+            new DeckDto
+            {
+                Id = _editDto.Id
+            },
+            false,
+            false,
+            true,
+            Transformed: binder
         )));
     }
 

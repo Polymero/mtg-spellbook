@@ -13,14 +13,16 @@ namespace Spellbox.Model
         CollectionBinderDto Binder,
         bool IsCreated,
         bool IsUpdated,
-        bool IsDeleted
+        bool IsDeleted,
+        DeckDto? Transformed = null
     );
 
     public sealed record EditDeckCallback(
         DeckDto Deck,
         bool IsCreated,
         bool IsUpdated,
-        bool IsDeleted
+        bool IsDeleted,
+        CollectionBinderDto? Transformed = null
     );
 
 }

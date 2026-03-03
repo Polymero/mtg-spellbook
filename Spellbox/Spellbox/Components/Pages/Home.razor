@@ -237,6 +237,14 @@
 
         if (!result!.Canceled && result.Data is EditBinderCallback callback)
         {
+            if (callback.IsCreated)
+            {
+                (callback.Binder.PriceValue, callback.Binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(callback.Binder.Id);
+
+                BinderCache.Add(callback.Binder);
+                BinderCache.OrderBy(b => b.Name);
+            }
+
             if (callback.IsUpdated)
             {
                 var index = BinderCache
@@ -246,13 +254,25 @@
 
                 if (index >= 0)
                     BinderCache[index] = callback.Binder;
+
+                BinderCache.OrderBy(b => b.Name);
             }
 
             if (callback.IsDeleted)
             {
                 BinderCache.RemoveAll(b => b.Id == callback.Binder.Id);
 
-                Unassigned = await LoadUnassigned();
+                if (callback.Transformed is null)
+                {
+                    Unassigned = await LoadUnassigned();
+                }
+                else
+                {
+                    (callback.Transformed.PriceValue, callback.Transformed.PriceMissing) = await PricingRouter.GetDeckValueAsync(callback.Transformed.Id);
+
+                    DeckCache.Add(callback.Transformed);
+                    DeckCache.OrderByDescending(d => d.UpdatedAt);
+                }
             }
 
             StateHasChanged();
@@ -300,6 +320,14 @@
 
         if (!result!.Canceled && result.Data is EditDeckCallback callback)
         {
+            if (callback.IsCreated)
+            {
+                (callback.Deck.PriceValue, callback.Deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(callback.Deck.Id);
+
+                DeckCache.Add(callback.Deck);
+                DeckCache.OrderByDescending(d => d.UpdatedAt);
+            }
+
             if (callback.IsUpdated)
             {
                 var index = DeckCache
@@ -309,13 +337,25 @@
 
                 if (index >= 0)
                     DeckCache[index] = callback.Deck;
+
+                DeckCache.OrderByDescending(d => d.UpdatedAt);
             }
 
             if (callback.IsDeleted)
             {
                 DeckCache.RemoveAll(b => b.Id == callback.Deck.Id);
 
-                Unassigned = await LoadUnassigned();
+                if (callback.Transformed is null)
+                {
+                    Unassigned = await LoadUnassigned();
+                }
+                else
+                {
+                    (callback.Transformed.PriceValue, callback.Transformed.PriceMissing) = await PricingRouter.GetBinderValueAsync(callback.Transformed.Id);
+
+                    BinderCache.Add(callback.Transformed);
+                    BinderCache.OrderBy(b => b.Name);
+                }
             }
 
             StateHasChanged();

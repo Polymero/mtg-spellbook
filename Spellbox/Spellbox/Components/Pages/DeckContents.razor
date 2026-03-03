@@ -1,6 +1,6 @@
 @page "/decks/{DeckId:guid}"
 
-@if (_deck == null)
+@if (_deck is null)
 {
     <PageTitle>Spellbox</PageTitle>
 
@@ -9,17 +9,10 @@
 else
 {
 
-    <MudPaper Class="pa-4">
-        
-        <MudText Typo="Typo.h4">
-            @_deck.Name
-        </MudText>
+    <PageTitle>@_deck.Name</PageTitle>
 
-        <MudText Typo="Typo.h6">
-            @_deck.Description
-        </MudText>
-
-    </MudPaper>
+    <CollectionDeckCard Deck="_deck"
+                        OnEdit="OpenEditDeckDialog" />
 
     <MudToggleGroup T="bool"
                     @bind-Value="_expandVariants"
@@ -62,12 +55,14 @@ else
 
     </MudPaper>
 
-
 }
 
 
 @inject CrossService CrossService
 @inject CollectionService CollectionService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject IPricingRouter PricingRouter
 @code {
 
     [Parameter]
@@ -91,8 +86,10 @@ else
     protected override async Task OnParametersSetAsync()
     {
         _deck = await CollectionService.GetDeckDetails(DeckId);
-        var _zoneGroups = await CrossService.GetSnapshotZoneGroupsAsync(_deck.ActiveSnapshotId);
 
+        (_deck.PriceValue, _deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(_deck.Id);
+
+        var _zoneGroups = await CrossService.GetSnapshotZoneGroupsAsync(_deck.ActiveSnapshotId);
         _zones = _zoneGroups.Select(kvp =>
         {
             var zoneDto = new ZoneDto
@@ -133,6 +130,51 @@ else
     private void UpdateCache(EditAllocationCallback callback)
     {
 
+    }
+
+
+    private async Task OpenEditDeckDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["DeckId"] = DeckId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditDeckDialog>("Edit Deck", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditDeckCallback callback)
+        {
+            if (callback.IsUpdated)
+            {
+                _deck = callback.Deck;
+
+                (_deck.PriceValue, _deck.PriceMissing) = await PricingRouter.GetDeckValueAsync(_deck.Id);
+            }
+
+            if (callback.IsDeleted)
+            {
+                if (callback.Transformed is null)
+                {
+                    NavigationManager.NavigateTo("/");
+                    return;
+                }
+                else
+                {
+                    NavigationManager.NavigateTo($"/binders/{callback.Transformed.Id}");
+                    return;
+                }
+            }
+
+            StateHasChanged();
+        }
     }
 
 }

@@ -35,8 +35,14 @@ builder.Services.AddScoped<CollectionService>();
 builder.Services.AddScoped<CrossService>();
 
 // Scryfall import services
+builder.Services.AddHttpClient("Scryfall", client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "Spellbox/0.1 (spellbox@sebven.com)");
+    client.DefaultRequestHeaders.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
+});
 builder.Services.AddScoped<IScryfallImportService, ScryfallImportService>();
 builder.Services.AddHostedService<ScryfallSyncWorker>();
+builder.Services.AddSingleton<SymbologyService>();
 
 // User services
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
@@ -53,6 +59,10 @@ builder.Services.AddScoped<IPricingService, CardMarketPricingService>();
 
 
 var app = builder.Build();
+
+await app.Services
+    .GetRequiredService<SymbologyService>()
+    .InitialiseAsync();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

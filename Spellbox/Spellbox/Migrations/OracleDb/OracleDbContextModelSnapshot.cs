@@ -166,6 +166,29 @@ namespace Spellbox.Migrations.OracleDb
                     b.ToTable("Variants");
                 });
 
+            modelBuilder.Entity("Spellbox.Model.Symbol", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SvgData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tip")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.ToTable("Symbols");
+                });
+
             modelBuilder.Entity("Spellbox.Services.ScryfallSyncState", b =>
                 {
                     b.Property<string>("Key")

@@ -32,6 +32,13 @@
             Delete
         </MudButton>
 
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Warning"
+                   Variant="Variant.Outlined"
+                   OnClick="TransformAsync">
+            To Deck           
+        </MudButton>
+
         <MudSpacer />
 
         <MudButton Class="mx-2 my-1"
@@ -78,6 +85,8 @@
             true,
             false
         )));
+
+        Snackbar.Add($"Changes saved successfully ~ !", Severity.Success);
     }
 
     private async Task DeleteAsync()
@@ -91,6 +100,23 @@
             false,
             false,
             true
+        )));
+
+        Snackbar.Add($"Binder '{_editDto.Name}' deleted.", Severity.Success);
+    }
+
+    private async Task TransformAsync()
+    {
+        var deck = await CollectionService.TransformBinderIntoDeckAsync(_editDto);
+        MudDialog.Close(DialogResult.Ok(new EditBinderCallback(
+            new CollectionBinderDto
+            {
+                Id = _editDto.Id
+            },
+            false,
+            false,
+            true,
+            Transformed: deck
         )));
     }
 

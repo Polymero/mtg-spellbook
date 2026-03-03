@@ -201,6 +201,8 @@
             true, 
             false
         )));
+
+        Snackbar.Add($"Changes saved successfully ~ !", Severity.Success);
     }
 
     private async Task DeleteAsync()
@@ -215,6 +217,8 @@
             false,
             true
         )));
+
+        Snackbar.Add($"Card deleted from collection.", Severity.Success);
     }
 
 

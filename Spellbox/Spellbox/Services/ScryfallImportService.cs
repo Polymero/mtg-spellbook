@@ -504,7 +504,17 @@ namespace Spellbox.Services
                 await SqliteUpserts.UpsertFaceAsync(db, face, ct);
 
             foreach (var variant in variantBatch)
-                await SqliteUpserts.UpsertVariantAsync(db, variant, ct);
+            {
+                try
+                {
+                    await SqliteUpserts.UpsertVariantAsync(db, variant, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Variant upsert error: {variant.ScryfallId} {variant.SearchName} {variant.SetCode} {variant.CollNum}");
+                    continue;
+                }
+            }
 
             await tx.CommitAsync(ct);
 

@@ -1,6 +1,6 @@
 @page "/binders/{BinderId:guid}"
 
-@if (_binder == null)
+@if (_binder is null)
 {
     <PageTitle>Spellbox</PageTitle>
 
@@ -11,18 +11,17 @@ else
 
     <PageTitle>@_binder.Name</PageTitle>
 
-    <MudPaper Class="pa-4">
-        <MudText Typo="Typo.h4">
-            @_binder.Name
-        </MudText>
+    <CollectionBinderCard Binder="_binder"
+                          OnEdit="OpenEditBinderDialog" />
 
-        <MudText Typo="Typo.h6">
-            @_binder.Description
-        </MudText>
-    </MudPaper>
+    <MudStack Row="true" 
+              AlignItems="AlignItems.Center" 
+              Justify="Justify.SpaceEvenly"
+              Class="mt-4">
 
     <MudToggleGroup T="CardDisplayMode"
-                    @bind-Value="_displayMode">
+                    @bind-Value="_displayMode"
+                    Style="width: 40%">
         <MudToggleItem Value="CardDisplayMode.Grid">
             <MudIcon Icon="@Icons.Material.Filled.GridView" />
                 Grid
@@ -35,16 +34,19 @@ else
 
     <MudToggleGroup T="bool"
                     @bind-Value="_expandVariants"
-                    Size="Size.Small">
+                    Size="Size.Small"
+                    Style="width: 40%">
         <MudToggleItem Value="false">
-            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-                Oracle
+            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                Oracles
         </MudToggleItem>
         <MudToggleItem Value="true">
-            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
-                Variant
+            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                Variants
         </MudToggleItem>
     </MudToggleGroup>
+
+    </MudStack>
 
     <MudPaper Class="pa-4">
 
@@ -71,6 +73,9 @@ else
 
 @inject CrossService CrossService
 @inject CollectionService CollectionService
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject IPricingRouter PricingRouter
 @code {
 
     [Parameter]
@@ -94,8 +99,10 @@ else
     
     protected override async Task OnParametersSetAsync()
     {
-        _binder = await CollectionService.GetBinderDetails(BinderId);
+        _binder = await CollectionService.GetBinderDetails(BinderId);        
         _groups = await CrossService.GetBinderGroupsAsync(BinderId);
+
+        (_binder.PriceValue, _binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(_binder.Id);
 
         BuildIndexes(_groups);
         StateHasChanged();
@@ -187,6 +194,51 @@ else
             variant.Allocations[index] = updatedAllocation;
 
             _allocationIndex[updatedAllocation.Id] = updatedAllocation;
+        }
+    }
+
+
+    private async Task OpenEditBinderDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["BinderId"] = BinderId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditBinderDialog>("Edit Binder", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditBinderCallback callback)
+        {
+            if (callback.IsUpdated)
+            {
+                _binder = callback.Binder;
+
+                (_binder.PriceValue, _binder.PriceMissing) = await PricingRouter.GetBinderValueAsync(_binder.Id);
+            }
+
+            if (callback.IsDeleted)
+            {
+                if (callback.Transformed is null)
+                {
+                    NavigationManager.NavigateTo("/");
+                    return;
+                }
+                else
+                {
+                    NavigationManager.NavigateTo($"/decks/{callback.Transformed.Id}");
+                    return;
+                }
+            }
+
+            StateHasChanged();
         }
     }
 

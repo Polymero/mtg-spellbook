@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Spellbox.Model;
 using Spellbox.Services;
 
@@ -14,6 +15,7 @@ namespace Spellbox.Contexts
         public DbSet<CardFace> Faces { get; set; }
         public DbSet<CardVariant> Variants { get; set; }
         public DbSet<ScryfallSyncState> SyncStates { get; set; }
+        public DbSet<Symbol> Symbols { get; set; }
 
         public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
         {
@@ -26,6 +28,7 @@ namespace Spellbox.Contexts
             model.ApplyConfiguration(new CardFaceConfiguration());
             model.ApplyConfiguration(new CardVariantConfiguration());
             model.ApplyConfiguration(new ScryfallSyncStatesConfiguration());
+            model.ApplyConfiguration(new SymbolConfiguration());
         }
     }
 
@@ -170,7 +173,17 @@ namespace Spellbox.Contexts
     {
         public void Configure(EntityTypeBuilder<ScryfallSyncState> entity)
         {
-            entity.HasKey(x => x.Key);
+            entity.HasKey(e => e.Key);
+        }
+    }
+
+    public class SymbolConfiguration : IEntityTypeConfiguration<Symbol>
+    {
+        public void Configure(EntityTypeBuilder<Symbol> entity)
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.Code);
         }
     }
 

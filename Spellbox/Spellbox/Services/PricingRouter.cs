@@ -28,7 +28,7 @@ namespace Spellbox.Services
         );
 
         Task<(decimal, int)> GetDeckValueAsync(
-            Guid activeSnapshotId
+            Guid deckId
         );
 
         Task<List<PricingEditDto>> GetPricingEditsAsync();
@@ -133,7 +133,7 @@ namespace Spellbox.Services
         }
 
         public async Task<(decimal, int)> GetDeckValueAsync(
-            Guid activeSnapshotId
+            Guid deckId
         )
         {
             var prefs = (await _session.GetAsync()).PricingSettings;
@@ -142,7 +142,7 @@ namespace Spellbox.Services
                 .Single(s => s.Marketplace == prefs.Marketplace);
 
             return await service.GetDeckValueAsync(
-                activeSnapshotId,
+                deckId,
                 prefs.NonFoilMetric,
                 prefs.FoilMetric
             );
