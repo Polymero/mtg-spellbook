@@ -1,0 +1,158 @@
+﻿
+
+<MudDialog>
+
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            Moving @AllocationIds.Count Cards
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+    
+        <MudGrid Class="mb-4">
+
+            <!-- Binder allocation -->
+            <MudItem xs="5">
+                <MudSelect T="CollectionBinderDto"
+                           Label="Binder"
+                           Clearable="true"
+                           @bind-Value="_targetBinder">
+                    @foreach (var b in _binders)
+                    {
+                        <MudSelectItem Value="b">
+                            @b.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="2"
+                     Class="d-flex align-end">
+                <MudText>
+                    OR
+                </MudText>
+            </MudItem>
+
+            <!-- Deck allocation -->
+            <MudItem xs="5">
+                <MudSelect T="DeckDto"
+                           Label="Deck"
+                           Clearable="true"
+                           @bind-Value="_targetDeck">
+                    @foreach (var d in _decks)
+                    {
+                        <MudSelectItem Value="d">
+                            @d.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            @if (_targetDeck is not null)
+            {
+                <MudItem xs="7">
+
+                </MudItem>
+
+                <MudItem xs="5">
+                    <MudSelect T="DeckZoneType"
+                               Label="Zone"
+                               @bind-Value="_targetZoneType">
+                        @foreach (var zt in Enum.GetValues<DeckZoneType>())
+                        {
+                            <MudSelectItem Value="zt">
+                                @zt
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+        
+        </MudGrid>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudSpacer />
+
+        <MudButton Class="mx-2 my-1"
+                   Variant="Variant.Text"
+                   OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Class="mx-2 my-1"
+                   Color="Color.Success"
+                   Variant="Variant.Filled"
+                   Disabled="@(!CanMove)"
+                   OnClick="MoveAsync">
+            Move
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@inject CollectionService CollectionService
+@inject ISnackbar Snackbar
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public HashSet<Guid> AllocationIds { get; set; } = new();
+    [Parameter] public Guid? CurrentBinderId { get; set; }
+    [Parameter] public Guid? CurrentZoneId { get; set; }
+
+    private CollectionBinderDto? _targetBinder;
+    private DeckDto? _targetDeck;
+    private DeckZoneType _targetZoneType = DeckZoneType.Mainboard;
+
+    private List<CollectionBinderDto> _binders = new List<CollectionBinderDto>();
+    private List<DeckDto> _decks = new List<DeckDto>();
+
+    private bool CanMove =>
+        !(
+            _targetBinder is not null && 
+            _targetDeck is not null
+        );
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _binders = await CollectionService.GetAllBinders();
+        _decks = await CollectionService.GetAllDecks();
+
+        _targetBinder = CurrentBinderId.HasValue 
+            ? _binders.Single(b => b.Id == CurrentBinderId.Value) 
+            : null;
+        _targetDeck = CurrentZoneId.HasValue 
+            ? _decks.Single(d => d.ActiveZoneIds.Values.Contains(CurrentZoneId.Value)) 
+            : null;
+    }
+
+
+    private async Task MoveAsync()
+    {
+        if (_targetBinder?.Id == CurrentBinderId)
+            Cancel();
+
+        var movedIds = await CollectionService.MoveAllocationsAsync(AllocationIds, _targetBinder?.Id, _targetDeck?.ActiveSnapshotId, _targetZoneType);
+        MudDialog.Close(DialogResult.Ok(new MoveAllocationsCallback(movedIds)));
+
+        var targetName = "Unassigned";
+        if (_targetBinder is not null)
+            targetName = _targetBinder.Name;
+        else if (_targetDeck is not null)
+            targetName = _targetDeck.Name;
+
+        Snackbar.Add($"Moved {movedIds.Count} card(s) to '{targetName}.'", Severity.Success);
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

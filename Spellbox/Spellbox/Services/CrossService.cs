@@ -63,6 +63,7 @@ namespace Spellbox.Services
                         {
                             OracleId = oracleGroup.Key,
                             Name = oracle.Name,
+                            ColorIdentity = oracle.ColorIdentity,
 
                             Type = typeGroup.Key,
 
@@ -213,6 +214,7 @@ namespace Spellbox.Services
     {
         public Guid OracleId { get; init; }
         public string Name { get; init; } = null!;
+        public List<string> ColorIdentity { get; init; } = [];
 
         public AllocationType Type { get; init; }
 

@@ -9,6 +9,10 @@ namespace Spellbox.Model
         bool IsDeleted
     );
 
+    public sealed record MoveAllocationsCallback(
+        IEnumerable<Guid> AllocationIds
+    );
+
     public sealed record EditBinderCallback(
         CollectionBinderDto Binder,
         bool IsCreated,

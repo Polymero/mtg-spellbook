@@ -140,7 +140,8 @@ namespace Spellbox.Services
                     OracleText = f.OracleText,
                     Power = f.Power,
                     Toughness = f.Toughness,
-                    Defense = f.Defense
+                    Defense = f.Defense,
+                    Loyalty = f.Loyalty
                 })
                 .ToListAsync();
 

@@ -18,33 +18,126 @@ else
 
     </MudPaper>
 
-    <MudToggleGroup T="CardDisplayMode"
-                    @bind-Value="_displayMode">
-        <MudToggleItem Value="CardDisplayMode.Grid">
-            <MudIcon Icon="@Icons.Material.Filled.GridView" />
-                Grid
-        </MudToggleItem>
-        <MudToggleItem Value="CardDisplayMode.Table">
-            <MudIcon Icon="@Icons.Material.Filled.TableRows" />
-                Table
-        </MudToggleItem>
-    </MudToggleGroup>
+<MudPaper Elevation="0"
+              Class="pa-4 mud-transparent">
+        <MudGrid Spacing="0" 
+                 Justify="Justify.SpaceEvenly">
+
+            <MudItem xs="4">
+                <MudToggleGroup T="CardDisplayMode"
+                                @bind-Value="_displayMode"
+                                Size="Size.Small">
+                    <MudToggleItem Value="CardDisplayMode.Grid">
+                        <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                            Grid
+                    </MudToggleItem>
+                    <MudToggleItem Value="CardDisplayMode.Table">
+                        <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+                            Table
+                    </MudToggleItem>
+                </MudToggleGroup>
+            </MudItem>
+
+            <MudItem xs="4">
+                <MudToggleGroup T="bool"
+                                @bind-Value="_expandVariants"
+                                Size="Size.Small">
+                    <MudToggleItem Value="false">
+                        <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                            Oracles
+                    </MudToggleItem>
+                    <MudToggleItem Value="true">
+                        <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                            Variants
+                    </MudToggleItem>
+                </MudToggleGroup>
+            </MudItem>
+
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Elevation="0"
+              Class="pa-4 mud-transparent">
+        <MudGrid Class=""
+                 Spacing="0"
+                 Justify="Justify.Center">
+
+            <MudItem xs="2">
+                <MudSelect T="ColorIdentityFilterMode"
+                           Dense="true"
+                           @bind-Value="_CIFMode"
+                           @bind-Value:after="ApplyFilter">
+                    @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
+                    {
+                        <MudSelectItem Value="mode">
+                            @mode
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="4" Class="justify-center">
+                <MudStack Row="true"
+                          Justify="Justify.Center">
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["C"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("C"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
+                            Size="Size.Large"
+                            Style=@(_CIF["W"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("W"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["U"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("U"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["B"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("B"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["R"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("R"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
+                            Size="Size.Large"
+                            Style=@(_CIF["G"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("G"))" />
+                </MudStack>
+            </MudItem>
+
+            <MudItem xs="5">
+                <MudTextField Label="Search" 
+                            T="string"
+                            Variant="Variant.Text" />
+            </MudItem>
+
+        </MudGrid>
+    </MudPaper>
+
 
     <MudPaper Class="pa-4">
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
-            <CardGridView Groups="_groups"
+            <CardGridView Groups="_filteredGroups"
                           VariantIndex="_variantIndex"
                           AllocationIndex="_allocationIndex"
-                          OnEditSuccess="UpdateCache" />
+                          OnEditSuccess="UpdateCacheOnEdit"
+                          OnMoveSuccess="UpdateCacheOnMove"
+                          ExpandVariants="_expandVariants" />
         }
         else
         {
             <CardTableView Groups="_groups"
                            VariantIndex="_variantIndex"
                            AllocationIndex="_allocationIndex"
-                           OnEditSuccess="UpdateCache" />
+                           OnEditSuccess="UpdateCacheOnEdit" />
         }
 
     </MudPaper>
@@ -54,15 +147,23 @@ else
 
 @inject CrossService CrossService
 @inject CollectionService CollectionService
+@inject SymbologyService SymbologyService
 @code {
 
     // UI Cache
     private List<CollectionGroupedOracleDto> _groups =[];
+    private List<CollectionGroupedOracleDto> _filteredGroups = [];
     private Dictionary<Guid, CollectionGroupedVariantDto> _variantIndex = new();
     private Dictionary<Guid, CollectionAllocationDto> _allocationIndex = new();
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
+    private bool _expandVariants = false;
+    private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
+    {
+        {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
+    };
+    private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
 
     public enum CardDisplayMode
     {
@@ -75,6 +176,9 @@ else
         _groups = await CrossService.GetCollectionGroupsAsync();
 
         BuildIndexes(_groups);
+
+        ApplyFilter();
+
         StateHasChanged();
     }
 
@@ -98,13 +202,31 @@ else
     }
 
 
-    private void UpdateCache(EditAllocationCallback callback)
+    private void UpdateCacheOnMove(MoveAllocationsCallback callback)
+    {
+        foreach (var allocId in callback.AllocationIds)
+        {
+            if (!_allocationIndex.TryGetValue(allocId, out var alloc))
+                continue;
+
+            var variant = _variantIndex[alloc.VariantId];
+
+            variant.Allocations.Remove(alloc);
+
+            _allocationIndex.Remove(alloc.Id);
+
+            if (variant.Allocations.Count == 0)
+                RemoveVariant(variant);
+        }
+    }
+
+    private void UpdateCacheOnEdit(EditAllocationCallback callback)
     {
         if (callback.IsDeleted)
             RemoveAllocation(callback.Allocation);
 
         else if (callback.IsUpdated)
-            UpdateAllocation(callback.Allocation, removeIfMoved: false);
+            UpdateAllocation(callback.Allocation, removeIfMoved: true);
 
         StateHasChanged();
     }
@@ -165,6 +287,68 @@ else
 
             _allocationIndex[updatedAllocation.Id] = updatedAllocation;
         }
+    }
+
+
+    private enum ColorIdentityFilterMode
+    {
+        AtMost,
+        Equals,
+        Contain
+    }
+
+    private void ToggleCIF(string colour)
+    {
+        _CIF[colour] = !_CIF[colour];
+
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        _filteredGroups = _groups;
+
+        if (_CIF.Values.Any(v => v))
+        {
+            var colours = _CIF
+                .Where(kvp => kvp.Value)
+                .Select(kvp => kvp.Key);
+
+            if (_CIFMode == ColorIdentityFilterMode.AtMost)
+            {
+                _filteredGroups = _filteredGroups
+                    .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c)))
+                    .ToList();
+
+                if (!_CIF["C"])
+                    _filteredGroups = _filteredGroups
+                        .Where(oracle => oracle.ColorIdentity.Count > 0)
+                        .ToList();
+            }
+
+            if (_CIFMode == ColorIdentityFilterMode.Equals)
+            {
+                if (colours.Count() == 1 && colours.First() == "C")
+                    _filteredGroups = _filteredGroups
+                        .Where(oracle => oracle.ColorIdentity.Count == 0)
+                        .ToList();
+                else
+                    _filteredGroups = _filteredGroups
+                        .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c))
+                            && oracle.ColorIdentity.Count == colours.Count())
+                        .ToList();
+            }
+
+            if (_CIFMode == ColorIdentityFilterMode.Contain)
+            {
+                _filteredGroups = _filteredGroups
+                    .Where(oracle => colours.Where(c => c != "C").All(c => oracle.ColorIdentity.Contains(c))
+                        || (_CIF["C"] ? oracle.ColorIdentity.Count == 0 : false))
+                    .ToList();
+            }
+                
+        }
+        
     }
 
 }

@@ -15,7 +15,7 @@ namespace Spellbox.Model
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        public ICollection<DeckSnapshot> Snapshots { get; set; } = new List<DeckSnapshot>();
+        public ICollection<DeckSnapshot> Snapshots { get; set; } = [];
     }
 
     public sealed class DeckDto
@@ -31,6 +31,9 @@ namespace Spellbox.Model
         
         public Guid ActiveSnapshotId { get; init; }
         public Guid ActiveMainboardId { get; init; }
+        public IEnumerable<Guid> SnapshotIds { get; set; } = [];
+        public IDictionary<DeckZoneType, Guid> ActiveZoneIds { get; set; } = new Dictionary<DeckZoneType, Guid>();
+
         public int Quantity { get; init; }
         public decimal PriceValue { get; set; }
         public int PriceMissing { get; set; }

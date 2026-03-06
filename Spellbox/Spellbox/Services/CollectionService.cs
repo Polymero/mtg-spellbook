@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -118,15 +119,17 @@ namespace Spellbox.Services
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            return await db.Decks
+            var decks = await db.Decks
                 .OrderByDescending(d => d.UpdatedAt)
                 .Select(d => new DeckDto
                 {
                     Id = d.Id,
+
                     Name = d.Name,
                     Type = d.Type,
                     Description = d.Description,
                     CoverImage = d.CoverImage,
+
                     CreatedAt = d.CreatedAt,
                     UpdatedAt = d.UpdatedAt,
 
@@ -149,6 +152,19 @@ namespace Spellbox.Services
                             .Sum(z => z.Cards.Count)
                 })
                 .ToListAsync();
+
+            foreach (var deck in decks)
+            {
+                deck.SnapshotIds = await db.Snapshots
+                    .Where(s => s.DeckId == deck.Id)
+                    .Select(s => s.Id)
+                    .ToListAsync();
+                deck.ActiveZoneIds = await db.Zones
+                    .Where(z => z.SnapshotId == deck.ActiveSnapshotId)
+                    .ToDictionaryAsync(z => z.ZoneType, z => z.Id);
+            }
+
+            return decks;
         }
 
 
@@ -436,6 +452,51 @@ namespace Spellbox.Services
                 db.CollectionCards.Remove(alloc.CollectionCard);
 
             await db.SaveChangesAsync();
+        }
+
+        public async Task<List<Guid>> MoveAllocationsAsync(
+            IEnumerable<Guid> allocationIds,
+            Guid? binderId,
+            Guid? snapshotId,
+            DeckZoneType zoneType
+        )
+        {
+            if (binderId.HasValue && snapshotId.HasValue)
+                throw new InvalidOperationException();
+                
+            using var db = await _factory.CreateDbContextAsync();
+
+            var allocs = await db.Allocations
+                .Where(a => allocationIds.Contains(a.Id))
+                .ToListAsync();
+
+            var allocIndex = binderId.HasValue 
+                ? AllocationIndex.Binder 
+                : snapshotId.HasValue 
+                    ? AllocationIndex.Deck 
+                    : AllocationIndex.Unassigned;
+
+            var moved = new List<Guid>();
+
+            foreach (var alloc in allocs)
+            {
+                moved.Add(alloc.Id);
+
+                alloc.AllocationIndex = allocIndex;
+                alloc.BinderId = binderId;
+                alloc.ZoneId = snapshotId.HasValue
+                    ? db.Zones
+                        .Where(z => z.SnapshotId == snapshotId)
+                        .Single(z => z.ZoneType == zoneType)
+                        .Id
+                    : null;
+
+                alloc.AllocatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+
+            return moved;
         }
 
 

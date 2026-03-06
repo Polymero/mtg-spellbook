@@ -19,32 +19,32 @@ else
               Justify="Justify.SpaceEvenly"
               Class="mt-4">
 
-    <MudToggleGroup T="CardDisplayMode"
-                    @bind-Value="_displayMode"
-                    Style="width: 40%">
-        <MudToggleItem Value="CardDisplayMode.Grid">
-            <MudIcon Icon="@Icons.Material.Filled.GridView" />
-                Grid
-        </MudToggleItem>
-        <MudToggleItem Value="CardDisplayMode.Table">
-            <MudIcon Icon="@Icons.Material.Filled.TableRows" />
-                Table
-        </MudToggleItem>
-    </MudToggleGroup>
+        <MudToggleGroup T="CardDisplayMode"
+                        @bind-Value="_displayMode"
+                        Style="width: 40%">
+            <MudToggleItem Value="CardDisplayMode.Grid">
+                <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                    Grid
+            </MudToggleItem>
+            <MudToggleItem Value="CardDisplayMode.Table">
+                <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+                    Table
+            </MudToggleItem>
+        </MudToggleGroup>
 
-    <MudToggleGroup T="bool"
-                    @bind-Value="_expandVariants"
-                    Size="Size.Small"
-                    Style="width: 40%">
-        <MudToggleItem Value="false">
-            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
-                Oracles
-        </MudToggleItem>
-        <MudToggleItem Value="true">
-            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-                Variants
-        </MudToggleItem>
-    </MudToggleGroup>
+        <MudToggleGroup T="bool"
+                        @bind-Value="_expandVariants"
+                        Size="Size.Small"
+                        Style="width: 40%">
+            <MudToggleItem Value="false">
+                <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                    Oracles
+            </MudToggleItem>
+            <MudToggleItem Value="true">
+                <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                    Variants
+            </MudToggleItem>
+        </MudToggleGroup>
 
     </MudStack>
 
@@ -55,7 +55,8 @@ else
             <CardGridView Groups="_groups"
                           VariantIndex="_variantIndex"
                           AllocationIndex="_allocationIndex"
-                          OnEditSuccess="UpdateCache"
+                          OnEditSuccess="UpdateCacheOnEdit"
+                          OnMoveSuccess="UpdateCacheOnMove"
                           ExpandVariants="_expandVariants" />
         }
         else
@@ -63,7 +64,7 @@ else
             <CardTableView Groups="_groups"
                            VariantIndex="_variantIndex"
                            AllocationIndex="_allocationIndex"
-                           OnEditSuccess="UpdateCache" />
+                           OnEditSuccess="UpdateCacheOnEdit" />
         }
 
     </MudPaper>
@@ -128,7 +129,25 @@ else
     }
 
 
-    private void UpdateCache(EditAllocationCallback callback)
+    private void UpdateCacheOnMove(MoveAllocationsCallback callback)
+    {
+        foreach (var allocId in callback.AllocationIds)
+        {
+            if (!_allocationIndex.TryGetValue(allocId, out var alloc))
+                continue;
+
+            var variant = _variantIndex[alloc.VariantId];
+
+            variant.Allocations.Remove(alloc);
+
+            _allocationIndex.Remove(alloc.Id);
+
+            if (variant.Allocations.Count == 0)
+                RemoveVariant(variant);
+        }
+    }
+
+    private void UpdateCacheOnEdit(EditAllocationCallback callback)
     {
         if (callback.IsDeleted)
             RemoveAllocation(callback.Allocation);

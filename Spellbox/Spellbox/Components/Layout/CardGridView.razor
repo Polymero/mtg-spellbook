@@ -14,33 +14,23 @@
 
             <ChildContent Context="row">
                 <div class="card-row" style="grid-template-columns: repeat(@_cardsPerRow, 224px);">
-                    @foreach (var card in row)
+                    @for (int i = 0; i < _cardsPerRow; i++)
                     {
-                        <MudPaper Class="card-tile" 
-                                  Elevation="1"
-                                  @onclick="@(() => OpenCardDialog(card))">
-
-                            <MudImage Src="@card.Images[0]"
-                                      Alt="img" 
-                                      Width="@CardWidth"
-                                      Class="card-image"
-                                      Style="border-radius: 5%"/>
-
-                            <div class="text-truncate mt-1">
-                                <MudChip T="string"
-                                         Color="Color.Primary"
-                                         Size="Size.Small">
-                                    <MudText Typo="Typo.caption">
-                                        @String.Format("{0}x", card.Quantity)
-                                    </MudText>
-                                </MudChip>
-                                <MudText Typo="Typo.caption" 
-                                         Class="text-truncate">
-                                    @card.Name
-                                </MudText>
-                            </div>
-
-                        </MudPaper>
+                        @if (i < row.Count)
+                        {
+                            <GridCard Card="row[i]" 
+                                      OnClick="OpenCardDialog"
+                                      OnSelect="SelectCard"
+                                      OnDeselect="DeselectCard"
+                                      Selection="_selectedAllocations"/>
+                        }
+                        else
+                        {
+                            <MudPaper Class="card-tile mb-4" 
+                                      Elevation="0"
+                                      Style="width: 224px">
+                            </MudPaper>
+                        }
                     }
                 </div>
             </ChildContent>
@@ -50,21 +40,55 @@
 
 </div>
 
+@if (_selectedAllocations.Count > 0)
+{
+    <MudPaper Class="@($"gridview-selection-float px-4 {(_hiding ? "slide-out" : "")}")"
+              Elevation="4"
+              Outlined="true">
+
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center">
+
+            <MudText>
+                @_selectedAllocations.Count card(s) selected
+            </MudText>
+
+            <MudSpacer />
+
+            @* <MudIconButton Icon="@Icons.Material.Filled.CollectionsBookmark"
+                           Size="Size.Medium"
+                           OnClick="OpenZoneDialog"
+                           Color="Color.Success"
+                           Class="mx-n4" /> *@
+
+            <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
+                           Size="Size.Medium"
+                           OnClick="OpenMoveDialog"
+                           Color="Color.Info" 
+                           Class="mx-n4" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                           Size="Size.Medium"
+                           OnClick="@(() => _selectedAllocations.Clear())" 
+                           Color="Color.Error"
+                           Class="mx-n4" />
+
+        </MudStack>
+
+    </MudPaper>
+}
+
 
 @inject IDialogService DialogService
 @inject IJSRuntime JS
 @code {
 
-    [Parameter]
-    public IReadOnlyList<CollectionGroupedOracleDto> Groups { get; set; } = null!;
-    [Parameter]
-    public IReadOnlyDictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = null!;
-    [Parameter]
-    public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
-    [Parameter]
-    public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
-    [Parameter]
-    public bool ExpandVariants { get; set; } = false;
+    [Parameter] public IReadOnlyList<CollectionGroupedOracleDto> Groups { get; set; } = null!;
+    [Parameter] public IReadOnlyDictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = null!;
+    [Parameter] public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
+    [Parameter] public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
+    [Parameter] public EventCallback<MoveAllocationsCallback> OnMoveSuccess { get; set; }
+    [Parameter] public bool ExpandVariants { get; set; } = false;
 
     // Constants
     private const int CardWidth = 224;
@@ -80,18 +104,9 @@
     private IJSObjectReference? _module;
     private IJSObjectReference? _resizeObserver;
     private DotNetObjectReference<CardGridView>? _objRef;
+    private bool _hiding = false;
 
-    private sealed class RenderCard
-    {
-        public Guid OracleId { get; init; }
-        public Guid? VariantId { get; init; } = null;
-
-        public string Name { get; init; } = null!;
-        public int Quantity { get; init; }
-
-        public List<string> Images { get; init; } = [];
-        public IReadOnlyList<CollectionAllocationDto> Allocations { get; init; } = [];
-    }
+    public HashSet<Guid> _selectedAllocations = new ();
 
 
     protected override void OnParametersSet()
@@ -238,6 +253,58 @@
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();
+    }
+
+
+    private void SelectCard(RenderCard card)
+    {
+        foreach (var alloc in card.Allocations)
+        {
+            if (!_selectedAllocations.Contains(alloc.Id))
+                _selectedAllocations.Add(alloc.Id);
+        }
+    }
+
+    private void DeselectCard(RenderCard card)
+    {
+        foreach (var alloc in card.Allocations)
+        {
+            if (_selectedAllocations.Contains(alloc.Id))
+                _selectedAllocations.Remove(alloc.Id);
+        }
+    }
+
+    private async Task OpenMoveDialog()
+    {
+        if (_selectedAllocations.Count == 0)
+            return;
+
+        var parameters = new DialogParameters
+        {
+            ["AllocationIds"] = _selectedAllocations,
+            ["CurrentBinderId"] = AllocationIndex[_selectedAllocations.First()].BinderId,
+            ["CurrentZoneId"] = AllocationIndex[_selectedAllocations.First()].ZoneId
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<MoveAllocationDialog>("Move Allocations", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled &&
+            result.Data is MoveAllocationsCallback callback)
+        {
+            await OnMoveSuccess.InvokeAsync(callback);
+
+            _selectedAllocations.Clear();
+            StateHasChanged();
+        }
     }
 
 }

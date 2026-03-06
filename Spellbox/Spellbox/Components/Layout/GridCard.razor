@@ -1,0 +1,78 @@
+﻿
+
+<MudPaper Class="card-tile mb-4" 
+          Elevation="0">
+
+    <MudImage Src="@Card.Images[0]"
+                Alt="img" 
+                Width="224"
+                Class="card-image"
+                Style="border-radius: 5%"
+                @onclick="OnPaperClicked" />
+
+    
+
+    @if (Card.Allocations.All(a => Selection.Contains(a.Id)))
+    {
+        _selectIcon = Icons.Material.Filled.CheckBox;
+        _selected = true;
+    }
+    else if (Card.Allocations.Any(a => Selection.Contains(a.Id)))
+    {
+        _selectIcon = Icons.Material.Filled.IndeterminateCheckBox;
+        _selected = false;
+    }
+    else
+    {
+        _selectIcon = Icons.Material.Filled.CheckBoxOutlineBlank;
+        _selected = false;
+    }
+
+    <div class="text-truncate mt-1" @onclick="OnSelectClicked">
+
+        <MudIcon Icon="@_selectIcon" 
+                 Size="Size.Small"/>
+        
+        <MudChip T="string"
+                 Color="Color.Info"
+                 Size="Size.Small">
+            <MudText Typo="Typo.caption">
+                @String.Format("{0}x", Card.Quantity)
+            </MudText>
+        </MudChip>
+
+        <MudText Typo="Typo.caption">
+            @Card.Name
+        </MudText>
+
+    </div>
+
+</MudPaper>
+
+
+@code {
+
+    [Parameter] public RenderCard Card { get; set; } = null!;
+    [Parameter] public EventCallback<RenderCard> OnClick { get; set; }
+    [Parameter] public EventCallback<RenderCard> OnSelect { get; set; }
+    [Parameter] public EventCallback<RenderCard> OnDeselect { get; set; }
+    [Parameter] public HashSet<Guid> Selection { get; set; } = null!;
+
+    private string _selectIcon = Icons.Material.Filled.CheckBoxOutlineBlank;
+    private bool _selected = false;
+
+
+    private async Task OnPaperClicked()
+    {
+        await OnClick.InvokeAsync(Card);
+    }
+
+    private async Task OnSelectClicked()
+    {
+        if (_selected)
+            await OnDeselect.InvokeAsync(Card);
+        else
+            await OnSelect.InvokeAsync(Card);
+    }
+
+}
