@@ -1,0 +1,122 @@
+﻿@page "/import_collection"
+
+
+<PageTitle>Import Collection</PageTitle>
+
+<MudPaper>
+    <MudText>
+        Upload a <code>.csv</code> file to add a (sub)collection ~ !
+    </MudText>
+</MudPaper>
+
+<MudPaper>
+    <MudStack AlignItems="AlignItems.Center"
+              Spacing="3">
+        <MudIcon Icon="@Icons.Material.Outlined.UploadFile"
+                 Size="Size.Small" />
+
+        <InputFile id="_inputFile" 
+                   accept=".csv"
+                   style="display:none"
+                   OnChange="HandleFileSelected" />
+
+        <label for="_inputFile">
+            <MudButton Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@Icons.Material.Filled.FolderOpen"
+                    HtmlTag="_inputFile"
+                    Disabled="_isLoading">
+                Upload
+            </MudButton>
+        </label>
+        
+
+        @if (_fileName is not null)
+        {
+            <MudChip T="string"
+                     Icon="@Icons.Material.Filled.InsertDriveFile"
+                     Color="Color.Info"
+                     Text="@_fileName" />
+        }
+    </MudStack>
+</MudPaper>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Indeterminate="true"
+                       Color="Color.Primary" 
+                       Class="mb-4" />
+}
+
+@if (_result?.Errors.Count > 0)
+{
+    <MudAlert Severity="Severity.Warning"
+              Class="mb-4"
+              Dense="true">
+        <MudText>
+        
+        </MudText>
+        <MudList T="string"
+                 Dense="true">
+            @foreach (var error in _result.Errors)
+            {
+                <MudListItem Text="@error"
+                             Icon="@Icons.Material.Filled.ErrorOutline" />
+            }
+        </MudList>
+    </MudAlert>
+}
+
+@if (_result?.Cards.Count > 0)
+{
+    <MudAlert Severity="Severity.Success"
+              Class="mb-4"
+              Dense="true">
+        <MudText>
+            @_result?.Cards.Sum(c => c.Quantity) card(s) loaded
+        </MudText>
+    </MudAlert>
+}
+
+
+@inject CollectionImportService ImportService
+@code {
+
+    private ImportResult? _result;
+    private string? _fileName;
+    private bool _isLoading;
+    
+
+    private async Task HandleFileSelected(
+        InputFileChangeEventArgs args
+    )
+    {
+        var file = args.File;
+        if (file is null)
+            return;
+
+        _fileName = file.Name;
+        _isLoading = true;
+        _result = null;
+
+        try
+        {
+            const long maxSize = 10 * 1024 * 1024;
+
+            await using var stream = file.OpenReadStream(maxSize);
+            _result = await ImportService.ParseStreamAsync(stream);
+        }
+        catch (Exception ex)
+        {
+            _result = new ImportResult
+            {
+                Errors = [$"Failed to read file '{ex.Message}'."]
+            };
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+}

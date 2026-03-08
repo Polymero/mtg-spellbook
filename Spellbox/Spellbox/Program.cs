@@ -57,6 +57,9 @@ builder.Services.AddScoped<CardMarketPriceGuideService>();
 builder.Services.AddHostedService<CardMarketSyncWorker>();
 builder.Services.AddScoped<IPricingService, CardMarketPricingService>();
 
+// Import/Export services
+builder.Services.AddScoped<CollectionImportService>();
+
 
 var app = builder.Build();
 
