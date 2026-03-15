@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+
 
 namespace Spellbox.Model
 {
+
     public class CollectionAllocation
     {
         [Key]
@@ -27,6 +30,7 @@ namespace Spellbox.Model
         public bool IsAltered { get; set; } = false;
         public bool IsSigned { get; set; } = false;
         public bool IsStamped { get; set; } = false;
+        public bool IsMisprint { get; set; } = false;
 
         public decimal? BoughtFor { get; set; }
 
@@ -55,6 +59,7 @@ namespace Spellbox.Model
         public bool IsAltered { get; init; }
         public bool IsSigned { get; init; }
         public bool IsStamped { get; init; }
+        public bool IsMisprint { get; init; }
 
         public decimal? BoughtFor { get; init; }
 
@@ -62,6 +67,44 @@ namespace Spellbox.Model
         public DateTime AllocatedAt { get; init; }
 
         public decimal? Price { get; set; }
+
+
+        public static Expression<Func<CollectionAllocation, CollectionAllocationDto>> FromCollectionEntity => a
+            => new()
+            {
+                Id = a.Id,
+                Type = AllocationType.Collection,
+                BinderId = a.BinderId,
+                BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
+                ZoneId = a.ZoneId,
+                DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
+                OracleId = a.CollectionCard.OracleId,
+                VariantId = a.CollectionCard.VariantId,
+                Finish = a.Finish,
+                Language = a.Language,
+                Condition = a.Condition,
+                IsAltered = a.IsAltered,
+                IsMisprint = a.IsMisprint,
+                IsSigned = a.IsSigned,
+                IsStamped = a.IsStamped,
+                BoughtFor = a.BoughtFor,
+                AddedAt = a.AddedAt,
+                AllocatedAt = a.AllocatedAt
+            };
+
+        public static Expression<Func<CollectionAllocation, CollectionAllocationDto>> FromGhostEntity => a
+            => new()
+            {
+                Type = AllocationType.Ghost,
+                BinderId = a.BinderId,
+                BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
+                ZoneId = a.ZoneId,
+                DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
+                OracleId = a.CollectionCard.OracleId,
+                VariantId = a.CollectionCard.VariantId,
+                AddedAt = a.AddedAt,
+                AllocatedAt = a.AllocatedAt
+            };
     }
 
     public sealed class EditableAllocationDto
@@ -72,16 +115,37 @@ namespace Spellbox.Model
         public CardFinish Finish { get; set; }
         public CardLanguage Language { get; set; }
         public CardCondition Condition { get; set; }
+
         public bool IsAltered { get; set; }
+        public bool IsMisprint { get; set; }
         public bool IsSigned { get; set; }
         public bool IsStamped { get; set; }
 
         public decimal? BoughtFor { get; set; }
 
         public Guid? BinderId { get; set; }
+        public Guid? DeckId { get; set; }
         public Guid? SnapshotId { get; set; }
         public Guid? ZoneId { get; set; }
-        public Guid? DeckId { get; set; }
+
+        public static Expression<Func<CollectionAllocation, EditableAllocationDto>> FromEntity => a
+            => new()
+            {
+                AllocationId = a.Id,
+                VariantId = a.CollectionCard.VariantId,
+                Finish = a.Finish,
+                Language = a.Language,
+                Condition = a.Condition,
+                IsAltered = a.IsAltered,
+                IsMisprint = a.IsMisprint,
+                IsSigned = a.IsSigned,
+                IsStamped = a.IsStamped,
+                BoughtFor = a.BoughtFor,
+                BinderId = a.BinderId,
+                DeckId = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Id : null,
+                SnapshotId = a.ZoneId.HasValue ? a.Zone!.Snapshot.Id : null,
+                ZoneId = a.ZoneId
+            };
     }
 
     public sealed class NewAllocationDto
@@ -96,10 +160,12 @@ namespace Spellbox.Model
         public CardFinish Finish { get; set; } = CardFinish.NonFoil;
         public CardLanguage Language { get; set; } = CardLanguage.English;
         public CardCondition Condition { get; set; } = CardCondition.NearMint;
+
         public bool IsAltered { get; set; } = false;
+        public bool IsMisprint { get; set; } = false;
         public bool IsSigned { get; set; } = false;
         public bool IsStamped { get; set; } = false;
-        public bool IsMisprint { get; set; } = false;
+        
         public decimal? BoughtFor { get; set; }
 
         public decimal? Price { get; set; }

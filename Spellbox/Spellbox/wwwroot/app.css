@@ -106,3 +106,37 @@ h1:focus {
     object-fit: cover;
     object-position: 50% 20%;
 }
+
+.card-grid-container {
+    width: 100%;
+    min-height: 100%;
+    /* overflow-y: auto; */
+    display: grid;
+}
+
+.card-row {
+    display: inline-flex;
+    gap: 4px;
+    justify-content: space-evenly;
+}
+
+.card-tile {
+    width: 224px;
+    min-width: 224px;
+    max-width: 224px;
+}
+
+.card-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.text-truncate {
+    display: block;
+    width: 224px;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

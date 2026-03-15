@@ -169,7 +169,7 @@ namespace Spellbox.Services
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
         public string Released { get; init; } = null!;
-        public List<string> Images { get; init; } = null!;
+        public CardImage Images { get; init; } = null!;
         public int? CardMarketProductId { get; init; } = null;
         
         public List<CollectionAllocationDto> Allocations { get; set; } = [];

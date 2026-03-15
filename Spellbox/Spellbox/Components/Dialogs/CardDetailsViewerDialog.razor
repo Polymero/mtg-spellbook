@@ -1,6 +1,6 @@
 ﻿@using MudBlazor.Charts
 
-<MudDialog>
+<MudDialog Class="border-2 mud-border-dark">
 
     <DialogContent>
 
@@ -16,7 +16,7 @@
                 <!-- Card image -->
                 <MudItem xs="5"
                          Class="my-4">
-                    <MudImage Src=@(_viewerDto.Variant.Images[0]) 
+                    <MudImage Src=@(_viewerDto.Variant.Images.Front.Large) 
                               Alt="IMG" 
                               Fluid="true"
                               Style="border-radius: 5%;"/>
@@ -118,34 +118,33 @@
                     <!-- Additional variant data -->
                     @if (VariantId.HasValue)
                     {
-                        <MudPaper Class="my-6"
-                                Elevation="0">
+                        <MudText Typo="Typo.h6"
+                                 Class="mt-6">
+                            Variant Info
+                        </MudText>
 
-                            <MudText Typo="Typo.h6"
-                                     Class="mb-1">
-                                Variant Info
-                            </MudText>
+                        <MudPaper Class="pa-2 mb-1" 
+                                  Elevation="0" 
+                                  Outlined="false">
 
-                            <!-- Set -->
-                            <MudText Typo="Typo.body1">
-                                <b>Set:</b> @_viewerDto.Variant.SetName (@_viewerDto.Variant.SetCode.ToUpper() @_viewerDto.Variant.CollNum)
-                            </MudText>
+                            <MudStack Row="true">
 
-                            <!-- Rarity -->
-                            <MudText Typo="Typo.body1"
-                                    Style="text-transform: capitalize">
-                                <b>Rarity:</b> @_viewerDto.Variant.Rarity
-                            </MudText>
+                                <MudStack Spacing="0" 
+                                          AlignItems="AlignItems.End">
+                                    <MudText><b>Set</b></MudText>
+                                    <MudText><b>Rarity</b></MudText>
+                                    <MudText><b>Released</b></MudText>
+                                    <MudText><b>Artist</b></MudText>
+                                </MudStack>
 
-                            <!-- Release date -->
-                            <MudText Typo="Typo.body1">
-                                <b>Released:</b> @_viewerDto.Variant.Released
-                            </MudText>
+                                <MudStack Spacing="0">
+                                    <MudText>@_viewerDto.Variant.SetName (@_viewerDto.Variant.SetCode.ToUpper() @_viewerDto.Variant.CollNum)</MudText>
+                                    <MudText Style="text-transform: capitalize">@_viewerDto.Variant.Rarity</MudText>
+                                    <MudText>@_viewerDto.Variant.Released</MudText>
+                                    <MudText>@_viewerDto.Variant.Artist</MudText>
+                                </MudStack>
 
-                            <!-- Artist -->
-                            <MudText Typo="Typo.body1">
-                                <b>Artist:</b> @_viewerDto.Variant.Artist
-                            </MudText>
+                            </MudStack>
 
                         </MudPaper>
                     }
@@ -196,7 +195,7 @@
                 </HeaderContent>
 
                 <RowTemplate Context="a">
-                    <MudTh>
+                    <MudTd>
                         @if (a.BinderName is not null)
                         {
                             @a.BinderName
@@ -211,11 +210,11 @@
                                 <i>Unassigned</i>
                             </MudText>
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @String.Format("{0} {1}", _variantInfo[a.VariantId].SetCode.ToUpper(), _variantInfo[a.VariantId].CollNum)
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @if (a.Finish == CardFinish.NonFoil)
                         {
                             <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
@@ -228,11 +227,11 @@
                         {
                             @a.Finish
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @a.Language
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @switch (a.Condition)
                         {
                             case CardCondition.Mint:
@@ -260,8 +259,8 @@
                                 <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip>
                                 break;
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @if (a.IsAltered)
                         {
                             <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
@@ -274,8 +273,8 @@
                         {
                             <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd Style="text-align: center">
                         @if (a.BoughtFor.HasValue)
                         {
                             @if (a.Price.HasValue && a.Price.Value > 0m && a.BoughtFor > 0m)
@@ -308,8 +307,8 @@
                                 —
                             </span>
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         @if (a.Price.HasValue)
                         {
                             <span>
@@ -322,13 +321,13 @@
                                 —
                             </span>
                         }
-                    </MudTh>
-                    <MudTh>
+                    </MudTd>
+                    <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Color="Color.Warning"
                                        Size="Size.Small" 
                                        OnClick="@(() => EditAllocationAsync(a.Id))" />
-                    </MudTh>
+                    </MudTd>
                 </RowTemplate>
             
             </MudTable>

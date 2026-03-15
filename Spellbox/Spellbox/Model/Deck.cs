@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+
 
 namespace Spellbox.Model
 {
+
     public class Deck
     {
         [Key]
@@ -17,6 +20,7 @@ namespace Spellbox.Model
 
         public ICollection<DeckSnapshot> Snapshots { get; set; } = [];
     }
+
 
     public sealed class DeckDto
     {
@@ -37,7 +41,40 @@ namespace Spellbox.Model
         public int Quantity { get; init; }
         public decimal PriceValue { get; set; }
         public int PriceMissing { get; set; }
+
+        public static Expression<Func<Deck, DeckDto>> FromEntity => d
+            => new()
+            {
+                Id = d.Id,
+
+                Name = d.Name,
+                Type = d.Type,
+                Description = d.Description,
+                CoverImage = d.CoverImage,
+
+                CreatedAt = d.CreatedAt,
+                UpdatedAt = d.UpdatedAt,
+
+                ActiveSnapshotId = d.Snapshots
+                    .Single(s => s.IsActive)
+                    .Id,
+                ActiveMainboardId = d.Snapshots
+                    .First(s => s.IsActive)
+                    .Zones
+                    .First(z => z.ZoneType == DeckZoneType.Mainboard)
+                    .Id,
+
+                Quantity = d.Snapshots
+                    .First(s => s.IsActive)
+                    .Zones
+                    .Sum(z => z.Allocations.Count) +
+                    d.Snapshots
+                        .First(s => s.IsActive)
+                        .Zones
+                        .Sum(z => z.Cards.Count)
+            };
     }
+
 
     public sealed class EditableDeckDto
     {
@@ -47,11 +84,24 @@ namespace Spellbox.Model
         public DeckType Type { get; set; }
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
+
+        public static Expression<Func<Deck, EditableDeckDto>> FromEntity => d
+            => new()
+            {
+                Id = d.Id,
+
+                Name = d.Name,
+                Type = d.Type,
+                Description = d.Description,
+                CoverImage = d.CoverImage
+            };
     }
+
 
     public enum DeckType
     {
         Unassigned = 0,
         Commander = 1
     }
+
 }

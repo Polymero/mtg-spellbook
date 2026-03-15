@@ -10,7 +10,7 @@ namespace Spellbox.Model
         public string Name { get; init; } = null!;
         public int Quantity { get; init; }
 
-        public List<string> Images { get; init; } = [];
+        public CardImage Images { get; init; } = null!;
         public IReadOnlyList<CollectionAllocationDto> Allocations { get; init; } = [];
     }
 }

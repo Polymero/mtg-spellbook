@@ -98,6 +98,9 @@ namespace Spellbox.Contexts
             entity.Property(e => e.IsStamped)
                   .IsRequired();
 
+            entity.Property(e => e.IsMisprint)
+                  .IsRequired();
+
             entity.Property(e => e.BoughtFor)
                   .HasPrecision(10, 2);
 

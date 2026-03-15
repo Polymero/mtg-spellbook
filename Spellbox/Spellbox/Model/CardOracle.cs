@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 
 namespace Spellbox.Model
@@ -11,12 +12,12 @@ namespace Spellbox.Model
 
         public string Name { get; set; } = null!;
         public string TypeLine { get; set; } = null!;
-        public List<string> Keywords { get; set; } = null!;
+        public List<string> Keywords { get; set; } = [];
         public decimal CMC { get; set; }
-        public List<string> ColorIdentity { get; set; } = null!;
+        public List<string> ColorIdentity { get; set; } = [];
 
-        public ICollection<CardFace> Faces { get; set; } = new List<CardFace>();
-        public ICollection<CardVariant> Variants { get; set; } = new List<CardVariant>();
+        public ICollection<CardFace> Faces { get; set; } = [];
+        public ICollection<CardVariant> Variants { get; set; } = [];
     }
 
     public class CardOracleDto
@@ -27,6 +28,17 @@ namespace Spellbox.Model
         public List<string> Keywords { get; init; } = null!;
         public decimal CMC { get; init; }
         public List<string> ColorIdentity { get; init; } = null!;
+
+        public static Expression<Func<CardOracle, CardOracleDto>> FromEntity => o
+            => new()
+            {
+                OracleId = o.OracleId,
+                Name = o.Name,
+                TypeLine = o.TypeLine,
+                Keywords = o.Keywords,
+                CMC = o.CMC,
+                ColorIdentity = o.ColorIdentity
+            };
     }
 
 }

@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+
 
 namespace Spellbox.Model
 {
+
     public class CollectionBinder
     {
         [Key]
@@ -33,6 +36,18 @@ namespace Spellbox.Model
         // PricingService
         public decimal PriceValue { get; set; }
         public int PriceMissing { get; set; }
+
+        public static Expression<Func<CollectionBinder, CollectionBinderDto>> FromEntity => b
+            => new()
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Description = b.Description,
+                CoverImage = b.CoverImage,
+                CreatedAt = b.CreatedAt,
+                UpdatedAt = b.UpdatedAt,
+                Quantity = b.Cards.Count
+            };
     }
 
     public sealed class EditableBinderDto
@@ -42,5 +57,14 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
+
+        public static Expression<Func<CollectionBinder, EditableBinderDto>> FromEntity => b
+            => new()
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Description = b.Description,
+                CoverImage = b.CoverImage
+            };
     }
 }

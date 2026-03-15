@@ -8,6 +8,7 @@ using Spellbox.Model;
 
 namespace Spellbox.Services
 {
+
     public sealed class CollectionService
     {
 
@@ -77,7 +78,6 @@ namespace Spellbox.Services
                         AllocatedAt = DateTime.UtcNow
                     });
                 }
-
             }
 
             await db.SaveChangesAsync();
@@ -101,17 +101,7 @@ namespace Spellbox.Services
 
             return await db.Binders
                 .OrderBy(b => b.Name)
-                .Select(b => new CollectionBinderDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    CoverImage = b.CoverImage,
-                    CreatedAt = b.CreatedAt,
-                    UpdatedAt = b.UpdatedAt,
-
-                    Quantity = b.Cards.Count()
-                })
+                .Select(CollectionBinderDto.FromEntity)
                 .ToListAsync();
         }
 
@@ -121,36 +111,7 @@ namespace Spellbox.Services
 
             var decks = await db.Decks
                 .OrderByDescending(d => d.UpdatedAt)
-                .Select(d => new DeckDto
-                {
-                    Id = d.Id,
-
-                    Name = d.Name,
-                    Type = d.Type,
-                    Description = d.Description,
-                    CoverImage = d.CoverImage,
-
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt,
-
-                    ActiveSnapshotId = d.Snapshots
-                        .First(s => s.IsActive)
-                        .Id,
-                    ActiveMainboardId = d.Snapshots
-                        .First(s => s.IsActive)
-                        .Zones
-                        .First(z => z.ZoneType == DeckZoneType.Mainboard)
-                        .Id,
-
-                    Quantity = d.Snapshots
-                        .First(s => s.IsActive)
-                        .Zones
-                        .Sum(z => z.Allocations.Count) +
-                        d.Snapshots
-                            .First(s => s.IsActive)
-                            .Zones
-                            .Sum(z => z.Cards.Count)
-                })
+                .Select(DeckDto.FromEntity)
                 .ToListAsync();
 
             foreach (var deck in decks)
@@ -175,19 +136,7 @@ namespace Spellbox.Services
 
             return await db.Allocations
                 .Where(a => a.AllocationIndex == AllocationIndex.Unassigned)
-                .Select(a => new CollectionAllocationDto
-                {
-                    Id = a.Id,
-                    OracleId = a.CollectionCard.OracleId,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned,
-                    IsStamped = a.IsStamped,
-                    BoughtFor = a.BoughtFor
-                })
+                .Select(CollectionAllocationDto.FromCollectionEntity)
                 .ToListAsync();
         }
 
@@ -200,17 +149,7 @@ namespace Spellbox.Services
             return await db.Binders
                 .AsNoTracking()
                 .Where(b => b.Id == binderId)
-                .Select(b => new CollectionBinderDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    CoverImage = b.CoverImage,
-                    CreatedAt = b.CreatedAt,
-                    UpdatedAt = b.UpdatedAt,
-
-                    Quantity = b.Cards.Count
-                })
+                .Select(CollectionBinderDto.FromEntity)
                 .SingleAsync();
         }
 
@@ -223,21 +162,7 @@ namespace Spellbox.Services
             return await db.Allocations
                 .AsNoTracking()
                 .Where(a => a.BinderId == binderId)
-                .Select(a => new CollectionAllocationDto
-                {
-                    Id = a.Id,
-                    BinderId = a.BinderId,
-                    BinderName = binder.Name,
-                    OracleId = a.CollectionCard.OracleId,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned,
-                    IsStamped = a.IsStamped,
-                    BoughtFor = a.BoughtFor
-                })
+                .Select(CollectionAllocationDto.FromCollectionEntity)
                 .ToListAsync();
         }
 
@@ -249,35 +174,7 @@ namespace Spellbox.Services
 
             return await db.Decks
                 .Where(d => d.Id == deckId)
-                .Select(d => new DeckDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    Type = d.Type,
-                    Description = d.Description,
-                    CoverImage = d.CoverImage,
-                    
-                    ActiveSnapshotId = d.Snapshots
-                        .Single(s => s.IsActive)
-                        .Id,
-                    ActiveMainboardId = d.Snapshots
-                        .Single(s => s.IsActive)
-                        .Zones
-                        .Single(z => z.ZoneType == DeckZoneType.Mainboard)
-                        .Id,
-
-                    CreatedAt = d.CreatedAt,
-                    UpdatedAt = d.UpdatedAt,
-
-                    Quantity = d.Snapshots
-                        .First(s => s.IsActive)
-                        .Zones
-                        .Sum(z => z.Allocations.Count) +
-                        d.Snapshots
-                            .First(s => s.IsActive)
-                            .Zones
-                            .Sum(z => z.Cards.Count)
-                })
+                .Select(DeckDto.FromEntity)
                 .SingleAsync();
         }
 
@@ -305,9 +202,12 @@ namespace Spellbox.Services
                             Language = a.Language,
                             Condition = a.Condition,
                             IsAltered = a.IsAltered,
+                            IsMisprint = a.IsMisprint,
                             IsSigned = a.IsSigned,
                             IsStamped = a.IsStamped,
-                            BoughtFor = a.BoughtFor
+                            BoughtFor = a.BoughtFor,
+                            AddedAt = a.AddedAt,
+                            AllocatedAt = a.AllocatedAt
                         }).ToList()
                 })
                 .ToListAsync();
@@ -323,23 +223,7 @@ namespace Spellbox.Services
 
             return await db.Allocations
                 .AsNoTracking()
-                .Select(a => new CollectionAllocationDto
-                {
-                    Id = a.Id,
-                    BinderId = a.Binder != null ? a.BinderId : null,
-                    BinderName = a.Binder != null ? a.Binder.Name : null,
-                    ZoneId = a.Zone != null ? a.ZoneId : null,
-                    DeckName = a.Zone != null ? a.Zone.Snapshot.Deck.Name : null,
-                    OracleId = a.CollectionCard.OracleId,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned,
-                    IsStamped = a.IsStamped,
-                    BoughtFor = a.BoughtFor
-                })
+                .Select(CollectionAllocationDto.FromCollectionEntity)
                 .ToListAsync();
         }
 
@@ -351,21 +235,17 @@ namespace Spellbox.Services
 
             return await db.Allocations
                 .Where(a => a.Id == allocationId)
-                .Select(a => new EditableAllocationDto
-                {
-                    AllocationId = a.Id,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned,
-                    IsStamped = a.IsStamped,
-                    BoughtFor = a.BoughtFor,
-                    BinderId = a.BinderId,
-                    DeckId = a.DeckId,
-                    ZoneId = a.ZoneId
-                })
+                .Select(EditableAllocationDto.FromEntity)
+                .SingleAsync();
+        }
+
+        public async Task<CollectionAllocationDto> GetAllocationAsync(Guid allocationId)
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Where(a => a.Id == allocationId)
+                .Select(CollectionAllocationDto.FromCollectionEntity)
                 .SingleAsync();
         }
 
@@ -375,59 +255,38 @@ namespace Spellbox.Services
 
             var alloc = await db.Allocations.FindAsync(editDto.AllocationId);
 
-            if (alloc != null)
+            if (alloc is null)
+                return new CollectionAllocationDto();
+
+            alloc.Finish = editDto.Finish;
+            alloc.Language = editDto.Language;
+            alloc.Condition = editDto.Condition;
+            alloc.IsAltered = editDto.IsAltered;
+            alloc.IsSigned = editDto.IsSigned;
+            alloc.IsStamped = editDto.IsStamped;
+            alloc.BoughtFor = editDto.BoughtFor;
+
+            alloc.BinderId = null;
+            alloc.ZoneId = null;
+
+            if (editDto.BinderId.HasValue)
             {
-                alloc.Finish = editDto.Finish;
-                alloc.Language = editDto.Language;
-                alloc.Condition = editDto.Condition;
-                alloc.IsAltered = editDto.IsAltered;
-                alloc.IsSigned = editDto.IsSigned;
-                alloc.IsStamped = editDto.IsStamped;
-                alloc.BoughtFor = editDto.BoughtFor;
-
-                alloc.BinderId = null;
-                alloc.ZoneId = null;
-
-                if (editDto.BinderId.HasValue)
-                {
-                    alloc.BinderId = editDto.BinderId;
-                    alloc.AllocationIndex = AllocationIndex.Binder;
-                }
-                else if (editDto.ZoneId.HasValue)
-                {
-                    alloc.ZoneId = editDto.ZoneId;
-                    alloc.AllocationIndex = AllocationIndex.Deck;
-                }
-                else
-                {
-                    alloc.AllocationIndex = AllocationIndex.Unassigned;
-                }
-
-                await db.SaveChangesAsync();
+                alloc.BinderId = editDto.BinderId;
+                alloc.AllocationIndex = AllocationIndex.Binder;
             }
-            
-            // Remake db?
+            else if (editDto.ZoneId.HasValue)
+            {
+                alloc.ZoneId = editDto.ZoneId;
+                alloc.AllocationIndex = AllocationIndex.Deck;
+            }
+            else
+            {
+                alloc.AllocationIndex = AllocationIndex.Unassigned;
+            }
 
-            return await db.Allocations
-                .Where(a => a.Id == editDto.AllocationId)
-                .Select(a => new CollectionAllocationDto
-                {
-                    Id = a.Id,
-                    BinderId = a.Binder != null ? a.BinderId : null,
-                    BinderName = a.Binder != null ? a.Binder.Name : null,
-                    ZoneId = a.Zone != null ? a.ZoneId : null,
-                    DeckName = a.Zone != null ? a.Zone.Snapshot.Deck.Name : null,
-                    OracleId = a.CollectionCard.OracleId,
-                    VariantId = a.CollectionCard.VariantId,
-                    Finish = a.Finish,
-                    Language = a.Language,
-                    Condition = a.Condition,
-                    IsAltered = a.IsAltered,
-                    IsSigned = a.IsSigned,
-                    IsStamped = a.IsStamped,
-                    BoughtFor = a.BoughtFor
-                })
-                .SingleAsync();
+            await db.SaveChangesAsync();
+
+            return await GetAllocationAsync(alloc.Id);
         }
 
         public async Task DeleteAllocationAsync(Guid allocationId)
@@ -529,13 +388,7 @@ namespace Spellbox.Services
 
             return await db.Binders
                 .Where(b => b.Id == binderId)
-                .Select(b => new EditableBinderDto
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    Description = b.Description,
-                    CoverImage = b.CoverImage
-                })
+                .Select(EditableBinderDto.FromEntity)
                 .SingleAsync();
         }
 

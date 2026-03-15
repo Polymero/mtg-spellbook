@@ -37,13 +37,8 @@ namespace Spellbox.Services
                     EF.Functions.Like(c.Name, $"% {search}%") ? 1 :
                     2)
                 .ThenBy(c => c.Name)
-                .Select(c => new CardOracleDto
-                {
-                    OracleId = c.OracleId,
-                    Name = c.Name,
-                    TypeLine = c.TypeLine
-                }) 
-                .Take(20)
+                .Select(CardOracleDto.FromEntity) 
+                .Take(12)
                 .ToListAsync(ct);
         }
 
@@ -55,13 +50,7 @@ namespace Spellbox.Services
                 .Where(v => v.OracleId == oracleId)
                 .OrderByDescending(v => v.Released)
                 .ThenBy(v => v.CollNum)
-                .Select(v => new CardVariantDto
-                {
-                    ScryfallId = v.ScryfallId,
-                    SetName = v.SetName,
-                    SetCode = v.SetCode,
-                    CollNum = v.CollNum
-                })
+                .Select(CardVariantDto.FromEntity)
                 .ToListAsync();
         }
 
@@ -72,15 +61,7 @@ namespace Spellbox.Services
 
             return await db.Oracles
                 .Where(o => oracleIds.Contains(o.OracleId))    
-                .Select(o => new CardOracleDto
-                {
-                    OracleId = o.OracleId,
-                    Name = o.Name,
-                    TypeLine = o.TypeLine,
-                    Keywords = o.Keywords,
-                    CMC = o.CMC,
-                    ColorIdentity = o.ColorIdentity
-                })
+                .Select(CardOracleDto.FromEntity)
                 .ToDictionaryAsync(o => o.OracleId);
         }
 
@@ -90,22 +71,7 @@ namespace Spellbox.Services
 
             return await db.Variants
                 .Where(v => variantIds.Contains(v.ScryfallId))
-                .Select(v => new CardVariantDto
-                {
-                    ScryfallId = v.ScryfallId,
-                    OracleId = v.OracleId,
-                    Name = v.SearchName,
-                    SetName = v.SetName,
-                    SetCode = v.SetCode,
-                    CollNum = v.CollNum,
-                    Thumbs = v.Thumbs,
-                    Images = v.Images,
-                    Artist = v.Artist,
-                    Rarity = v.Rarity,
-                    Released = v.Released,
-                    FlavorTexts = v.FlavorTexts,
-                    Finishes = v.Finishes
-                })
+                .Select(CardVariantDto.FromEntity)
                 .ToDictionaryAsync(v => v.ScryfallId);
         }
 
@@ -119,22 +85,7 @@ namespace Spellbox.Services
 
             return await db.Variants
                 .Where(v => targets.Contains(v.SetCode + v.CollNum))
-                .Select(v => new CardVariantDto
-                {
-                    ScryfallId = v.ScryfallId,
-                    OracleId = v.OracleId,
-                    Name = v.SearchName,
-                    SetName = v.SetName,
-                    SetCode = v.SetCode,
-                    CollNum = v.CollNum,
-                    Thumbs = v.Thumbs,
-                    Images = v.Images,
-                    Artist = v.Artist,
-                    Rarity = v.Rarity,
-                    Released = v.Released,
-                    FlavorTexts = v.FlavorTexts,
-                    Finishes = v.Finishes
-                })
+                .Select(CardVariantDto.FromEntity)
                 .ToDictionaryAsync(v => Tuple.Create(v.SetCode, v.CollNum));
         }
 
@@ -145,33 +96,13 @@ namespace Spellbox.Services
 
             var oracle = await db.Oracles
                 .Where(o => o.OracleId == oracleId)
-                .Select(o => new CardOracleDto
-                {
-                    OracleId = o.OracleId,
-                    Name = o.Name,
-                    TypeLine = o.TypeLine,
-                    Keywords = o.Keywords,
-                    CMC = o.CMC,
-                    ColorIdentity = o.ColorIdentity
-                })
+                .Select(CardOracleDto.FromEntity)
                 .SingleAsync();
 
             var faces = await db.Faces
                 .Where(f => f.OracleId == oracleId)
                 .OrderBy(f => f.Order)
-                .Select(f => new CardFaceDto
-                {
-                    OracleId = f.OracleId,
-                    Order = f.Order,
-                    Name = f.Name,
-                    ManaCost = f.ManaCost,
-                    TypeLine = f.TypeLine,
-                    OracleText = f.OracleText,
-                    Power = f.Power,
-                    Toughness = f.Toughness,
-                    Defense = f.Defense,
-                    Loyalty = f.Loyalty
-                })
+                .Select(CardFaceDto.FromEntity)
                 .ToListAsync();
 
             return (oracle, faces);
@@ -198,7 +129,6 @@ namespace Spellbox.Services
                 Released = v.Released,
                 Rarity = v.Rarity,
                 FlavorTexts = v.FlavorTexts,
-                Thumbs = v.Thumbs,
                 Images = v.Images,
                 Finishes = v.Finishes
             };
@@ -212,9 +142,11 @@ namespace Spellbox.Services
             using var db = await _factory.CreateDbContextAsync();
 
             var variant = await db.Variants
-                .SingleOrDefaultAsync(v =>
+                .Where(v =>
                     v.SetCode.ToLower() == setCode.ToLower() &&
-                    v.CollNum == collNum);
+                    v.CollNum == collNum)
+                .Select(CardVariantDto.FromEntity)
+                .SingleOrDefaultAsync();
                 
             if (variant is null)
                 return null;
@@ -234,7 +166,6 @@ namespace Spellbox.Services
                 Released = variant.Released,
                 Rarity = variant.Rarity,
                 FlavorTexts = variant.FlavorTexts,
-                Thumbs = variant.Thumbs,
                 Images = variant.Images,
                 Finishes = variant.Finishes
             };
@@ -271,20 +202,19 @@ namespace Spellbox.Services
         public string Name { get; init; } = null!;
 
         // Face(s)
-        public ICollection<CardFaceDto> Faces { get; init; } = null!;
+        public ICollection<CardFaceDto> Faces { get; init; } = [];
 
         // Variant
         public Guid ScryfallId { get; init; }
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
         public string SetName { get; init; } = null!;
-        public List<string> Finishes { get; init; } = null!;
+        public List<string> Finishes { get; init; } = [];
         public string? Artist { get; init; }
         public string Released { get; init; } = null!;
         public string Rarity { get; init; } = null!;
-        public List<string> FlavorTexts { get; init; } = null!;
-        public List<string> Thumbs { get; init; } = null!;
-        public List<string> Images { get; init; } = null!;
+        public List<string> FlavorTexts { get; init; } = [];
+        public CardImage Images { get; init; } = null!;
     }
 
 }

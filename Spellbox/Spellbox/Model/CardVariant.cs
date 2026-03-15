@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 
 namespace Spellbox.Model
@@ -39,16 +40,66 @@ namespace Spellbox.Model
         public string SetName { get; init; } = null!;
         public string SetCode { get; init; } = null!;
         public string CollNum { get; init; } = null!;
-        public List<string> Finishes { get; init; } = null!;
+        public List<string> Finishes { get; init; } = [];
         public string? Artist { get; init; }
         public string Released { get; init; } = null!;
         public string Rarity { get; init; } = null!;
-        public List<string> FlavorTexts { get; init; } = null!;
+        public List<string> FlavorTexts { get; init; } = [];
 
-        public List<string> Thumbs { get; init; } = null!;
-        public List<string> Images { get; init; } = null!;
+        public CardImage Images { get; init; } = null!;
 
         public int? CardMarketProductId { get; set; }
+
+        public static Expression<Func<CardVariant, CardVariantDto>> FromEntity => v
+            => new()
+            {
+                ScryfallId = v.ScryfallId,
+                OracleId = v.OracleId,
+                Name = v.SearchName,
+                SetName = v.SetName,
+                SetCode = v.SetCode,
+                CollNum = v.CollNum,
+                Finishes = v.Finishes,
+                Artist = v.Artist,
+                Released = v.Released,
+                Rarity = v.Rarity,
+                FlavorTexts = v.FlavorTexts,
+                Images = new CardImage(v.ScryfallId)
+            };
+    }
+
+    public class CardImage
+    {
+        private static Guid ScryfallId;
+        public Side Front;
+        public Side Back;
+
+        public CardImage(Guid scryfallId)
+        {
+            ScryfallId = scryfallId;
+            Front = new(ScryfallId, "front");
+            Back = new(ScryfallId, "back");
+        }
+
+        public class Side(
+            Guid ScryfallId,
+            string side
+        )
+        {
+            readonly string uri = String.Join("/", [
+                "https://cards.scryfall.io",
+                "{0}",
+                side,
+                ScryfallId.ToString()[0],
+                ScryfallId.ToString()[1],
+                ScryfallId.ToString()
+            ]) + ".jpg";
+
+            public string Small => String.Format(uri, "small");
+            public string Normal => String.Format(uri, "normal");
+            public string Large => String.Format(uri, "large");
+            public string ArtCrop => String.Format(uri, "art_crop");
+        }
     }
 
 }
