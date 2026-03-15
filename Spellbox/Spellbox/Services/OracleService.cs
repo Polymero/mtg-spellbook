@@ -109,6 +109,35 @@ namespace Spellbox.Services
                 .ToDictionaryAsync(v => v.ScryfallId);
         }
 
+        public async Task<Dictionary<Tuple<string, string>, CardVariantDto>> GetVariantsBySetCollAsync(
+            IEnumerable<Tuple<string, string>> setColls
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var targets = from pair in setColls select pair.Item1 + pair.Item2;
+
+            return await db.Variants
+                .Where(v => targets.Contains(v.SetCode + v.CollNum))
+                .Select(v => new CardVariantDto
+                {
+                    ScryfallId = v.ScryfallId,
+                    OracleId = v.OracleId,
+                    Name = v.SearchName,
+                    SetName = v.SetName,
+                    SetCode = v.SetCode,
+                    CollNum = v.CollNum,
+                    Thumbs = v.Thumbs,
+                    Images = v.Images,
+                    Artist = v.Artist,
+                    Rarity = v.Rarity,
+                    Released = v.Released,
+                    FlavorTexts = v.FlavorTexts,
+                    Finishes = v.Finishes
+                })
+                .ToDictionaryAsync(v => Tuple.Create(v.SetCode, v.CollNum));
+        }
+
 
         public async Task<(CardOracleDto, List<CardFaceDto>)> GetSingleOracleAsync(Guid oracleId)
         {
@@ -184,7 +213,7 @@ namespace Spellbox.Services
 
             var variant = await db.Variants
                 .SingleOrDefaultAsync(v =>
-                    v.SetCode == setCode!.ToLower() &&
+                    v.SetCode.ToLower() == setCode.ToLower() &&
                     v.CollNum == collNum);
                 
             if (variant is null)
@@ -232,6 +261,7 @@ namespace Spellbox.Services
 
             await db.SaveChangesAsync();
         }
+
     }
 
     public sealed class CardViewerDto

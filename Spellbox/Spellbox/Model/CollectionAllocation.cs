@@ -99,8 +99,10 @@ namespace Spellbox.Model
         public bool IsAltered { get; set; } = false;
         public bool IsSigned { get; set; } = false;
         public bool IsStamped { get; set; } = false;
-
+        public bool IsMisprint { get; set; } = false;
         public decimal? BoughtFor { get; set; }
+
+        public decimal? Price { get; set; }
     }
 
     public enum AllocationIndex

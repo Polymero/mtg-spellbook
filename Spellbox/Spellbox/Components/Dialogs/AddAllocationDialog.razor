@@ -9,221 +9,231 @@
     </TitleContent>
 
     <DialogContent>
-        <MudStack Spacing="3">
+        <MudStack Spacing="2">
 
-            <MudGrid>
+            <MudPaper Outlined="true"
+                      Class="mx-n4 px-4 pb-2">
 
-                <!-- Card oracle search by name -->
-                <MudItem xs="6">
-                    <MudAutocomplete T="CardOracleDto"
-                                     Label="Search..."
-                                     Dense="true"
-                                     Clearable="true"
-                                     SearchFunc="OracleSearchFuncAsync"
-                                     ToStringFunc="o => o.Name"
-                                     ResetValueOnEmptyText="true"
-                                     OnClearButtonClick="ClearSelection"
-                                     ValueChanged="OracleSelectFuncAsync">
+                <MudStack Row="true" 
+                          Justify="Justify.SpaceEvenly"
+                          AlignItems="AlignItems.End"
+                          StretchItems="StretchItems.Start">
 
-                        <ItemTemplate Context="o">
-                            <div class="d-flex flex-column">
-                                <span class="fw-semibold">@o.Name</span>
-                                <span class="mud-text mud-text-caption">@o.TypeLine</span>
-                            </div>
-                        </ItemTemplate>
+                    <!-- Card oracle search by name -->
+                    <MudContainer Class="pa-0" 
+                                      Style="width: 100%">
+                        <MudAutocomplete T="CardOracleDto"
+                                        Label="Search..."
+                                        Dense="true"
+                                        Clearable="true"
+                                        SearchFunc="OracleSearchFuncAsync"
+                                        ToStringFunc="o => o.Name"
+                                        ResetValueOnEmptyText="true"
+                                        OnClearButtonClick="ClearSelection"
+                                        ValueChanged="OracleSelectFuncAsync">
 
-                        <NoItemsTemplate>
-                            <MudText Typo="Typo.caption">
-                                No matching cards found...
-                            </MudText>
-                        </NoItemsTemplate>
+                            <ItemTemplate Context="o">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold">@o.Name</span>
+                                    <span class="mud-text mud-text-caption">@o.TypeLine</span>
+                                </div>
+                            </ItemTemplate>
 
-                    </MudAutocomplete>
-                </MudItem>
+                            <NoItemsTemplate>
+                                <MudText Typo="Typo.caption">
+                                    No matching cards found...
+                                </MudText>
+                            </NoItemsTemplate>
 
-                <MudItem xs="1" Class="d-flex align-end">
+                        </MudAutocomplete>
+                    </MudContainer>
+
                     <MudText>
                         OR
                     </MudText>
-                </MudItem>
 
-                <!-- Card variant search by set code and collector number -->
-                <MudItem xs="2">
+                    <!-- Card variant search by set code and collector number -->
                     <MudTextField Label="Set Code"
-                                  Immediate="true"
-                                  @bind-Value="_setCode" 
-                                  OnKeyDown="OnKeyDownAsync" />
-                </MudItem>
-                <MudItem xs="2">
+                                Immediate="true"
+                                @bind-Value="_setCode" 
+                                OnKeyDown="OnKeyDownAsync" />
+
                     <MudTextField Label="Coll Num"
-                                  Immediate="true"
-                                  @bind-Value="_collNum" 
-                                  OnKeyDown="OnKeyDownAsync" />
-                </MudItem>
-                <MudItem xs="1" Class="d-flex align-end">
+                                Immediate="true"
+                                @bind-Value="_collNum" 
+                                OnKeyDown="OnKeyDownAsync" />
+
                     <MudButton Variant="Variant.Outlined"
-                               Color="Color.Success"
-                               Disabled="@(!CanLookupVariantBySetColl)"
-                               OnClick="LookupVariantBySetCollAsync">
+                            Color="Color.Success"
+                            Disabled="@(!CanLookupVariantBySetColl)"
+                            OnClick="LookupVariantBySetCollAsync"
+                            Size="Size.Small"
+                            Style="height: 100%">
                         Go
                     </MudButton>
-                </MudItem>
 
-            </MudGrid>
+                </MudStack>
 
-            <!-- Card variant selector -->
-            @if (_availableVariants is not null)
-            {
-                <MudSelect T="CardVariantDto"
-                           Label="Select variant..."
-                           Dense="true"
-                           ValueChanged="VariantSelectFuncAsync">
-                    @foreach (var v in _availableVariants)
-                    {
-                        <MudSelectItem Value="v">
-                            @String.Format("{0} ({1}) - {2}", v.SetCode.ToUpper(), v.CollNum, v.SetName)
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            }
-
-            <MudDivider />
-
-            <!-- Card info viewer -->
-            @if (_selectedVariant is not null)
-            {
-                <MudGrid Class="mt-0">
-
-                    <!-- Card image -->
-                    <MudItem xs="5"
-                            Class="my-auto">
-                        <MudImage Src=@(_selectedVariant.Images[0]) 
-                                Alt="IMG" 
-                                Fluid="true"
-                                Style="border-radius: 5%;"/>
-                    </MudItem>
-
-                    <!-- Card data -->
-                    <MudItem xs="7">
-
-                        <MudText Typo="Typo.h6"
-                                Class="mb-1">
-                            Info
-                        </MudText>
-
-                        @foreach (var f in _selectedVariant!.Faces.OrderBy(f => f.Order))
+                <!-- Card variant selector -->
+                @if (_availableVariants is not null)
+                {
+                    <MudSelect T="CardVariantDto"
+                            Label="Select variant..."
+                            Dense="true"
+                            ValueChanged="VariantSelectFuncAsync">
+                        @foreach (var v in _availableVariants)
                         {
-                            <MudPaper Class="pa-2 mb-2" 
-                                    Elevation="0" 
-                                    Outlined="true">
+                            <MudSelectItem Value="v">
+                                @String.Format("{0} ({1}) - {2}", v.SetCode.ToUpper(), v.CollNum, v.SetName)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                }
 
-                                <!-- Card name -->
-                                <MudText Typo="Typo.subtitle1" 
-                                        Class="font-weight-bold">
-                                    @f.Name
-                                </MudText>
+            </MudPaper>
 
-                                <MudDivider Class="my-1" />
+            <MudPaper Outlined="true"
+                      Class="mx-n4 pa-4">
 
-                                <!-- Type line -->
-                                <MudText Typo="Typo.caption">
-                                    @f.TypeLine
-                                </MudText>
+                <!-- Card info viewer -->
+                @if (_selectedVariant is not null)
+                {
+                    <MudGrid Class="mt-n6">
 
-                                <MudDivider Class="my-1" />
+                        <!-- Card image -->
+                        <MudItem xs="5"
+                                Class="my-auto">
+                            <MudImage Src=@(_selectedVariant.Images[0]) 
+                                    Alt="IMG" 
+                                    Fluid="true"
+                                    Style="border-radius: 5%;"/>
+                        </MudItem>
 
-                                <!-- Oracle text -->
-                                <MudText Typo="Typo.body2" 
-                                        Class="my-2"
-                                        Style="white-space: pre-line;">
-                                    @f.OracleText
-                                </MudText>
+                        <!-- Card data -->
+                        <MudItem xs="7">
 
-                                <!-- Flavor text, if any -->
-                                @if (_selectedVariant.FlavorTexts is not null)
-                                {
-                                    <MudText Typo="Typo.body2"
+                            <MudText Typo="Typo.h6"
+                                    Class="mb-1">
+                                Info
+                            </MudText>
+
+                            @foreach (var f in _selectedVariant!.Faces.OrderBy(f => f.Order))
+                            {
+                                <MudPaper Class="pa-2 mb-2" 
+                                        Elevation="0" 
+                                        Outlined="true">
+
+                                    <!-- Card name -->
+                                    <MudText Typo="Typo.subtitle1" 
+                                            Class="font-weight-bold">
+                                        @f.Name @SymbologyService.RenderSymbolText(f.ManaCost)
+                                    </MudText>
+
+                                    <MudDivider Class="my-1" />
+
+                                    <!-- Type line -->
+                                    <MudText Typo="Typo.caption">
+                                        @f.TypeLine
+                                    </MudText>
+
+                                    <MudDivider Class="my-1" />
+
+                                    <!-- Oracle text -->
+                                    <MudText Typo="Typo.body2" 
                                             Class="my-2"
                                             Style="white-space: pre-line;">
-                                        <i>@_selectedVariant.FlavorTexts[f.Order]</i>
+                                        @SymbologyService.RenderSymbolText(f.OracleText)
                                     </MudText>
-                                }
 
-                                <!-- Power and toughness, if any -->
-                                @if (!String.IsNullOrWhiteSpace(f.Power))
-                                {
-                                    <MudDivider Class="my-1" />
+                                    <!-- Flavor text, if any -->
+                                    @if (_selectedVariant.FlavorTexts is not null)
+                                    {
+                                        <MudText Typo="Typo.body2"
+                                                Class="my-2"
+                                                Style="white-space: pre-line;">
+                                            <i>@_selectedVariant.FlavorTexts[f.Order]</i>
+                                        </MudText>
+                                    }
 
-                                    <MudText Typo="Typo.subtitle1"
-                                            Class="font-weight-bold">
-                                        @String.Format("{0}/{1}", f.Power, f.Toughness)
-                                    </MudText>
-                                }
-                                
-                                <!-- Defense, if any -->
-                                @if (!String.IsNullOrWhiteSpace(f.Defense))
-                                {
-                                    <MudDivider Class="my-1" />
+                                    <!-- Power and toughness, if any -->
+                                    @if (!String.IsNullOrWhiteSpace(f.Power))
+                                    {
+                                        <MudDivider Class="my-1" />
 
-                                    <MudText Typo="Typo.subtitle1"
-                                            Class="font-weight-bold">
-                                        @f.Defense
-                                    </MudText>
-                                }
+                                        <MudText Typo="Typo.subtitle1"
+                                                Class="font-weight-bold">
+                                            @String.Format("{0}/{1}", f.Power, f.Toughness)
+                                        </MudText>
+                                    }
+                                    
+                                    <!-- Defense, if any -->
+                                    @if (!String.IsNullOrWhiteSpace(f.Defense))
+                                    {
+                                        <MudDivider Class="my-1" />
 
-                                <!-- Loyalty, if any -->
-                                @if (!String.IsNullOrWhiteSpace(f.Loyalty))
-                                {
-                                    <MudDivider Class="my-1" />
+                                        <MudText Typo="Typo.subtitle1"
+                                                Class="font-weight-bold">
+                                            @f.Defense
+                                        </MudText>
+                                    }
 
-                                    <MudText Typo="Typo.subtitle1"
-                                            Class="font-weight-bold">
-                                        @f.Loyalty
-                                    </MudText>
-                                }
+                                    <!-- Loyalty, if any -->
+                                    @if (!String.IsNullOrWhiteSpace(f.Loyalty))
+                                    {
+                                        <MudDivider Class="my-1" />
+
+                                        <MudText Typo="Typo.subtitle1"
+                                                Class="font-weight-bold">
+                                            @f.Loyalty
+                                        </MudText>
+                                    }
+
+                                </MudPaper>
+                            }
+
+                            <!-- Additional variant data -->
+                            <MudPaper Class="pa-2 mb-2"
+                                    Elevation="0">
+
+                                <!-- Set -->
+                                <MudText Typo="Typo.body1">
+                                    <b>Set:</b> @_selectedVariant.SetName (@_selectedVariant.SetCode.ToUpper() @_selectedVariant.CollNum)
+                                </MudText>
+
+                                <!-- Rarity -->
+                                <MudText Typo="Typo.body1"
+                                        Style="text-transform: capitalize">
+                                    <b>Rarity:</b> @_selectedVariant.Rarity
+                                </MudText>
+
+                                <!-- Release date -->
+                                <MudText Typo="Typo.body1">
+                                    <b>Released:</b> @_selectedVariant.Released
+                                </MudText>
+
+                                <!-- Artist -->
+                                <MudText Typo="Typo.body1">
+                                    <b>Artist:</b> @_selectedVariant.Artist
+                                </MudText>
 
                             </MudPaper>
-                        }
 
-                        <!-- Additional variant data -->
-                        <MudPaper Class="pa-2 mb-2"
-                                Elevation="0">
+                        </MudItem>
 
-                            <!-- Set -->
-                            <MudText Typo="Typo.body1">
-                                <b>Set:</b> @_selectedVariant.SetName (@_selectedVariant.SetCode.ToUpper() @_selectedVariant.CollNum)
-                            </MudText>
+                    </MudGrid>
+                }
 
-                            <!-- Rarity -->
-                            <MudText Typo="Typo.body1"
-                                    Style="text-transform: capitalize">
-                                <b>Rarity:</b> @_selectedVariant.Rarity
-                            </MudText>
+            </MudPaper>
 
-                            <!-- Release date -->
-                            <MudText Typo="Typo.body1">
-                                <b>Released:</b> @_selectedVariant.Released
-                            </MudText>
+            <MudPaper Outlined="true"
+                      Class="mx-n4 pa-4">
 
-                            <!-- Artist -->
-                            <MudText Typo="Typo.body1">
-                                <b>Artist:</b> @_selectedVariant.Artist
-                            </MudText>
+                <!-- Allocation properties -->
+                <MudStack Row="true" 
+                            Justify="Justify.SpaceEvenly"
+                            AlignItems="AlignItems.End">
 
-                        </MudPaper>
-
-                    </MudItem>
-
-                </MudGrid>
-            }
-
-            <MudDivider />
-
-            <!-- Allocation properties -->
-            <MudGrid>
-
-                <!-- Card finish -->
-                <MudItem xs="3">
+                    <!-- Card finish -->
                     <MudSelect T="CardFinish"
                                Label="Finish"
                                @bind-Value="_newAlloc.Finish">
@@ -234,10 +244,8 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
 
-                <!-- Card language -->
-                <MudItem xs="3">
+                    <!-- Card language -->
                     <MudSelect T="CardLanguage"
                                Label="Language"
                                @bind-Value="_newAlloc.Language">
@@ -248,10 +256,8 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
 
-                <!-- Card condition -->
-                <MudItem xs="3">
+                    <!-- Card condition -->
                     <MudSelect T="CardCondition"
                                Label="Condition"
                                @bind-Value="_newAlloc.Condition">
@@ -262,57 +268,43 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
 
-                <MudItem xs="1">
-
-                </MudItem>
-
-                <!-- Quantity -->
-                <MudItem xs="2">
+                    <!-- Quantity -->
                     <MudNumericField T="int"
                                      Label="Quantity"
                                      @bind-Value="_quantity"
                                      Min="1"
                                      Immediate="true" />
-                </MudItem>
 
-                <!-- Bought for -->
-                <MudItem xs="3" Class="align-end">
+                </MudStack>
+
+                <MudStack Row="true" 
+                            Justify="Justify.SpaceEvenly"
+                            AlignItems="AlignItems.End">
+
+                    <!-- Bought for -->
                     <MudNumericField T="decimal?"
                                      Label="Bought for"
                                      @bind-Value="_newAlloc.BoughtFor"
                                      Clearable="true" 
                                      HideSpinButtons="true" 
                                      Variant="Variant.Text" />
-                </MudItem>
 
-                <!-- Altered cards -->
-                <MudItem xs="2" Class="align-end">
+                    <!-- Altered cards -->
                     <MudCheckBox T="bool"
                                  Label="Altered"
                                  @bind-Value="_newAlloc.IsAltered" />
-                </MudItem>
 
-                <!-- Signed cards -->
-                <MudItem xs="2" Class="align-end">
+                    <!-- Signed cards -->
                     <MudCheckBox T="bool"
                                  Label="Signed"
                                  @bind-Value="_newAlloc.IsSigned" />
-                </MudItem>
 
-                <!-- Stamped cards -->
-                <MudItem xs="2" Class="align-end">
+                    <!-- Stamped cards -->
                     <MudCheckBox T="bool"
                                  Label="Stamped"
                                  @bind-Value="_newAlloc.IsStamped" />
-                </MudItem>
 
-                <MudItem xs="1">
-
-                </MudItem>
-
-                <MudItem xs="2">
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Success"
                                Disabled="@(!CanAddToSubmissionBatch)"
@@ -320,11 +312,13 @@
                                FullWidth="true">
                         Add
                     </MudButton>
-                </MudItem>
 
-            </MudGrid>
+                </MudStack>
 
-            <MudDivider />
+            </MudPaper>
+
+            <MudPaper Outlined="true"
+                      Class="mx-n4 pa-4">
 
             <!-- Submission batch -->
             <MudTable Items="SubmissionBatch"
@@ -353,6 +347,9 @@
                     </MudTh>
                     <MudTh>
                         Bought
+                    </MudTh>
+                    <MudTh>
+                        Price
                     </MudTh>
                     <MudTh>
                     
@@ -401,18 +398,21 @@
                         }
                     </MudTh>
                     <MudTh>
-                        @if (a.BoughtFor.HasValue)
+                        @if (a.BoughtFor.HasValue) 
                         {
-                            <span>
-                                €@a.BoughtFor.Value.ToString("0.00")
-                            </span>
+                            @if (a.Price.HasValue && a.Price > 0m && a.BoughtFor > 0m)
+                            {
+                                var shift = 100 * (a.Price - a.BoughtFor) / a.BoughtFor;
+                                @if (shift < 0m) { <span>€@a.BoughtFor?.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift?.ToString("0.0")%)</MudText></span> }
+                                else { <span>€@a.BoughtFor?.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift?.ToString("0.0")%)</MudText></span> }
+                            }
+                            else { <span>€@a.BoughtFor.Value.ToString("0.00")</span> }
                         }
-                        else
-                        {
-                            <span>
-                                —
-                            </span>
-                        }
+                        else { <span>—</span> }
+                    </MudTh>
+                    <MudTh>
+                        @if (a.Price.HasValue) { <span>€@a.Price.Value.ToString("0.00")</span> }
+                        else { <span>—</span> }
                     </MudTh>
                     <MudTh>
                         <MudIconButton Icon="@Icons.Material.Filled.Clear"
@@ -424,7 +424,10 @@
             
             </MudTable>
 
-            <MudDivider />
+            </MudPaper>
+
+            <MudPaper Outlined="true"
+                      Class="mx-n4 pa-4">
 
             <MudGrid>
 
@@ -470,6 +473,8 @@
 
             </MudGrid>
 
+            </MudPaper>
+
         </MudStack>
     </DialogContent>
 
@@ -493,7 +498,9 @@
 @inject CollectionService CollectionService
 @inject CrossService CrossService
 @inject OracleService OracleService
+@inject IPricingRouter PricingRouter
 @inject ISnackbar Snackbar
+@inject SymbologyService SymbologyService
 @code {
 
     [CascadingParameter]
@@ -608,14 +615,14 @@
         _quantity = 1;
     }
 
-    private void AddToSubmissionBatch()
+    private async Task AddToSubmissionBatch()
     {
         if (_selectedVariant is null)
             return;
 
         for (int i = 0; i < _quantity; i++)
         {
-            SubmissionBatch.Add(new NewAllocationDto
+            SubmissionBatch.Insert(0, new NewAllocationDto
             {
                 OracleId = _selectedVariant.OracleId,
                 VariantId = _selectedVariant.ScryfallId,
@@ -629,7 +636,12 @@
                 IsAltered = _newAlloc.IsAltered,
                 IsSigned = _newAlloc.IsSigned,
                 IsStamped = _newAlloc.IsStamped,
-                BoughtFor = _newAlloc.BoughtFor
+                BoughtFor = _newAlloc.BoughtFor,
+
+                Price = await PricingRouter.GetPriceAsync(
+                    _selectedVariant.ScryfallId,
+                    _newAlloc.Finish
+                )
             });
         }
 

@@ -42,39 +42,35 @@
 
 @if (_selectedAllocations.Count > 0)
 {
-    <MudPaper Class="@($"gridview-selection-float px-4 {(_hiding ? "slide-out" : "")}")"
-              Elevation="4"
-              Outlined="true">
+    <MudPaper Class="@($"gridview-selection-float {(_hiding ? "slide-out" : "")}")"
+              Elevation="8">
+        <MudPaper Class="px-4 ma-0" Outlined="true">
 
-        <MudStack Row="true"
-                  AlignItems="AlignItems.Center">
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Spacing="2"
+                      Class="py-4">
 
-            <MudText>
-                @_selectedAllocations.Count card(s) selected
-            </MudText>
+                <MudText>
+                    @_selectedAllocations.Count card(s) selected
+                </MudText>
 
-            <MudSpacer />
+                <MudSpacer />
 
-            @* <MudIconButton Icon="@Icons.Material.Filled.CollectionsBookmark"
-                           Size="Size.Medium"
-                           OnClick="OpenZoneDialog"
-                           Color="Color.Success"
-                           Class="mx-n4" /> *@
+                <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
+                            Size="Size.Small"
+                            OnClick="OpenMoveDialog"
+                            Color="Color.Info" />
 
-            <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
-                           Size="Size.Medium"
-                           OnClick="OpenMoveDialog"
-                           Color="Color.Info" 
-                           Class="mx-n4" />
+                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                            Size="Size.Small"
+                            OnClick="@(() => _selectedAllocations.Clear())" 
+                            Color="Color.Error" />
 
-            <MudIconButton Icon="@Icons.Material.Filled.Cancel"
-                           Size="Size.Medium"
-                           OnClick="@(() => _selectedAllocations.Clear())" 
-                           Color="Color.Error"
-                           Class="mx-n4" />
+            </MudStack>
 
-        </MudStack>
-
+        </MudPaper>
     </MudPaper>
 }
 

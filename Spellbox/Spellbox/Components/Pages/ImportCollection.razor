@@ -3,88 +3,225 @@
 
 <PageTitle>Import Collection</PageTitle>
 
-<MudPaper>
-    <MudText>
-        Upload a <code>.csv</code> file to add a (sub)collection ~ !
-    </MudText>
-</MudPaper>
 
-<MudPaper>
-    <MudStack AlignItems="AlignItems.Center"
-              Spacing="3">
-        <MudIcon Icon="@Icons.Material.Outlined.UploadFile"
-                 Size="Size.Small" />
+<MudStack Spacing="2">
 
-        <InputFile id="_inputFile" 
-                   accept=".csv"
-                   style="display:none"
-                   OnChange="HandleFileSelected" />
+    <MudPaper Class="pa-4"
+            Outlined="true">
 
-        <label for="_inputFile">
-            <MudButton Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    StartIcon="@Icons.Material.Filled.FolderOpen"
-                    HtmlTag="_inputFile"
-                    Disabled="_isLoading">
-                Upload
-            </MudButton>
-        </label>
-        
+        <MudStack AlignItems="AlignItems.Center"
+                Spacing="3">
 
-        @if (_fileName is not null)
-        {
-            <MudChip T="string"
-                     Icon="@Icons.Material.Filled.InsertDriveFile"
-                     Color="Color.Info"
-                     Text="@_fileName" />
-        }
-    </MudStack>
-</MudPaper>
+            <MudText>
+                Step 1: Upload a list of cards as a <code>.csv</code> file.
+            </MudText>
 
-@if (_isLoading)
-{
-    <MudProgressLinear Indeterminate="true"
-                       Color="Color.Primary" 
-                       Class="mb-4" />
-}
+            <InputFile id="_inputFile" 
+                    accept=".csv"
+                    style="display:none"
+                    OnChange="HandleFileSelected" />
 
-@if (_result?.Errors.Count > 0)
-{
-    <MudAlert Severity="Severity.Warning"
-              Class="mb-4"
-              Dense="true">
-        <MudText>
-        
-        </MudText>
-        <MudList T="string"
-                 Dense="true">
-            @foreach (var error in _result.Errors)
+            <label for="_inputFile">
+                <MudButton Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        StartIcon="@Icons.Material.Filled.FileUpload"
+                        HtmlTag="_inputFile"
+                        Disabled="_isLoading">
+                    Upload
+                </MudButton>
+            </label>
+
+            @if (_result is not null)
             {
-                <MudListItem Text="@error"
-                             Icon="@Icons.Material.Filled.ErrorOutline" />
-            }
-        </MudList>
-    </MudAlert>
-}
+                @if (_result.Errors.Count > 0)
+                {
+                    <MudAlert Severity="Severity.Warning"
+                            Dense="true">
+                        <MudText>
+                        
+                        </MudText>
+                        <MudList T="string"
+                                Dense="true">
+                            @foreach (var error in _result.Errors)
+                            {
+                                <MudListItem Text="@error"
+                                            Icon="@Icons.Material.Filled.ErrorOutline" />
+                            }
+                        </MudList>
+                    </MudAlert>
+                }
 
-@if (_result?.Cards.Count > 0)
-{
-    <MudAlert Severity="Severity.Success"
-              Class="mb-4"
-              Dense="true">
-        <MudText>
-            @_result?.Cards.Sum(c => c.Quantity) card(s) loaded
-        </MudText>
-    </MudAlert>
-}
+                <MudAlert Severity="Severity.Success"
+                        Dense="true">
+                    <MudText>
+                        @_result.Cards.Sum(c => c.Quantity) entries detected in <MudChip T="string" Color="Color.Info">@_fileName</MudChip> ~ !
+                    </MudText>
+                </MudAlert>
+            }
+
+        </MudStack>
+    </MudPaper>
+
+
+    @if (_isLoading) { <MudProgressLinear Indeterminate="true" Color="Color.Primary" /> }
+
+
+    @if (_result is not null)
+    {
+        <MudPaper Class="pa-4"
+                Outlined="true">
+            <MudStack AlignItems="AlignItems.Center"
+                    Spacing="3">
+
+                <MudText>
+                    Step 2: Parse entries into Spellbox cards.
+                </MudText>
+
+                <MudButton Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        Disabled="@(!CanParse)"
+                        OnClick="ParseAsync">
+                    Parse
+                </MudButton>
+
+                @if (_parsed is not null)
+                {
+                    @if (_parsed.Errors.Count > 0)
+                    {
+                        <MudAlert Severity="Severity.Warning"
+                                Dense="true">
+                            <MudText>
+                            
+                            </MudText>
+                            <MudList T="string"
+                                    Dense="true">
+                                @foreach (var error in _parsed.Errors)
+                                {
+                                    <MudListItem Text="@error"
+                                                Icon="@Icons.Material.Filled.ErrorOutline" />
+                                }
+                            </MudList>
+                        </MudAlert>
+                    }
+
+                    <MudAlert Severity="Severity.Success"
+                            Dense="true">
+                        <MudText>
+                            @_parsed.Cards.Count of @_result.Cards.Sum(c => c.Quantity) card(s) parsed succesfully ~ !
+                        </MudText>
+                    </MudAlert>
+
+                    <MudTable Items="_parsed.Cards"
+                            T="NewAllocationDto"
+                            FixedHeader="true"
+                            Dense="true"
+                            Hover="true"
+                            Virtualize="true"
+                            Height="720px"
+                            Style="width: 80%">
+
+                        <HeaderContent>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<NewAllocationDto, object>(a => a.Name)">
+                                    Name
+                                </MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>Code</MudTh>
+                            <MudTh>Finish</MudTh>
+                            <MudTh>Language</MudTh>
+                            <MudTh>Condition</MudTh>
+                            <MudTh>Flags</MudTh>
+                            <MudTh>Bought</MudTh>
+                        </HeaderContent>
+                        
+                        <RowTemplate Context="a">
+                            <MudTd>@a.Name</MudTd>
+                            <MudTd>@String.Format("{0} {1}", a.SetCode.ToUpper(), a.CollNum)</MudTd>
+                            <MudTd>
+                                @switch (a.Finish)
+                                {
+                                    case CardFinish.Unknown: <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                                    case CardFinish.NonFoil: <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" /> break;
+                                    case CardFinish.Foil: <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" /> break;
+                                    default: @a.Finish.ToString() break;
+                                }
+                            </MudTd>
+                            <MudTd>@a.Language</MudTd>
+                            <MudTd>
+                                @switch (a.Condition)
+                                {
+                                    case CardCondition.Mint: <MudChip T="string" Label="true" Size="Size.Small"><b>MT</b></MudChip> break;
+                                    case CardCondition.NearMint: <MudChip T="string" Label="true" Size="Size.Small"><b>NM</b></MudChip> break;
+                                    case CardCondition.Excellent: <MudChip T="string" Label="true" Size="Size.Small"><b>EX</b></MudChip> break;
+                                    case CardCondition.Good: <MudChip T="string" Label="true" Size="Size.Small"><b>GD</b></MudChip> break;
+                                    case CardCondition.LightPlayed: <MudChip T="string" Label="true" Size="Size.Small"><b>LP</b></MudChip> break;
+                                    case CardCondition.Played: <MudChip T="string" Label="true" Size="Size.Small"><b>PL</b></MudChip> break;
+                                    case CardCondition.Poor: <MudChip T="string" Label="true" Size="Size.Small"><b>PO</b></MudChip> break;
+                                    default: <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                                }
+                            </MudTd>
+                            <MudTd>
+                                @if (a.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+                                @if (a.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+                                @if (a.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
+                                @if (a.IsMisprint) { <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Title="Misprint" /> }
+                            </MudTd>
+                            <MudTd>
+                                @if (a.BoughtFor.HasValue) { <span>€@a.BoughtFor?.ToString("0.00")</span> }
+                                else { <span>—</span> }
+                            </MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+                }
+
+            </MudStack>
+        </MudPaper>
+    }
+
+
+    @if (_parsed is not null)
+    {
+        <MudPaper Class="pa-4"
+                Outlined="true">
+            <MudStack AlignItems="AlignItems.Center"
+                    Spacing="3">
+
+                <MudText>
+                    Step 3: Store cards in your collection database.
+                </MudText>
+
+                <MudButton Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        Disabled="@(!CanSubmit)"
+                        OnClick="SubmitAsync">
+                    Add @_parsed.Cards.Count Cards to Collection
+                </MudButton>
+
+            </MudStack>
+        </MudPaper>
+    }
+
+</MudStack>
 
 
 @inject CollectionImportService ImportService
+@inject OracleService OracleService
 @code {
 
     private ImportResult? _result;
+    private ParseResult? _parsed;
     private string? _fileName;
     private bool _isLoading;
+
+    private bool CanParse =>
+        _result is not null && (
+            _result.Cards.All(a => a.ScryfallId.HasValue) ||
+            _result.Cards.All(a => !@String.IsNullOrWhiteSpace(a.SetCode) && !@String.IsNullOrWhiteSpace(a.CollNum))
+        );
+
+    private bool CanSubmit =>
+        _parsed is not null && _parsed.Cards.Count > 0;
     
 
     private async Task HandleFileSelected(
@@ -98,6 +235,7 @@
         _fileName = file.Name;
         _isLoading = true;
         _result = null;
+        _parsed = null;
 
         try
         {
@@ -117,6 +255,16 @@
         {
             _isLoading = false;
         }
+    }
+
+    private async Task ParseAsync()
+    {
+        _parsed = await ImportService.ParseImportAllocationsAsync(_result!.Cards);
+    }
+
+    private async Task SubmitAsync()
+    {
+
     }
 
 }

@@ -16,14 +16,6 @@ namespace Spellbox.Services
         public List<ImportAllocation> Cards { get; init; } = [];
         public List<string> Errors { get; init; } = [];
         public bool Success => Errors.Count == 0;
-
-        // public int Quantity => Cards
-        //     .Sum(c => c.Quantity);
-        // public int VariantCount => Cards.Count;
-        // public int OracleCount => Cards
-        //     .Select(c => c.OracleId)
-        //     .Distinct()
-        //     .Count();
     }
 
     public class ImportAllocation
@@ -36,11 +28,18 @@ namespace Spellbox.Services
         public CardFinish Finish { get; init; } = CardFinish.Unknown;
         public CardCondition Condition { get; init; } = CardCondition.Unknown;
         public CardLanguage Language { get; init; } = CardLanguage.Unknown;
-        public bool IsSigned { get; init; } = false;
-        public bool IsAltered { get; init; } = false;
-        public bool IsStamped { get; init; } = false;
-        public bool IsMisprint { get; init; } = false;
+        public bool IsSigned { get; init; }
+        public bool IsAltered { get; init; }
+        public bool IsStamped { get; init; }
+        public bool IsMisprint { get; init; }
         public decimal? BoughtFor { get; init; }
+    }
+
+    public class ParseResult
+    {
+        public List<NewAllocationDto> Cards { get; init; } = [];
+        public List<string> Errors { get; init; } = [];
+        public bool Success => Errors.Count == 0;
     }
 
     public sealed class ImportAllocationMap : ClassMap<ImportAllocation>
@@ -48,22 +47,22 @@ namespace Spellbox.Services
         public ImportAllocationMap()
         {
             Map(a => a.Name)
-                .Name("Name", "Card Name", "Card name", "card_name")
+                .Name("Name", "Card Name", "Card name", "card name", "card_name")
                 .Optional();
             Map(a => a.ScryfallId)
-                .Name("ScryfallId", "Scryfall ID", "scryfall_id")
+                .Name("ScryfallId", "Scryfall ID", "scryfall_id", "scryfall ID")
                 .Optional();
             Map(a => a.SetCode)
-                .Name("SetCode", "Set Code", "Set code", "set_code")
+                .Name("SetCode", "Set Code", "Set code", "set_code", "edition code")
                 .Optional();
             Map(a => a.CollNum)
-                .Name("CollNum", "Collector number", "collector_number")
+                .Name("CollNum", "Collector number", "collector_number", "collector number")
                 .Optional();
             Map(a => a.Quantity)
                 .Name("Quantity", "Count", "Qty", "quantity", "number")
                 .Optional();
             Map(a => a.Finish)
-                .Name("Finish", "Foil", "finish", "Card Finish", "Foiling")
+                .Name("Finish", "Foil", "finish", "Card Finish", "Foiling", "modifier")
                 .TypeConverter<CardFinishConverter>()
                 .Optional();
             Map(a => a.Condition)
@@ -95,9 +94,9 @@ namespace Spellbox.Services
 
     public sealed class CollectionImportService
     {
-        private readonly IDbContextFactory<OracleDbContext> _oracle;
+        private readonly OracleService _oracle;
 
-        public CollectionImportService(IDbContextFactory<OracleDbContext> oracle)
+        public CollectionImportService(OracleService oracle)
         {
             _oracle = oracle;
         }
@@ -129,14 +128,7 @@ namespace Spellbox.Services
                 csv.Context.RegisterClassMap<ImportAllocationMap>();
 
                 await foreach (var record in csv.GetRecordsAsync<ImportAllocation>(ct))
-                {
-                    // Guid? variantId = null;
-
-                    // if (record.ScryfallId.HasValue)
-                    //     variantId = record.ScryfallId.Value;
-                    // else
                     cards.Add(record);
-                }
             }
             catch (Exception ex)
             {
@@ -146,6 +138,70 @@ namespace Spellbox.Services
             return new ImportResult
             {
                 Cards = cards,
+                Errors = errors
+            };
+        }
+
+
+        public async Task<ParseResult> ParseImportAllocationsAsync(IEnumerable<ImportAllocation> allocations)
+        {
+            var variantIdLookup = await _oracle.GetVariantsByIdsAsync(allocations
+                .Where(a => a.ScryfallId.HasValue)
+                .Select(a => a.ScryfallId!.Value)
+                .Distinct()
+            );
+  
+            var variantSetCollLookup = await _oracle.GetVariantsBySetCollAsync(allocations
+                .Where(a => !@String.IsNullOrWhiteSpace(a.SetCode) && !@String.IsNullOrWhiteSpace(a.CollNum))
+                .Select(a => Tuple.Create(a.SetCode!, a.CollNum!))
+                .Distinct()
+            );
+            
+            var newAllocs = new List<NewAllocationDto>();
+            var errors = new List<string>();
+
+            foreach (var alloc in allocations)
+            {
+                CardVariantDto? variant = null;
+
+                if (alloc.ScryfallId.HasValue)
+                    variantIdLookup.TryGetValue(alloc.ScryfallId!.Value, out variant);
+
+                if (variant is null && !@String.IsNullOrWhiteSpace(alloc.SetCode) && !@String.IsNullOrWhiteSpace(alloc.CollNum))
+                    variantSetCollLookup.TryGetValue(Tuple.Create(alloc.SetCode, alloc.CollNum), out variant);
+
+                if (variant is null)
+                {
+                    errors.Add($"'{alloc.Name}' was not found in database...");
+
+                    continue;
+                }
+
+                for (int i = 0; i < alloc.Quantity; i++)
+                {
+                    newAllocs.Add(new NewAllocationDto
+                    {
+                        OracleId = variant.OracleId,
+                        VariantId = variant.ScryfallId,
+
+                        Name = variant.Name,
+                        SetCode = variant.SetCode,
+                        CollNum = variant.CollNum,
+
+                        Finish = alloc.Finish,
+                        Language = alloc.Language,
+                        Condition = alloc.Condition,
+                        IsAltered = alloc.IsAltered,
+                        IsSigned = alloc.IsSigned,
+                        IsStamped = alloc.IsStamped,
+                        IsMisprint = alloc.IsMisprint
+                    });
+                }                
+            }
+
+            return new ParseResult
+            {
+                Cards = newAllocs,
                 Errors = errors
             };
         }

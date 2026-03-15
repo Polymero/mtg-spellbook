@@ -21,8 +21,9 @@
                 <MudStack Spacing="0">
 
                     <MudLink Typo="Typo.h4"
+                             Underline="Underline.None"
                              Href=@String.Format("/binders/{0}", Binder.Id)>
-                        @Binder.Name
+                        <b>@Binder.Name</b>
                     </MudLink>
 
                     <MudStack Row="true" Spacing="2">
@@ -45,9 +46,10 @@
                 </MudStack>
 
                 <MudIconButton Icon="@Icons.Material.Filled.Settings"
-                               Size="Size.Small"
-                               Color="Color.Primary"
-                               OnClick="OnEditClicked" />
+                               Size="Size.Medium"
+                               Color="Color.Inherit"
+                               OnClick="OnEditClicked"
+                               Class="mt-n8 pa-0" />
 
             </MudStack>
 

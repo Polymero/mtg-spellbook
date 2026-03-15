@@ -148,66 +148,8 @@ namespace Spellbox.Services
             };
         }
 
-
-
-
     }
 
-
-    // public interface ICardAllocation
-    // {
-    //     Guid OracleId { get; }
-    //     Guid VariantId { get; }
-
-    //     AllocationType Type { get; }
-
-    //     decimal? Price { get; set; }
-    // }
-
-    // public enum AllocationType
-    // {
-    //     Collection = 0,
-    //     Ghost = 1
-    // }
-
-
-    // public sealed class CardCollectionAllocation : ICardAllocation
-    // {
-    //     public CollectionAllocationDto Source { get; }
-
-    //     public CardCollectionAllocation(CollectionAllocationDto source)
-    //     {
-    //         Source = source;
-    //     }
-
-    //     public Guid OracleId => Source.OracleId;
-    //     public Guid VariantId => Source.VariantId;
-
-    //     public AllocationType Type => AllocationType.Collection;
-
-    //     public decimal? Price
-    //     {
-    //         get => Source.Price;
-    //         set => Source.Price = value;
-    //     }
-    // }
-
-    // public sealed class CardGhostAllocation : ICardAllocation
-    // {
-    //     public DeckCardDto Source { get; }
-
-    //     public CardGhostAllocation(DeckCardDto source)
-    //     {
-    //         Source = source;
-    //     }
-
-    //     public Guid OracleId => Source.OracleId;
-    //     public Guid VariantId => Source.VariantId;
-
-    //     public AllocationType Type => AllocationType.Ghost;
-
-    //     public decimal? Price { get; set; }
-    // }
 
 
     public sealed class CollectionGroupedOracleDto

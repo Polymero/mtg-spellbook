@@ -27,10 +27,14 @@ else
 
     <MudPaper Elevation="0"
               Class="pa-4 mud-transparent">
-        <MudGrid Spacing="0" 
-                 Justify="Justify.SpaceEvenly">
+        <MudStack Row="true" 
+                  Spacing="0" 
+                  Justify="Justify.SpaceEvenly"
+                  AlignItems="AlignItems.End"
+                  StretchItems="StretchItems.None">
 
-            <MudItem xs="4">
+            <MudContainer Style="width: 40%" 
+                          Class="ma-0 pa-0">
                 <MudToggleGroup T="CardDisplayMode"
                                 @bind-Value="_displayMode"
                                 Size="Size.Small">
@@ -43,9 +47,10 @@ else
                             Table
                     </MudToggleItem>
                 </MudToggleGroup>
-            </MudItem>
+            </MudContainer>
 
-            <MudItem xs="4">
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
                 <MudToggleGroup T="bool"
                                 @bind-Value="_expandVariants"
                                 Size="Size.Small">
@@ -58,34 +63,42 @@ else
                             Variants
                     </MudToggleItem>
                 </MudToggleGroup>
-            </MudItem>
+            </MudContainer>
 
-        </MudGrid>
+        </MudStack>
     </MudPaper>
 
     <MudPaper Elevation="0"
-              Class="pa-4 mud-transparent">
-        <MudGrid Class=""
-                 Spacing="0"
-                 Justify="Justify.Center">
+              Class="pa-4 mud-transparent mt-n8">
+        <MudStack Row="true" 
+                  Spacing="0" 
+                  Justify="Justify.SpaceEvenly"
+                  AlignItems="AlignItems.End"
+                  StretchItems="StretchItems.None">
 
-            <MudItem xs="2">
-                <MudSelect T="ColorIdentityFilterMode"
-                           Dense="true"
-                           @bind-Value="_CIFMode"
-                           @bind-Value:after="ApplyFilter">
-                    @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
-                    {
-                        <MudSelectItem Value="mode">
-                            @mode
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+            
 
-            <MudItem xs="4" Class="justify-center">
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
                 <MudStack Row="true"
-                          Justify="Justify.Center">
+                          Justify="Justify.Center"
+                          AlignItems="AlignItems.End"
+                          Spacing="2">
+
+                    <MudContainer Class="pa-0">
+                        <MudSelect T="ColorIdentityFilterMode"
+                                Dense="true"
+                                @bind-Value="_CIFMode"
+                                @bind-Value:after="ApplyFilter">
+                            @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
+                            {
+                                <MudSelectItem Value="mode">
+                                    @mode
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudContainer>
+
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
                             Size="Size.Large" 
                             Style=@(_CIF["C"] ? "" : "opacity: 0.3")
@@ -116,19 +129,26 @@ else
                             Style=@(_CIF["G"] ? "" : "opacity: 0.3")
                             @onclick="@(() => ToggleCIF("G"))" />
                 </MudStack>
-            </MudItem>
+            </MudContainer>
 
-            <MudItem xs="5">
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
                 <MudTextField Label="Search" 
                             T="string"
-                            Variant="Variant.Text" />
-            </MudItem>
+                            Variant="Variant.Text"
+                            Clearable="true"
+                            @bind-Value="_search"
+                            @bind-Value:after="ApplyFilter"
+                            Immediate="true"
+                            DebounceInterval="0" />
+            </MudContainer>
 
-        </MudGrid>
+        </MudStack>
     </MudPaper>
 
 
-    <MudPaper Class="pa-4">
+    <MudPaper Class="pa-4"
+              Outlined="true">
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
@@ -141,7 +161,7 @@ else
         }
         else
         {
-            <CardTableView Groups="_groups"
+            <CardTableView Groups="_filteredGroups"
                            VariantIndex="_variantIndex"
                            AllocationIndex="_allocationIndex"
                            OnEditSuccess="UpdateCacheOnEdit" />
@@ -171,6 +191,7 @@ else
         {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
     };
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
+    private string _search = "";
 
     public enum CardDisplayMode
     {
@@ -183,9 +204,7 @@ else
         _groups = await CrossService.GetUnassignedGroupsAsync();
 
         BuildIndexes(_groups);
-
         ApplyFilter();
-
         StateHasChanged();
     }
 
@@ -225,6 +244,9 @@ else
             if (variant.Allocations.Count == 0)
                 RemoveVariant(variant);
         }
+
+        ApplyFilter();
+        StateHasChanged();
     }
 
     private void UpdateCacheOnEdit(EditAllocationCallback callback)
@@ -235,6 +257,7 @@ else
         else if (callback.IsUpdated)
             UpdateAllocation(callback.Allocation, removeIfMoved: true);
 
+        ApplyFilter();
         StateHasChanged();
     }
 
@@ -354,7 +377,13 @@ else
                         || (_CIF["C"] ? oracle.ColorIdentity.Count == 0 : false))
                     .ToList();
             }
-                
+        }
+
+        if (!String.IsNullOrWhiteSpace(_search))
+        {
+            _filteredGroups = _filteredGroups
+                .Where(oracle => oracle.Name.ToLowerInvariant().Contains(_search.ToLowerInvariant()))
+                .ToList();
         }
         
     }

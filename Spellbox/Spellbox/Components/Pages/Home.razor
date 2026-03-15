@@ -39,7 +39,7 @@
 </MudPaper>
 
 
-<MudStack Class="my-8">
+<MudStack Class="mt-8">
 
     @if (Unassigned is not null && Unassigned.Quantity > 0)
     {
@@ -51,11 +51,11 @@
     <!-- Binders -->
     <MudGrid Spacing="2">
 
-        <MudItem xs="12">
+        <MudItem xs="12" Class="mb-n4 mt-8">
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        Your Binders:
+                        Your @BinderCache.Count binders:
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -63,16 +63,12 @@
                                    Icon="@Icons.Material.Filled.Add"
                                    Variant="Variant.Outlined" 
                                    Color="Color.Success"
-                                   Class="align-end" />
+                                   Size="Size.Small" />
                 </CardHeaderActions>
             </MudCardHeader>
         </MudItem>
 
-        @if (BinderCache == null)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        }
-        else if (BinderCache.Count == 0)
+        @if (BinderCache.Count == 0)
         {
             <MudText>
                 You have no binders. What have you done?
@@ -92,17 +88,14 @@
     </MudGrid>
 
 
-    @* <MudDivider /> *@
-
-
     <!-- Decks -->
     <MudGrid Spacing="2">
 
-        <MudItem xs="12">
+        <MudItem xs="12" Class="mb-n4 mt-8">
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        Your Decks:
+                        Your @DeckCache.Count decks:
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -110,16 +103,12 @@
                                    Icon="@Icons.Material.Filled.Add"
                                    Variant="Variant.Outlined" 
                                    Color="Color.Success"
-                                   Class="align-end" />
+                                   Size="Size.Small" />
                 </CardHeaderActions>
             </MudCardHeader>
         </MudItem>
 
-        @if (DeckCache == null)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        }
-        else if (DeckCache.Count == 0)
+        @if (DeckCache.Count == 0)
         {
             <MudText>
                 You have no decks yet. Why not build one?
@@ -228,6 +217,7 @@
         var options = new DialogOptions
         {
             CloseButton = true,
+            CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         };
@@ -285,7 +275,7 @@
     {
         var options = new DialogOptions 
         {
-            CloseButton = true, 
+            CloseButton = true,
             CloseOnEscapeKey = true, 
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
@@ -311,6 +301,7 @@
         var options = new DialogOptions
         {
             CloseButton = true,
+            CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Medium,
             FullWidth = true
         };

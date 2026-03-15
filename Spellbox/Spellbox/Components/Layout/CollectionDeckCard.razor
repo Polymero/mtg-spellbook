@@ -8,7 +8,7 @@
     <MudStack Row="true" Spacing="3">
 
         <div class="cover-container">
-            <img class="cover-image" src="@Deck.CoverImage"/>
+            <img class="cover-image border-0" src="@Deck.CoverImage"/>
         </div>
 
         <!-- Right: Content -->
@@ -20,8 +20,10 @@
                 <MudStack Spacing="0">
 
                     <MudLink Typo="Typo.h4"
+                             Color="Color.Tertiary"
+                             Underline="Underline.None"
                              Href=@String.Format("/decks/{0}", Deck.Id)>
-                        @Deck.Name
+                        <b>@Deck.Name</b>
                     </MudLink>
 
                     <MudStack Row="true" Spacing="2">
@@ -44,9 +46,10 @@
                 </MudStack>
 
                 <MudIconButton Icon="@Icons.Material.Filled.Settings"
-                               Size="Size.Small"
-                               Color="Color.Primary"
-                               OnClick="OnEditClicked" />
+                               Size="Size.Medium"
+                               Color="Color.Inherit"
+                               OnClick="OnEditClicked"
+                               Class="mt-n8 pa-0" />
 
             </MudStack>
 

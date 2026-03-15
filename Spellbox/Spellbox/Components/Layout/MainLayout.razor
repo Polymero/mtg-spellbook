@@ -5,7 +5,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
+<MudLayout Style="min-height: calc(100vh - 7.5rem)">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudLink Typo="Typo.h5"
@@ -23,7 +23,18 @@
     <MudMainContent Class="mt-16 pa-4">
         @Body
     </MudMainContent>
+    <div class="bottom-row">
+        <MudText Typo="Typo.button" 
+                 Color="Color.Primary"
+                 Style="font-size: 1.1rem">
+            <b>Spellbox &nbsp;&nbsp;</b>
+        </MudText>
+        <MudText Typo="Typo.caption">
+            by Polymero
+        </MudText>
+    </div>
 </MudLayout>
+    
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.

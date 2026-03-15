@@ -139,46 +139,16 @@
                 {
                     var shift = 100 * (r.Allocation.Price.Value - r.Allocation.BoughtFor.Value) / r.Allocation.BoughtFor.Value;
 
-                    @if (shift < 0m)
-                    {
-                        <span>
-                            €@r.Allocation.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText>
-                        </span>
-                    }
-                    else
-                    {
-                        <span>
-                            €@r.Allocation.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText>
-                        </span>
-                    }
+                    @if (shift < 0m) { <span>€@r.Allocation.BoughtFor?.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText></span> }
+                    else { <span>€@r.Allocation.BoughtFor?.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText></span> }
                 }
-                else
-                {
-                    <span>
-                        €@r.Allocation.BoughtFor.Value.ToString("0.00")
-                    </span>
-                }
+                else { <span>€@r.Allocation.BoughtFor.Value.ToString("0.00")</span> }
             }
-            else
-            {
-                <span>
-                    —
-                </span>
-            }
+            else { <span>—</span> }
         </MudTd>
         <MudTd>
-            @if (r.Allocation.Price.HasValue)
-            {
-                <span>
-                    €@r.Allocation.Price.Value.ToString("0.00")
-                </span>
-            }
-            else
-            {
-                <span>
-                    —
-                </span>
-            }
+            @if (r.Allocation.Price.HasValue) { <span>€@r.Allocation.Price.Value.ToString("0.00")</span> }
+            else { <span>—</span> }
         </MudTd>
         <MudTd>
             <MudIconButton Icon="@Icons.Material.Filled.Edit"
