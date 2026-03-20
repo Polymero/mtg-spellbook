@@ -15,6 +15,7 @@ namespace Spellbox.Model
         public CardOracle Oracle { get; set; } = null!;
 
         public string SearchName { get; set; } = null!;
+        public bool IsReversed { get; set; } = false;
 
         public string SetName { get; set; } = null!;
         public string SetCode { get; set; } = null!;
@@ -24,9 +25,6 @@ namespace Spellbox.Model
         public string Released { get; set; } = null!;
         public string Rarity { get; set; } = null!;
         public List<string> FlavorTexts { get; set; } = null!;
-
-        public List<string> Thumbs { get; set; } = null!;
-        public List<string> Images { get; set; } = null!;
 
         public int? CardMarketProductId { get; set; }
     }
@@ -64,25 +62,29 @@ namespace Spellbox.Model
                 Released = v.Released,
                 Rarity = v.Rarity,
                 FlavorTexts = v.FlavorTexts,
-                Images = new CardImage(v.ScryfallId)
+                Images = new CardImage(v.ScryfallId, v.IsReversed)
             };
     }
 
     public class CardImage
     {
-        private static Guid ScryfallId;
+        private static string ScryfallId = null!;
         public Side Front;
         public Side Back;
 
-        public CardImage(Guid scryfallId)
+        public CardImage(Guid scryfallId, bool isReversed)
         {
-            ScryfallId = scryfallId;
-            Front = new(ScryfallId, "front");
-            Back = new(ScryfallId, "back");
+            ScryfallId = scryfallId.ToString();
+
+            if (isReversed)
+                ScryfallId = ScryfallId[..^2] + ScryfallId[^1] + ScryfallId[^2];
+
+            Front = new(ScryfallId, isReversed ? "back" : "front");
+            Back = new(ScryfallId, isReversed ? "front" : "back");
         }
 
         public class Side(
-            Guid ScryfallId,
+            string ScryfallId,
             string side
         )
         {
@@ -90,9 +92,9 @@ namespace Spellbox.Model
                 "https://cards.scryfall.io",
                 "{0}",
                 side,
-                ScryfallId.ToString()[0],
-                ScryfallId.ToString()[1],
-                ScryfallId.ToString()
+                ScryfallId[0],
+                ScryfallId[1],
+                ScryfallId
             ]) + ".jpg";
 
             public string Small => String.Format(uri, "small");

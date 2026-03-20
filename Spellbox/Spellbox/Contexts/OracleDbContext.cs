@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 using Spellbox.Model;
 using Spellbox.Services;
 
@@ -61,6 +61,9 @@ namespace Spellbox.Contexts
                   )
                   .IsRequired();
 
+            entity.Property(e => e.Legalities)
+                  .IsRequired();
+
             entity.HasIndex(e => e.Name);
 
             entity.HasMany(e => e.Faces)
@@ -111,6 +114,9 @@ namespace Spellbox.Contexts
             entity.Property(e => e.SearchName)
                   .IsRequired();
 
+            entity.Property(e => e.IsReversed)
+                  .IsRequired();
+
             entity.Property(e => e.SetName)
                   .IsRequired();
 
@@ -131,20 +137,6 @@ namespace Spellbox.Contexts
                   .IsRequired();
 
             entity.Property(e => e.Rarity)
-                  .IsRequired();
-
-            entity.Property(e => e.Thumbs)
-                  .HasConversion(
-                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
-                        e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
-                  )
-                  .IsRequired();
-
-            entity.Property(e => e.Images)
-                  .HasConversion(
-                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
-                        e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
-                  )
                   .IsRequired();
 
             entity.Property(e => e.FlavorTexts)

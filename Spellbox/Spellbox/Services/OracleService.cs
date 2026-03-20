@@ -172,25 +172,19 @@ namespace Spellbox.Services
         }
 
 
-        public async Task ApplyPricingEditsAsync(
-            List<PricingEditDto> editDtos
+        public async Task<IEnumerable<string>> GetColorIdentityAsync(
+            IEnumerable<Guid> oracleIds
         )
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            var variantIds = editDtos.Select(e => e.VariantId);
+            var tmp = await db.Oracles
+                .Where(o => oracleIds.Contains(o.OracleId))
+                .Select(o => o.ColorIdentity)
+                .Distinct()
+                .ToListAsync();
 
-            var variants = await db.Variants
-                .AsTracking()
-                .Where(v => variantIds.Contains(v.ScryfallId))
-                .ToDictionaryAsync(v => v.ScryfallId);
-
-            foreach (var editDto in editDtos)
-            {
-                variants[editDto.VariantId].CardMarketProductId = editDto.CardMarketProductId;
-            }
-
-            await db.SaveChangesAsync();
+            return tmp.SelectMany(x => x).Distinct();
         }
 
     }

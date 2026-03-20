@@ -10,8 +10,8 @@ namespace Spellbox.Model
         [Key]
         public Guid Id { get; set; }
 
-        public Guid CollectionCardId { get; set; }
-        public CollectionCard CollectionCard { get; set; } = null!;
+        public Guid OracleId { get; set; }
+        public Guid VariantId { get; set; }
 
         public AllocationIndex AllocationIndex { get; set; }
 
@@ -78,8 +78,8 @@ namespace Spellbox.Model
                 BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
                 ZoneId = a.ZoneId,
                 DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
-                OracleId = a.CollectionCard.OracleId,
-                VariantId = a.CollectionCard.VariantId,
+                OracleId = a.OracleId,
+                VariantId = a.VariantId,
                 Finish = a.Finish,
                 Language = a.Language,
                 Condition = a.Condition,
@@ -92,16 +92,17 @@ namespace Spellbox.Model
                 AllocatedAt = a.AllocatedAt
             };
 
-        public static Expression<Func<CollectionAllocation, CollectionAllocationDto>> FromGhostEntity => a
+        public static Expression<Func<DeckCard, CollectionAllocationDto>> FromGhostEntity => a
             => new()
             {
                 Type = AllocationType.Ghost,
-                BinderId = a.BinderId,
-                BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
+                // BinderId = a.BinderId,
+                // BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
                 ZoneId = a.ZoneId,
-                DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
-                OracleId = a.CollectionCard.OracleId,
-                VariantId = a.CollectionCard.VariantId,
+                // DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
+                DeckName = a.Zone.Snapshot.Deck.Name,
+                OracleId = a.OracleId,
+                VariantId = a.VariantId,
                 AddedAt = a.AddedAt,
                 AllocatedAt = a.AllocatedAt
             };
@@ -110,6 +111,8 @@ namespace Spellbox.Model
     public sealed class EditableAllocationDto
     {
         public Guid AllocationId { get; init; }
+
+        public Guid OracleId { get; init; }
         public Guid VariantId { get; init; }
 
         public CardFinish Finish { get; set; }
@@ -132,7 +135,8 @@ namespace Spellbox.Model
             => new()
             {
                 AllocationId = a.Id,
-                VariantId = a.CollectionCard.VariantId,
+                OracleId = a.OracleId,
+                VariantId = a.VariantId,
                 Finish = a.Finish,
                 Language = a.Language,
                 Condition = a.Condition,

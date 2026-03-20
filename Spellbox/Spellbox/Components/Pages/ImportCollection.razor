@@ -77,6 +77,10 @@
                     Step 2: Parse entries into Spellbox cards.
                 </MudText>
 
+                <MudCheckBox T="bool"
+                             Label="Parse purchase prices"
+                             @bind-Value="_isParsePurchasePrices" />
+
                 <MudButton Variant="Variant.Filled"
                         Color="Color.Primary"
                         Disabled="@(!CanParse)"
@@ -113,12 +117,9 @@
 
                     <MudTable Items="_parsed.Cards"
                             T="NewAllocationDto"
-                            FixedHeader="true"
                             Dense="true"
                             Hover="true"
-                            Virtualize="true"
-                            Height="720px"
-                            Style="width: 80%">
+                            Style="max-height: 720px; overflow-y: scroll; width: 80%">
 
                         <HeaderContent>
                             <MudTh>
@@ -172,6 +173,10 @@
                             </MudTd>
                         </RowTemplate>
 
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new[] {50, 100, 250}" />
+                        </PagerContent>
+
                     </MudTable>
                 }
 
@@ -185,11 +190,69 @@
         <MudPaper Class="pa-4"
                 Outlined="true">
             <MudStack AlignItems="AlignItems.Center"
-                    Spacing="3">
+                      Spacing="3">
 
                 <MudText>
                     Step 3: Store cards in your collection database.
                 </MudText>
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.End"
+                          Justify="Justify.Center"
+                          Spacing="4"
+                          StretchItems="StretchItems.None"
+                          Style="width: 80%"
+                          Class="mt-n2 mb-2">
+
+                    <MudText>Target:</MudText>
+
+                    <MudContainer Gutters="false">
+                        <MudSelect T="CollectionBinderDto"
+                                Label="Binder"
+                                Clearable="true"
+                                Disabled="@(_selectedDeck is not null)"
+                                @bind-Value="_selectedBinder">
+                            @foreach (var b in BinderCache)
+                            {
+                                <MudSelectItem Value="b">
+                                    @b.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudContainer>
+
+                    <MudIconButton @onclick="OpenAddBinderDialog" 
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   Class="ml-n4" />
+
+                    <MudText>or</MudText>
+
+                    <MudContainer Gutters="false">
+                        <MudSelect T="DeckDto"
+                                Label="Deck"
+                                Clearable="true"
+                                Disabled="@(_selectedBinder is not null)"
+                                @bind-Value="_selectedDeck">
+                            @foreach (var d in DeckCache)
+                            {
+                                <MudSelectItem Value="d">
+                                    @d.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudContainer>
+
+                    <MudIconButton @onclick="OpenAddDeckDialog" 
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Outlined" 
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   Class="ml-n4" />
+
+                </MudStack>
 
                 <MudButton Variant="Variant.Filled"
                         Color="Color.Primary"
@@ -206,8 +269,18 @@
 
 
 @inject CollectionImportService ImportService
-@inject OracleService OracleService
+@inject CollectionService CollectionService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @code {
+
+    private List<CollectionBinderDto> BinderCache = [];
+    private List<DeckDto> DeckCache = [];
+    
+    private CollectionBinderDto? _selectedBinder;
+    private DeckDto? _selectedDeck;
+
+    private bool _isParsePurchasePrices = true;
 
     private ImportResult? _result;
     private ParseResult? _parsed;
@@ -222,6 +295,13 @@
 
     private bool CanSubmit =>
         _parsed is not null && _parsed.Cards.Count > 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        BinderCache = await CollectionService.GetAllBinders();
+        DeckCache = await CollectionService.GetAllDecks();
+    }
     
 
     private async Task HandleFileSelected(
@@ -259,12 +339,77 @@
 
     private async Task ParseAsync()
     {
-        _parsed = await ImportService.ParseImportAllocationsAsync(_result!.Cards);
+        _parsed = await ImportService.ParseImportAllocationsAsync(
+            _result!.Cards,
+            _isParsePurchasePrices
+        );
     }
 
     private async Task SubmitAsync()
     {
+        if (_parsed is null || _parsed.Cards.Count == 0)
+            return;
 
+        await CollectionService.SubmitBatchAsync(
+            _parsed.Cards,
+            _selectedBinder?.Id,
+            _selectedDeck?.ActiveMainboardId
+        );
+
+        var target = "Unassigned";
+        if (_selectedBinder is not null)
+            target = _selectedBinder.Name;
+        if (_selectedDeck is not null)
+            target = _selectedDeck.Name;
+
+        Snackbar.Add($"{_parsed.Cards.Count} cards succesfully added to '{target}' ~ !", Severity.Success);
+        _result = null;
+        _parsed = null;
+    }
+
+
+    // Open dialog to add a binder to the collection database
+    private async Task OpenAddBinderDialog()
+    {
+        var options = new DialogOptions 
+        {
+            CloseButton = true, 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddBinderDialog>("Add Binder", options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditBinderCallback callback)
+        {
+            BinderCache.Add(callback.Binder);
+            _selectedBinder = callback.Binder;
+            StateHasChanged();
+        }
+    }
+
+    // Open dialog to add a deck to the collection database
+    private async Task OpenAddDeckDialog()
+    {
+        var options = new DialogOptions 
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDeckDialog>("Add Deck", options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditDeckCallback callback)
+        {
+            DeckCache.Add(callback.Deck);
+            _selectedDeck = callback.Deck;
+            StateHasChanged();
+        }
     }
 
 }

@@ -2,19 +2,19 @@
 
 <MudPaper Elevation="1" 
           Class="pa-3 collection-card" 
-          Outlined="true"
-          @onclick="@(() => {})">
+          Outlined="true">
 
     <MudStack Row="true" Spacing="3">
 
         <div class="cover-container">
-            <img class="cover-image border-0" src="@Deck.CoverImage"/>
+            <img class="cover-image border-0" 
+                 src="@Deck.CoverImage"
+                 @onclick="@(() => NavigationManager.NavigateTo($"/decks/{Deck.Id}"))" />
         </div>
 
-        <!-- Right: Content -->
-        <MudStack Class="flex-grow-1">
+        <MudStack Class="flex-grow-1"
+                  Spacing="2">
 
-            <!-- Top Row -->
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
 
                 <MudStack Spacing="0">
@@ -32,14 +32,8 @@
                         </MudText>
 
                         <MudText Typo="Typo.caption">
-                            @if (Deck.PriceMissing > 0)
-                            {
-                                <span>€@Deck.PriceValue.ToString("0.00") + @Deck.PriceMissing?</span>
-                            }
-                            else
-                            {
-                                <span>€@Deck.PriceValue.ToString("0.00")</span>
-                            }
+                            @if (Deck.PriceMissing > 0) { <span>€@Deck.PriceValue.ToString("0.00") + @Deck.PriceMissing?</span> }
+                            else { <span>€@Deck.PriceValue.ToString("0.00")</span> }
                         </MudText>
                     </MudStack>
 
@@ -53,10 +47,39 @@
 
             </MudStack>
 
-            <!-- Bottom Row -->
-            <MudText Typo="Typo.body2" Class="mt-2">
+            <MudText Typo="Typo.body2" Class="mt-0 flex-grow-1">
                 @Deck.Description
             </MudText>
+
+            <MudStack Row="true"
+                      Spacing="1"
+                      AlignItems="AlignItems.Center">
+
+                @* @foreach (var colour in Deck.ColorIdentity)
+                {
+                    <MudIcon Icon=@SymbologyService.RenderSymbolIcon(colour)
+                             Size="Size.Small" />
+                } *@
+
+                <MudText Style="font-size: 1.28em;"
+                         Class="mb-0">
+                    @SymbologyService.RenderSymbolText('{' + String.Join("}{", Deck.ColorIdentity) + '}')
+                </MudText>
+
+                @if (!String.IsNullOrWhiteSpace(Deck.Sleeves))
+                {
+                    <MudChip T="string"
+                             Label="true"
+                             Variant="Variant.Text"
+                             Color="Color.Primary"
+                             Icon="@Icons.Material.Filled.Shield"
+                             Size="Size.Small"
+                             Class="mud-transparent">
+                        @Deck.Sleeves
+                    </MudChip>
+                }
+
+            </MudStack>
 
         </MudStack>
 
@@ -65,6 +88,8 @@
 </MudPaper>
 
 
+@inject NavigationManager NavigationManager
+@inject SymbologyService SymbologyService
 @code {
 
     [Parameter] public DeckDto Deck { get; set; } = null!;

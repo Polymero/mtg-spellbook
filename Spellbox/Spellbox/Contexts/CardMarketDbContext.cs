@@ -10,6 +10,7 @@ namespace Spellbox.Contexts
     public class CardMarketDbContext : DbContext
     {
         public DbSet<CardMarketPriceCache> PriceCaches { get; set; }
+        public DbSet<CardMarketProductId> AddedProductIds { get; set; }
         public DbSet<PricingSyncState> SyncStates { get; set; }
 
         public CardMarketDbContext(DbContextOptions<CardMarketDbContext> options) : base(options)
@@ -20,6 +21,7 @@ namespace Spellbox.Contexts
         protected override void OnModelCreating(ModelBuilder model)
         {
             model.ApplyConfiguration(new CardMarketPriceCacheConfiguration());
+            model.ApplyConfiguration(new CardMarketProductIdConfiguration());
             model.ApplyConfiguration(new SyncStatesConfiguration());
         }
     }
@@ -40,15 +42,6 @@ namespace Spellbox.Contexts
             entity.Property(e => e.Trend)
                   .HasColumnType("decimal(10,2)");
 
-            // entity.Property(e => e.Avg1)
-            //       .HasColumnType("decimal(10,2)");
-
-            // entity.Property(e => e.Avg7)
-            //       .HasColumnType("decimal(10,2)");
-
-            // entity.Property(e => e.Avg30)
-            //       .HasColumnType("decimal(10,2)");
-
             entity.Property(e => e.FoilLow)
                   .HasColumnType("decimal(10,2)");
 
@@ -58,17 +51,19 @@ namespace Spellbox.Contexts
             entity.Property(e => e.FoilTrend)
                   .HasColumnType("decimal(10,2)");
 
-            // entity.Property(e => e.FoilAvg1)
-            //       .HasColumnType("decimal(10,2)");
+        }
+    }
 
-            // entity.Property(e => e.FoilAvg7)
-            //       .HasColumnType("decimal(10,2)");
+    public class CardMarketProductIdConfiguration : IEntityTypeConfiguration<CardMarketProductId>
+    {
+        public void Configure(EntityTypeBuilder<CardMarketProductId> entity)
+        {
+            
+            entity.HasKey(e => e.VariantId);
 
-            // entity.Property(e => e.FoilAvg30)
-            //       .HasColumnType("decimal(10,2)");
+            entity.Property(e => e.ProductId)
+                .IsRequired();
 
-            // entity.Property(e => e.UpdatedAt)
-            //       .IsRequired();
         }
     }
 
@@ -76,7 +71,9 @@ namespace Spellbox.Contexts
     {
         public void Configure(EntityTypeBuilder<PricingSyncState> entity)
         {
+
             entity.HasKey(e => e.Key);
+            
         }
     }
 

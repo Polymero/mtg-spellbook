@@ -1,31 +1,58 @@
-using System.ComponentModel.DataAnnotations;
+
 
 namespace Spellbox.Model
 {
-    public class CardLegality
+
+    public sealed class CardLegality
     {
-        [Key]
-        public int Id { get; set; }
-        [Required]
-        public string? OracleId { get; set; }
-        public string? Standard { get; set; }
-        public string? Future { get; set; }
-        public string? Historic { get; set; }
-        public string? Timeless { get; set; }
-        public string? Gladiator { get; set; }
-        public string? Pioneer { get; set; }
-        public string? Explorer { get; set; }
-        public string? Modern { get; set; }
-        public string? Legacy { get; set; }
-        public string? Pauper { get; set; }
-        public string? Vintage { get; set; }
-        public string? Penny { get; set; }
-        public string? Commander { get; set; }
-        public string? Oathbreaker { get; set; }
-        public string? PauperCommander { get; set; }
-        public string? Duel { get; set; }
-        public string? Oldschool { get; set; }
-        public string? Premodern { get; set; }
-        public string? Predh { get; set; } 
+        public CardLegalityType Standard { get; set; }
+        public CardLegalityType Modern { get; set; }
+        public CardLegalityType Pioneer { get; set; }
+        public CardLegalityType Legacy { get; set; }
+        public CardLegalityType Vintage { get; set; }
+        public CardLegalityType Pauper { get; set; }
+        public CardLegalityType Penny { get; set; }
+        public CardLegalityType Commander { get; set; }
+        public CardLegalityType Oathbreaker { get; set; }
+        public CardLegalityType PauperCommander { get; set; }
+        public CardLegalityType DuelCommander { get; set; }
+        public CardLegalityType OldSchool { get; set; }
+        public CardLegalityType PreModern { get; set; }
+        public CardLegalityType PreDH { get; set; }
+
+        public int ToInt()
+        {
+            int value = 0;
+
+            foreach (var property in GetType().GetProperties().OrderBy(x => x.Name))
+            {
+                value <<= 2;
+                value |= (int) property.GetValue(this)!;
+            }
+
+            return value;
+        }
+
+        public static CardLegality FromInt(int value)
+        {
+            var legality = new CardLegality();
+
+            foreach (var property in typeof(CardLegality).GetProperties().OrderBy(x => x.Name).Reverse())
+            {
+                property.SetValue(legality, (CardLegalityType) (value & 3));
+                value >>>= 2;
+            }
+
+            return legality;
+        }
     }
+
+    public enum CardLegalityType
+    {
+        NotLegal = 0,
+        Legal = 1,
+        Restricted = 2,
+        Banned = 3
+    }
+
 }

@@ -143,7 +143,10 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<ParseResult> ParseImportAllocationsAsync(IEnumerable<ImportAllocation> allocations)
+        public async Task<ParseResult> ParseImportAllocationsAsync(
+            IEnumerable<ImportAllocation> allocations,
+            bool isParsePurchasePrices
+        )
         {
             var variantIdLookup = await _oracle.GetVariantsByIdsAsync(allocations
                 .Where(a => a.ScryfallId.HasValue)
@@ -194,7 +197,9 @@ namespace Spellbox.Services
                         IsAltered = alloc.IsAltered,
                         IsSigned = alloc.IsSigned,
                         IsStamped = alloc.IsStamped,
-                        IsMisprint = alloc.IsMisprint
+                        IsMisprint = alloc.IsMisprint,
+
+                        BoughtFor = isParsePurchasePrices ? alloc.BoughtFor : null
                     });
                 }                
             }

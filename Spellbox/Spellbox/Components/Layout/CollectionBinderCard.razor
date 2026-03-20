@@ -3,13 +3,14 @@
 
 <MudPaper Elevation="1" 
           Class="pa-3 collection-card" 
-          Outlined="true"
-          @onclick="@(() => {})">
+          Outlined="true">
 
     <MudStack Row="true" Spacing="3">
 
         <div class="cover-container">
-            <img class="cover-image" src="@Binder.CoverImage"/>
+            <img class="cover-image" 
+                 src="@Binder.CoverImage" 
+                 @onclick="@(() => NavigationManager.NavigateTo($"/binders/{Binder.Id}"))" />
         </div>
 
         <!-- Right: Content -->
@@ -65,6 +66,7 @@
 </MudPaper>
 
 
+@inject NavigationManager NavigationManager
 @code {
 
     [Parameter] public CollectionBinderDto Binder { get; set; } = null!;

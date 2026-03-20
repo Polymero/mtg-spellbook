@@ -115,6 +115,31 @@
                         </MudPaper>
                     }
 
+                    <!-- Legalities data -->
+                    <MudText Typo="Typo.h6"
+                             Class="mt-6">
+                        Legalities
+                    </MudText>
+
+                    <MudPaper Class="pa-2 mb-1" 
+                                Elevation="0" 
+                                Outlined="false">
+
+                        @{var _legalityColours = new List<MudBlazor.Color> {Color.Default, Color.Success, Color.Warning, Color.Error};}
+
+                        @foreach (var format in _viewerDto.Oracle.Legalities.GetType().GetProperties())
+                        {
+                            <MudChip T="string" 
+                                     Variant="Variant.Outlined"
+                                     Size="Size.Small"
+                                     Label="true"
+                                     Color="@_legalityColours[(int) @format.GetValue(_viewerDto.Oracle.Legalities)!]">
+                                @format.Name 
+                            </MudChip>
+                        }
+
+                    </MudPaper>
+
                     <!-- Additional variant data -->
                     @if (VariantId.HasValue)
                     {
@@ -165,68 +190,30 @@
                       Elevation="0">
             
                 <HeaderContent>
-                    <MudTh>
-                        Location
-                    </MudTh>
-                    <MudTh>
-                        Set Code
-                    </MudTh>
-                    <MudTh>
-                        Finish
-                    </MudTh>
-                    <MudTh>
-                        Language
-                    </MudTh>
-                    <MudTh>
-                        Condition
-                    </MudTh>
-                    <MudTh>
-                        Flags
-                    </MudTh>
-                    <MudTh>
-                        Bought
-                    </MudTh>
-                    <MudTh>
-                        Price
-                    </MudTh>
-                    <MudTh>
-                    
-                    </MudTh>
+                    <MudTh>Location</MudTh>
+                    <MudTh>Set Code</MudTh>
+                    <MudTh>Finish</MudTh>
+                    <MudTh>Language</MudTh>
+                    <MudTh>Condition</MudTh>
+                    <MudTh>Flags</MudTh>
+                    <MudTh>Bought</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh></MudTh>
                 </HeaderContent>
 
                 <RowTemplate Context="a">
                     <MudTd>
-                        @if (a.BinderName is not null)
-                        {
-                            @a.BinderName
-                        }
-                        else if (a.DeckName is not null)
-                        {
-                            @a.DeckName
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.caption">
-                                <i>Unassigned</i>
-                            </MudText>
-                        }
+                        @if (a.BinderName is not null) { @a.BinderName }
+                        else if (a.DeckName is not null) { @a.DeckName }
+                        else { <MudText Typo="Typo.caption"><i>Unassigned</i></MudText> }
                     </MudTd>
                     <MudTd>
                         @String.Format("{0} {1}", _variantInfo[a.VariantId].SetCode.ToUpper(), _variantInfo[a.VariantId].CollNum)
                     </MudTd>
                     <MudTd>
-                        @if (a.Finish == CardFinish.NonFoil)
-                        {
-                            <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
-                        }
-                        else if (a.Finish == CardFinish.Foil)
-                        {
-                            <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
-                        }
-                        else
-                        {
-                            @a.Finish
-                        }
+                        @if (a.Finish == CardFinish.NonFoil) { <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" /> }
+                        else if (a.Finish == CardFinish.Foil) { <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" /> }
+                        else { @a.Finish }
                     </MudTd>
                     <MudTd>
                         @a.Language
@@ -261,18 +248,9 @@
                         }
                     </MudTd>
                     <MudTd>
-                        @if (a.IsAltered)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
-                        }
-                        @if (a.IsSigned)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" />
-                        }
-                        @if (a.IsStamped)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
-                        }
+                        @if (a.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+                        @if (a.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+                        @if (a.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
                     </MudTd>
                     <MudTd Style="text-align: center">
                         @if (a.BoughtFor.HasValue)
@@ -281,46 +259,16 @@
                             {
                                 var shift = 100 * (a.Price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
 
-                                @if (shift < 0m)
-                                {
-                                    <span>
-                                        €@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span>
-                                        €@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText>
-                                    </span>
-                                }
+                                @if (shift < 0m) { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText></span> }
+                                else { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText></span> }
                             }
-                            else
-                            {
-                                <span>
-                                    €@a.BoughtFor.Value.ToString("0.00")
-                                </span>
-                            }
+                            else { <span>€@a.BoughtFor.Value.ToString("0.00")</span> }
                         }
-                        else
-                        {
-                            <span>
-                                —
-                            </span>
-                        }
+                        else { <span>—</span> }
                     </MudTd>
                     <MudTd>
-                        @if (a.Price.HasValue)
-                        {
-                            <span>
-                                €@a.Price.Value.ToString("0.00")
-                            </span>
-                        }
-                        else
-                        {
-                            <span>
-                                —
-                            </span>
-                        }
+                        @if (a.Price.HasValue) { <span>€@a.Price.Value.ToString("0.00")</span> }
+                        else { <span>—</span> }
                     </MudTd>
                     <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
@@ -342,7 +290,6 @@
 @inject CrossService CrossService
 @inject IDialogService DialogService
 @inject OracleService OracleService
-@inject IPricingRouter PricingRouter
 @inject SymbologyService SymbologyService
 @code {
 

@@ -147,47 +147,47 @@ namespace Spellbox.Services
     }
 
 
-    public sealed class CardMarketPriceGuideResponse
-    {
-        [JsonPropertyName("version")]
-        public int Version { get; set; }
-        [JsonPropertyName("createdAt")]
-        public string CreatedAt { get; set; } = null!;
+    // public sealed class CardMarketPriceGuideResponse
+    // {
+    //     [JsonPropertyName("version")]
+    //     public int Version { get; set; }
+    //     [JsonPropertyName("createdAt")]
+    //     public string CreatedAt { get; set; } = null!;
 
-        [JsonPropertyName("priceGuides")]
-        public List<CardMarketPriceGuideEntry> PriceGuides { get; set; } = new List<CardMarketPriceGuideEntry>();
-    }
+    //     [JsonPropertyName("priceGuides")]
+    //     public List<CardMarketPriceGuideEntry> PriceGuides { get; set; } = new List<CardMarketPriceGuideEntry>();
+    // }
 
-    public sealed class CardMarketPriceGuideEntry
-    {
-        [JsonPropertyName("idProduct")]
-        public int ProductId { get; set; }
-        [JsonPropertyName("idCategory")]
-        public int CategoryId { get; set; }
+    // public sealed class CardMarketPriceGuideEntry
+    // {
+    //     [JsonPropertyName("idProduct")]
+    //     public int ProductId { get; set; }
+    //     [JsonPropertyName("idCategory")]
+    //     public int CategoryId { get; set; }
 
-        [JsonPropertyName("avg")]
-        public decimal? Avg { get; set; }
-        [JsonPropertyName("low")]
-        public decimal? Low { get; set; }
-        [JsonPropertyName("trend")]
-        public decimal? Trend { get; set; }
-        [JsonPropertyName("avg1")]
-        public decimal? Avg1 { get; set; }
-        [JsonPropertyName("avg7")]
-        public decimal? Avg7 { get; set; }
-        [JsonPropertyName("avg30")]
-        public decimal? Avg30 { get; set; }
-        [JsonPropertyName("avg-foil")]
-        public decimal? AvgFoil { get; set; }
-        [JsonPropertyName("low-foil")]
-        public decimal? LowFoil { get; set; }
-        [JsonPropertyName("trend-foil")]
-        public decimal? TrendFoil { get; set; }
-        [JsonPropertyName("avg1-foil")]
-        public decimal? Avg1Foil { get; set; }
-        [JsonPropertyName("avg7-foil")]
-        public decimal? Avg7Foil { get; set; }
-        [JsonPropertyName("avg30-foil")]
-        public decimal? Avg30Foil { get; set; }
-    }
+    //     [JsonPropertyName("avg")]
+    //     public decimal? Avg { get; set; }
+    //     [JsonPropertyName("low")]
+    //     public decimal? Low { get; set; }
+    //     [JsonPropertyName("trend")]
+    //     public decimal? Trend { get; set; }
+    //     [JsonPropertyName("avg1")]
+    //     public decimal? Avg1 { get; set; }
+    //     [JsonPropertyName("avg7")]
+    //     public decimal? Avg7 { get; set; }
+    //     [JsonPropertyName("avg30")]
+    //     public decimal? Avg30 { get; set; }
+    //     [JsonPropertyName("avg-foil")]
+    //     public decimal? AvgFoil { get; set; }
+    //     [JsonPropertyName("low-foil")]
+    //     public decimal? LowFoil { get; set; }
+    //     [JsonPropertyName("trend-foil")]
+    //     public decimal? TrendFoil { get; set; }
+    //     [JsonPropertyName("avg1-foil")]
+    //     public decimal? Avg1Foil { get; set; }
+    //     [JsonPropertyName("avg7-foil")]
+    //     public decimal? Avg7Foil { get; set; }
+    //     [JsonPropertyName("avg30-foil")]
+    //     public decimal? Avg30Foil { get; set; }
+    // }
 }

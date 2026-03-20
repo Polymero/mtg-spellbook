@@ -53,6 +53,12 @@ namespace Spellbox.Services
             PriceMetric nonFoilMetric,
             PriceMetric foilMetric
         );
+
+        Task ApplyPricingEditsAsync(
+            List<PricingEditDto> edits,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        );
     }
 
 
@@ -61,18 +67,21 @@ namespace Spellbox.Services
         private readonly IDbContextFactory<OracleDbContext> _oracle;
         private readonly IDbContextFactory<CardMarketDbContext> _market;
         private readonly IDbContextFactory<CollectionDbContext> _collection;
+        private readonly ILogger<CardMarketPricingService> _logger;
 
         public PricingMarketplace Marketplace => PricingMarketplace.CardMarket;
 
         public CardMarketPricingService(
             IDbContextFactory<OracleDbContext> oracle, 
             IDbContextFactory<CardMarketDbContext> market,
-            IDbContextFactory<CollectionDbContext> collection
+            IDbContextFactory<CollectionDbContext> collection,
+            ILogger<CardMarketPricingService> logger
         )
         {
             _oracle = oracle;
             _market = market;
             _collection = collection;
+            _logger = logger;
         }
 
 
@@ -85,6 +94,7 @@ namespace Spellbox.Services
             using var marketDb = await _market.CreateDbContextAsync();
 
             var price = await marketDb.PriceCaches
+                .AsNoTracking()
                 .SingleOrDefaultAsync(p => p.ProductId == priceId);
 
             if (price == null)
@@ -119,18 +129,28 @@ namespace Spellbox.Services
         )
         {
             using var oracleDb = await _oracle.CreateDbContextAsync();
+            using var marketDb = await _market.CreateDbContextAsync();
 
             var productId = await oracleDb.Variants
                 .Where(v => v.ScryfallId == variantId)
                 .Select(v => v.CardMarketProductId)
                 .SingleOrDefaultAsync();
 
+            if (!productId.HasValue)
+            {
+                productId = await marketDb.AddedProductIds
+                    .Where(p => p.VariantId == variantId)
+                    .Select(p => p.ProductId)
+                    .SingleOrDefaultAsync();
+            }
+
             if (!productId.HasValue || productId.Value <= 0)
                 return null;
             
-            using var marketDb = await _market.CreateDbContextAsync();
+            
 
             var price = await marketDb.PriceCaches
+                .AsNoTracking()
                 .SingleOrDefaultAsync(p => p.ProductId == productId.Value);
 
             if (price == null)
@@ -186,7 +206,15 @@ namespace Spellbox.Services
                 .Where(p => p.CardMarketProductId != null)
                 .ToDictionary(p => p.ScryfallId, p => p.CardMarketProductId!.Value);
 
+            var addedMap = await marketDb.AddedProductIds
+                .AsNoTracking()
+                .Where(p => variantIds.Contains(p.VariantId))
+                .ToDictionaryAsync(p => p.VariantId, p => p.ProductId);
+
+            addedMap.ToList().ForEach(kvp => priceMap.Add(kvp.Key, kvp.Value));
+
             var prices = await marketDb.PriceCaches
+                .AsNoTracking()
                 .Where(p => priceMap.Values.Contains(p.ProductId))
                 .ToListAsync();
 
@@ -242,11 +270,12 @@ namespace Spellbox.Services
             using var collection = await _collection.CreateDbContextAsync();
 
             var allocations = await collection.Allocations
+                .AsNoTracking()
                 .Where(a => a.AllocationIndex == AllocationIndex.Unassigned)
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
-                    VariantId = a.CollectionCard.VariantId,
+                    VariantId = a.VariantId,
                     Finish = a.Finish
                 })
                 .ToListAsync();
@@ -268,11 +297,12 @@ namespace Spellbox.Services
             using var collection = await _collection.CreateDbContextAsync();
 
             var allocations = await collection.Allocations
+                .AsNoTracking()
                 .Where(a => a.BinderId == binderId)
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
-                    VariantId = a.CollectionCard.VariantId,
+                    VariantId = a.VariantId,
                     Finish = a.Finish
                 })
                 .ToListAsync();
@@ -294,6 +324,7 @@ namespace Spellbox.Services
             using var collection = await _collection.CreateDbContextAsync();
 
             var allocations = await collection.Decks
+                .AsNoTracking()
                 .Where(d => d.Id == deckId)
                 .SelectMany(d => d.Snapshots)
                 .SelectMany(s => s.Zones)
@@ -301,7 +332,7 @@ namespace Spellbox.Services
                 .Select(a => new CollectionAllocationDto
                 {
                     Id = a.Id,
-                    VariantId = a.CollectionCard.VariantId,
+                    VariantId = a.VariantId,
                     Finish = a.Finish
                 })
                 .ToListAsync();
@@ -316,15 +347,23 @@ namespace Spellbox.Services
 
 
         public async Task<List<PricingEditDto>> GetPricingEditsAsync(
-            PriceMetric noinFoilMetric,
+            PriceMetric nonFoilMetric,
             PriceMetric foilMetric
         )
         {
             using var collection = await _collection.CreateDbContextAsync();
 
-            var variantIds = await collection.CollectionCards
+            var variantIds = await collection.Allocations
                 .Select(c => c.VariantId)
                 .Distinct()
+                .ToListAsync();
+
+            using var market = await _market.CreateDbContextAsync();
+
+            var addedIds = await market.AddedProductIds
+                .AsNoTracking()
+                .Where(p => variantIds.Contains(p.VariantId))
+                .Select(p => p.VariantId)
                 .ToListAsync();
 
             using var oracle = await _oracle.CreateDbContextAsync();
@@ -332,7 +371,8 @@ namespace Spellbox.Services
             return await oracle.Variants
                 .Where(v => 
                     variantIds.Contains(v.ScryfallId) &&
-                    v.CardMarketProductId == null
+                    v.CardMarketProductId == null &&
+                    !addedIds.Contains(v.ScryfallId)
                 )
                 .Select(v => new PricingEditDto
                 {
@@ -345,6 +385,37 @@ namespace Spellbox.Services
                     CardMarketProductId = v.CardMarketProductId
                 })
                 .ToListAsync();
+        }
+
+        public async Task ApplyPricingEditsAsync(
+            List<PricingEditDto> edits,
+            PriceMetric nonFoilMetric,
+            PriceMetric foilMetric
+        )
+        {
+            using var market = await _market.CreateDbContextAsync();
+
+            foreach (var edit in edits)
+            {
+                if (edit.CardMarketProductId is null)
+                    continue;
+
+                try
+                {
+                    market.AddedProductIds.Add(new CardMarketProductId
+                    {
+                       VariantId = edit.VariantId,
+                       ProductId = edit.CardMarketProductId.Value 
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to add pricing ID for {VariantId}", edit.VariantId);
+                    continue;
+                }
+            }
+
+            await market.SaveChangesAsync();
         }
 
     }

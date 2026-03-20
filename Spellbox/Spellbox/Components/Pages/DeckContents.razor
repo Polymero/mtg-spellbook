@@ -14,46 +14,243 @@ else
     <CollectionDeckCard Deck="_deck"
                         OnEdit="OpenEditDeckDialog" />
 
-    <MudToggleGroup T="bool"
-                    @bind-Value="_expandVariants"
-                    Size="Size.Small">
-        <MudToggleItem Value="false">
-            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-                Oracle
-        </MudToggleItem>
-        <MudToggleItem Value="true">
-            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
-                Variant
-        </MudToggleItem>
-    </MudToggleGroup>
+    <MudPaper Elevation="0"
+              Class="pa-4 mud-transparent">
+        <MudStack Row="true" 
+                  Spacing="0" 
+                  Justify="Justify.SpaceEvenly"
+                  AlignItems="AlignItems.End"
+                  StretchItems="StretchItems.None">
 
-    <MudPaper Class="pa-4">
+            <MudContainer Style="width: 40%" 
+                          Class="ma-0 pa-0">
+                <MudToggleGroup T="CardDisplayMode"
+                                @bind-Value="_displayMode"
+                                Size="Size.Small">
+                    <MudToggleItem Value="CardDisplayMode.Grid">
+                        <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                            Grid
+                    </MudToggleItem>
+                    <MudToggleItem Value="CardDisplayMode.Table">
+                        <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+                            Table
+                    </MudToggleItem>
+                </MudToggleGroup>
+            </MudContainer>
 
-        <MudText Typo="Typo.h6">
-            Commander(s)
-        </MudText>
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
+                <MudToggleGroup T="bool"
+                                @bind-Value="_expandVariants"
+                                Size="Size.Small">
+                    <MudToggleItem Value="false">
+                        <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                            Oracles
+                    </MudToggleItem>
+                    <MudToggleItem Value="true">
+                        <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                            Variants
+                    </MudToggleItem>
+                </MudToggleGroup>
+            </MudContainer>
 
-        <CardGridView Groups="_zones[DeckZoneType.Commanders].Groups"
-                      VariantIndex="_zones[DeckZoneType.Commanders].VariantIndex"
-                      AllocationIndex="_zones[DeckZoneType.Commanders].AllocationIndex"
-                      OnEditSuccess="UpdateCache"
-                      ExpandVariants="_expandVariants" />
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Elevation="0"
+              Class="pa-4 mud-transparent mt-n8">
+        <MudStack Row="true" 
+                  Spacing="0" 
+                  Justify="Justify.SpaceEvenly"
+                  AlignItems="AlignItems.End"
+                  StretchItems="StretchItems.None">
+
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
+                <MudStack Row="true"
+                          Justify="Justify.Center"
+                          AlignItems="AlignItems.End"
+                          Spacing="2">
+
+                    <MudContainer Class="pa-0">
+                        <MudSelect T="ColorIdentityFilterMode"
+                                Dense="true"
+                                @bind-Value="_CIFMode"
+                                @bind-Value:after="ApplyFilter">
+                            @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
+                            {
+                                <MudSelectItem Value="mode">
+                                    @mode
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudContainer>
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["C"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("C"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
+                            Size="Size.Large"
+                            Style=@(_CIF["W"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("W"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["U"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("U"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["B"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("B"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
+                            Size="Size.Large" 
+                            Style=@(_CIF["R"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("R"))" />
+
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
+                            Size="Size.Large"
+                            Style=@(_CIF["G"] ? "" : "opacity: 0.3")
+                            @onclick="@(() => ToggleCIF("G"))" />
+                </MudStack>
+            </MudContainer>
+
+            <MudContainer Style="width: 40%"
+                          Class="ma-0 pa-0">
+                <MudTextField Label="Search" 
+                            T="string"
+                            Variant="Variant.Text"
+                            Clearable="true"
+                            @bind-Value="_search"
+                            @bind-Value:after="ApplyFilter"
+                            Immediate="true"
+                            DebounceInterval="0" />
+            </MudContainer>
+
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Class="px-4 pt-4 mb-4"
+              Outlined="true">
+
+        <MudStack Row="true"
+                  Spacing="0"
+                  Justify="Justify.SpaceBetween"
+                  Style="width: 100%">
+
+            <MudContainer Gutters="false"
+                          Class="mb-2">
+                <MudText Typo="Typo.h6">
+                    Commander(s)
+                </MudText>
+
+                <CardGridView Groups="_zones[DeckZoneType.Commanders].Groups"
+                              VariantIndex="_zones[DeckZoneType.Commanders].VariantIndex"
+                              AllocationIndex="_zones[DeckZoneType.Commanders].AllocationIndex"
+                              OnEditSuccess="UpdateCacheOnEdit"
+                              OnMoveSuccess="UpdateCacheOnMove"
+                              ExpandVariants="_expandVariants" />
+            </MudContainer>
+
+            @if (_zones[DeckZoneType.Companions].Groups.Count > 0)
+            {
+                <MudContainer Gutters="false"
+                              Class="mb-1">
+                    <MudText Typo="Typo.h6">
+                        Companion(s)
+                    </MudText>
+
+                    <CardGridView Groups="_zones[DeckZoneType.Companions].Groups"
+                                  VariantIndex="_zones[DeckZoneType.Companions].VariantIndex"
+                                  AllocationIndex="_zones[DeckZoneType.Companions].AllocationIndex"
+                                  OnEditSuccess="UpdateCacheOnEdit"
+                                  OnMoveSuccess="UpdateCacheOnMove"
+                                  ExpandVariants="_expandVariants" />
+                </MudContainer>
+            }
+
+        </MudStack>
 
     </MudPaper>
 
-    <MudPaper Class="pa-4">
+    <MudTabs Outlined="false"
+             Rounded="true"
+             ApplyEffectsToContainer="false"
+             Centered="true">
 
-        <MudText Typo="Typo.h6">
-            Mainboard
-        </MudText>
+        <MudTabPanel Text="@($"Mainboard {_zones[DeckZoneType.Mainboard].Quantity}")">
+            <MudPaper Class="pa-4 mt-n0"
+                      Outlined="true">
 
-        <CardGridView Groups="_zones[DeckZoneType.Mainboard].Groups"
-                      VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
-                      AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
-                      OnEditSuccess="UpdateCache"
-                      ExpandVariants="_expandVariants" />
+                @if (_displayMode == CardDisplayMode.Grid)
+                {
+                    <CardGridView Groups="_zones[DeckZoneType.Mainboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit"
+                                OnMoveSuccess="UpdateCacheOnMove"
+                                ExpandVariants="_expandVariants" />
+                }
+                else
+                {
+                    <CardTableView Groups="_zones[DeckZoneType.Mainboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit" />
+                }
+            </MudPaper>
+        </MudTabPanel>
 
-    </MudPaper>
+        <MudTabPanel Text="@($"Sideboard {_zones[DeckZoneType.Sideboard].Quantity}")">
+            <MudPaper Class="pa-4 mt-n0"
+                      Outlined="true">
+
+                @if (_displayMode == CardDisplayMode.Grid)
+                {
+                    <CardGridView Groups="_zones[DeckZoneType.Sideboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit"
+                                OnMoveSuccess="UpdateCacheOnMove"
+                                ExpandVariants="_expandVariants" />
+                }
+                else
+                {
+                    <CardTableView Groups="_zones[DeckZoneType.Sideboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit" />
+                }
+            </MudPaper>
+        </MudTabPanel>
+
+        <MudTabPanel Text="@($"Maybeboard {_zones[DeckZoneType.Maybeboard].Quantity}")">
+            <MudPaper Class="pa-4 mt-n0"
+                      Outlined="true">
+
+                @if (_displayMode == CardDisplayMode.Grid)
+                {
+                    <CardGridView Groups="_zones[DeckZoneType.Maybeboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit"
+                                OnMoveSuccess="UpdateCacheOnMove"
+                                ExpandVariants="_expandVariants" />
+                }
+                else
+                {
+                    <CardTableView Groups="_zones[DeckZoneType.Maybeboard].FilteredGroups"
+                                VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
+                                AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
+                                OnEditSuccess="UpdateCacheOnEdit" />
+                }
+            </MudPaper>
+        </MudTabPanel>
+        
+    </MudTabs>
 
 }
 
@@ -63,6 +260,7 @@ else
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 @inject IPricingRouter PricingRouter
+@inject SymbologyService SymbologyService
 @code {
 
     [Parameter]
@@ -71,12 +269,30 @@ else
     private DeckDto? _deck;
     private Dictionary<DeckZoneType, ZoneDto> _zones = new ();
 
+    public enum CardDisplayMode
+    {
+        Grid,
+        Table
+    }
+
+    private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
+    private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
+    {
+        {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
+    };
+    private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
+    private string _search = "";
 
     private sealed class ZoneDto
     {
         public DeckZoneType ZoneType { get; init; }
         public List<CollectionGroupedOracleDto> Groups { get; init; } = [];
+        public List<CollectionGroupedOracleDto> FilteredGroups { get; set; } = [];
+
+        public int Quantity => FilteredGroups.Sum(g => g.Quantity);
+        public decimal Price => FilteredGroups.Sum(g => g.Price);
+
 
         public Dictionary<Guid, CollectionGroupedVariantDto> VariantIndex { get; set; } = new();
         public Dictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = new();
@@ -103,6 +319,7 @@ else
             return new KeyValuePair<DeckZoneType,ZoneDto>(kvp.Key, zoneDto);
         }).ToDictionary();
 
+        ApplyFilter();
         StateHasChanged();
     }
 
@@ -127,7 +344,12 @@ else
     }
 
 
-    private void UpdateCache(EditAllocationCallback callback)
+    private void UpdateCacheOnMove(MoveAllocationsCallback callback)
+    {
+
+    }
+
+    private void UpdateCacheOnEdit(EditAllocationCallback callback)
     {
 
     }
@@ -174,6 +396,79 @@ else
             }
 
             StateHasChanged();
+        }
+    }
+
+
+    private enum ColorIdentityFilterMode
+    {
+        AtMost,
+        Equals,
+        Contain
+    }
+
+    private void ToggleCIF(string colour)
+    {
+        _CIF[colour] = !_CIF[colour];
+
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        foreach (var kvp in _zones)
+        {
+            kvp.Value.FilteredGroups = kvp.Value.Groups;
+
+            if (kvp.Key == DeckZoneType.Commanders || kvp.Key == DeckZoneType.Companions)
+                continue;
+
+            if (_CIF.Values.Any(v => v))
+            {
+                var colours = _CIF
+                    .Where(kvp => kvp.Value)
+                    .Select(kvp => kvp.Key);
+
+                if (_CIFMode == ColorIdentityFilterMode.AtMost)
+                {
+                    kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                        .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c)))
+                        .ToList();
+
+                    if (!_CIF["C"])
+                        kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                            .Where(oracle => oracle.ColorIdentity.Count > 0)
+                            .ToList();
+                }
+
+                if (_CIFMode == ColorIdentityFilterMode.Equals)
+                {
+                    if (colours.Count() == 1 && colours.First() == "C")
+                        kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                            .Where(oracle => oracle.ColorIdentity.Count == 0)
+                            .ToList();
+                    else
+                        kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                            .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c))
+                                && oracle.ColorIdentity.Count == colours.Count())
+                            .ToList();
+                }
+
+                if (_CIFMode == ColorIdentityFilterMode.Contain)
+                {
+                    kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                        .Where(oracle => colours.Where(c => c != "C").All(c => oracle.ColorIdentity.Contains(c))
+                            || (_CIF["C"] ? oracle.ColorIdentity.Count == 0 : false))
+                        .ToList();
+                }
+            }
+
+            if (!String.IsNullOrWhiteSpace(_search))
+            {
+                kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
+                    .Where(oracle => oracle.Name.ToLowerInvariant().Contains(_search.ToLowerInvariant()))
+                    .ToList();
+            }
         }
     }
 

@@ -39,9 +39,6 @@ namespace Spellbox.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("CollectionCardId")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Condition")
                         .HasColumnType("INTEGER");
 
@@ -66,6 +63,12 @@ namespace Spellbox.Migrations
                     b.Property<int>("Language")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid>("OracleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("ZoneId")
                         .HasColumnType("TEXT");
 
@@ -73,15 +76,17 @@ namespace Spellbox.Migrations
 
                     b.HasIndex("BinderId");
 
-                    b.HasIndex("CollectionCardId");
-
                     b.HasIndex("DeckId");
+
+                    b.HasIndex("OracleId");
+
+                    b.HasIndex("VariantId");
 
                     b.HasIndex("ZoneId");
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\n                    (\n                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR\n                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)\n                    )\n                    ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)\r\n                    )\r\n                    ");
                         });
                 });
 
@@ -112,33 +117,14 @@ namespace Spellbox.Migrations
                     b.ToTable("Binders");
                 });
 
-            modelBuilder.Entity("Spellbox.Model.CollectionCard", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("OracleId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("VariantId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OracleId", "VariantId")
-                        .IsUnique();
-
-                    b.ToTable("CollectionCards");
-                });
-
             modelBuilder.Entity("Spellbox.Model.Deck", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorIdentity")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CoverImage")
@@ -150,8 +136,14 @@ namespace Spellbox.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("LegalityStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sleeves")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
@@ -169,6 +161,12 @@ namespace Spellbox.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AllocatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OracleId")
@@ -300,12 +298,6 @@ namespace Spellbox.Migrations
                         .HasForeignKey("BinderId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Spellbox.Model.CollectionCard", "CollectionCard")
-                        .WithMany("Allocations")
-                        .HasForeignKey("CollectionCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Spellbox.Model.Deck", "Deck")
                         .WithMany()
                         .HasForeignKey("DeckId");
@@ -316,8 +308,6 @@ namespace Spellbox.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Binder");
-
-                    b.Navigation("CollectionCard");
 
                     b.Navigation("Deck");
 
@@ -360,11 +350,6 @@ namespace Spellbox.Migrations
             modelBuilder.Entity("Spellbox.Model.CollectionBinder", b =>
                 {
                     b.Navigation("Cards");
-                });
-
-            modelBuilder.Entity("Spellbox.Model.CollectionCard", b =>
-                {
-                    b.Navigation("Allocations");
                 });
 
             modelBuilder.Entity("Spellbox.Model.Deck", b =>

@@ -85,7 +85,7 @@ main[b-u2c2xiooig] {
     justify-content: center;
     position: absolute;
     bottom: -3.5rem;
-    width: 100vw;
+    width: calc(100vw - 0.5rem);
 }
 
 

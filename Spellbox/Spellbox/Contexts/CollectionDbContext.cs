@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Spellbox.Model;
 
 
@@ -8,7 +10,6 @@ namespace Spellbox.Contexts
 
     public class CollectionDbContext : DbContext
     {
-        public DbSet<CollectionCard> CollectionCards { get; set; }
         public DbSet<CollectionAllocation> Allocations { get; set; }
         public DbSet<CollectionBinder> Binders { get; set; }
         public DbSet<Deck> Decks { get; set; }
@@ -26,7 +27,6 @@ namespace Spellbox.Contexts
 
         protected override void OnModelCreating(ModelBuilder model)
         {
-            model.ApplyConfiguration(new CollectionCardConfiguration());
             model.ApplyConfiguration(new CollectionAllocationConfiguration());
             model.ApplyConfiguration(new CollectionBinderConfiguration());
             model.ApplyConfiguration(new DeckConfiguration());
@@ -36,31 +36,6 @@ namespace Spellbox.Contexts
 
             model.ApplyConfiguration(new UserProfileConfiguration());
             model.ApplyConfiguration(new UserPricingSettingsConfiguration());
-        }
-    }
-
-    public class CollectionCardConfiguration : IEntityTypeConfiguration<CollectionCard>
-    {
-        public void Configure(EntityTypeBuilder<CollectionCard> entity)
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.OracleId)
-                  .IsRequired();
-
-            entity.Property(e => e.VariantId)
-                  .IsRequired();
-
-            entity.Property(e => e.Quantity)
-                  .IsRequired();
-
-            entity.HasIndex(e => new { e.OracleId, e.VariantId })
-                  .IsUnique();
-
-            entity.HasMany(e => e.Allocations)
-                  .WithOne(a => a.CollectionCard)
-                  .HasForeignKey(a => a.CollectionCardId)
-                  .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
@@ -104,15 +79,8 @@ namespace Spellbox.Contexts
             entity.Property(e => e.BoughtFor)
                   .HasPrecision(10, 2);
 
-            entity.HasIndex(e => e.CollectionCardId);
-            entity.HasIndex(e => e.BinderId);
-            entity.HasIndex(e => e.ZoneId);
-            entity.HasIndex(e => e.DeckId);
-
-            entity.HasOne(e => e.CollectionCard)
-                  .WithMany(c => c.Allocations)
-                  .HasForeignKey(e => e.CollectionCardId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => e.OracleId);
+            entity.HasIndex(e => e.VariantId);
 
             entity.ToTable(t =>
             {
@@ -162,6 +130,16 @@ namespace Spellbox.Contexts
                   .IsRequired();
 
             entity.Property(e => e.Type)
+                  .IsRequired();
+
+            entity.Property(e => e.ColorIdentity)
+                  .HasConversion(
+                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
+                        e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
+                  )
+                  .IsRequired();
+
+            entity.Property(e => e.LegalityStatus)
                   .IsRequired();
 
             entity.Property(e => e.CreatedAt)

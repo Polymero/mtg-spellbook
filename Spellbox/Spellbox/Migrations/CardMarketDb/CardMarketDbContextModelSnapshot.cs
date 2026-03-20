@@ -46,6 +46,20 @@ namespace Spellbox.Migrations.CardMarketDb
                     b.ToTable("PriceCaches");
                 });
 
+            modelBuilder.Entity("Spellbox.Model.CardMarketProductId", b =>
+                {
+                    b.Property<Guid>("VariantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("VariantId");
+
+                    b.ToTable("AddedProductIds");
+                });
+
             modelBuilder.Entity("Spellbox.Services.PricingSyncState", b =>
                 {
                     b.Property<string>("Key")

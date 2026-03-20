@@ -22,7 +22,8 @@ INSERT INTO Oracles (
     TypeLine,
     Keywords,
     CMC,
-    ColorIdentity
+    ColorIdentity,
+    Legalities
 )
 VALUES (
     {oracle.OracleId},
@@ -30,7 +31,8 @@ VALUES (
     {oracle.TypeLine},
     {oracle.Keywords},
     {oracle.CMC},
-    {oracle.ColorIdentity}
+    {oracle.ColorIdentity},
+    {oracle.Legalities}
 )
 ON CONFLICT(OracleId)
 DO UPDATE SET
@@ -38,7 +40,8 @@ DO UPDATE SET
     TypeLine = excluded.TypeLine,
     Keywords = excluded.Keywords,
     CMC = excluded.CMC,
-    ColorIdentity = excluded.ColorIdentity
+    ColorIdentity = excluded.ColorIdentity,
+    Legalities = excluded.Legalities
 ", ct);
         }
 
@@ -54,6 +57,7 @@ INSERT INTO Variants (
     ScryfallId,
     OracleId,
     SearchName,
+    IsReversed,
     SetName,
     SetCode,
     CollNum,
@@ -62,14 +66,13 @@ INSERT INTO Variants (
     Released,
     Rarity,
     FlavorTexts,
-    Thumbs,
-    Images,
     CardMarketProductId
 )
 VALUES (
     {variant.ScryfallId},
     {variant.OracleId},
     {variant.SearchName},
+    {variant.IsReversed},
     {variant.SetName},
     {variant.SetCode},
     {variant.CollNum},
@@ -78,14 +81,13 @@ VALUES (
     {variant.Released},
     {variant.Rarity},
     {variant.FlavorTexts},
-    {variant.Thumbs},
-    {variant.Images},
     {variant.CardMarketProductId}
 )
 ON CONFLICT(ScryfallId)
 DO UPDATE SET
     OracleId = excluded.OracleId,
     SearchName = excluded.SearchName,
+    IsReversed = excluded.IsReversed,
     SetName = excluded.SetName,
     SetCode = excluded.SetCode,
     CollNum = excluded.CollNum,
@@ -94,8 +96,6 @@ DO UPDATE SET
     Released = excluded.Released,
     Rarity = excluded.Rarity,
     FlavorTexts = excluded.FlavorTexts,
-    Thumbs = excluded.Thumbs,
-    Images = excluded.Images,
     CardMarketProductId =
         COALESCE(excluded.CardMarketProductId, Variants.CardMarketProductId)
 ", ct);

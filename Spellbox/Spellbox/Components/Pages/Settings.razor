@@ -67,6 +67,8 @@
 
 </MudPaper>
 
+
+@inject CollectionService CollectionService
 @inject IUserSessionService UserSession
 @code {
     private string _displayName = "";
@@ -85,4 +87,5 @@
         await UserSession.UpdateDisplayNameAsync(_displayName);
         await UserSession.UpdatePricingSettingsAsync(_pricingSettings);
     }
+
 }

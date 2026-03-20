@@ -91,6 +91,7 @@ namespace Spellbox.Services
             var oracleBatch = new Dictionary<Guid, CardOracle>();
             var faceBatch = new List<CardFace>();
             var variantBatch = new List<CardVariant>();
+            var reversibleBatch = new List<JsonElement>();
 
             bool delta = sync.SyncedAt > DateTime.MinValue;
             int batches = 0;
@@ -111,7 +112,7 @@ namespace Spellbox.Services
                     {
                         if (pLayout.GetString() == "reversible_card")
                         {
-                            variantBatch.AddRange(await ParseReversibleCard(card));
+                            reversibleBatch.Add(card.Clone());
                         }
                     }
                 }
@@ -154,6 +155,11 @@ namespace Spellbox.Services
                     });
                 }
             }
+
+            await FlushAsync(oracleBatch, faceBatch, variantBatch, ct);
+
+            foreach (var card in reversibleBatch)
+                variantBatch.AddRange(await ParseReversibleCard(card));
 
             await FlushAsync(oracleBatch, faceBatch, variantBatch, ct);
 
@@ -294,6 +300,28 @@ namespace Spellbox.Services
                     : new List<string>()
             };
 
+            if (card.TryGetProperty("legalities", out var legalities) &&
+                legalities.ValueKind == JsonValueKind.Object)
+            {
+                oracle.Legalities = new CardLegality
+                {
+                    Standard = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("standard")),
+                    Modern = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("modern")),
+                    Pioneer = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("pioneer")),
+                    Legacy = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("legacy")),
+                    Vintage = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("vintage")),
+                    Pauper = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("pauper")),
+                    Penny = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("penny")),
+                    Commander = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("commander")),
+                    Oathbreaker = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("oathbreaker")),
+                    PauperCommander = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("paupercommander")),
+                    DuelCommander = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("duel")),
+                    OldSchool = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("oldschool")),
+                    PreModern = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("premodern")),
+                    PreDH = ParseCardLegalityType(legalities.GetPropertyOrEmptyString("predh")),
+                }.ToInt();
+            }
+
             if (card.TryGetProperty("card_faces", out var faces) &&
                 faces.ValueKind == JsonValueKind.Array)
             {
@@ -309,6 +337,20 @@ namespace Spellbox.Services
             }
 
             return oracle;
+        }
+
+        private static CardLegalityType ParseCardLegalityType(
+            string legalityType
+        )
+        {
+            return legalityType switch
+            {
+                "not_legal" => CardLegalityType.NotLegal,
+                "legal" => CardLegalityType.Legal,
+                "restricted" => CardLegalityType.Restricted,
+                "banned" => CardLegalityType.Banned,
+                _ => CardLegalityType.NotLegal,
+            };
         }
 
         private static CardFace ParseCardFace(
@@ -369,32 +411,6 @@ namespace Spellbox.Services
 
             if (card.TryGetProperty("card_faces", out var faces))
             {
-                var thumbs = new List<string?>();
-                var images = new List<string?>();
-
-                foreach (var face in faces.EnumerateArray())
-                {
-                    if (face.TryGetProperty("image_uris", out var faceImg))
-                    {
-                        thumbs.Add(faceImg.GetPropertyOrEmptyString("small"));
-                        images.Add(faceImg.GetPropertyOrEmptyString("normal"));
-                    }
-                    else
-                    {
-                        thumbs.Add(null);
-                        images.Add(null);
-                    }
-                }
-
-                if (images.All(string.IsNullOrEmpty) && card.TryGetProperty("image_uris", out var cardImg))
-                {
-                    thumbs = new List<string?> { cardImg.GetPropertyOrEmptyString("small") };
-                    images = new List<string?> { cardImg.GetPropertyOrEmptyString("normal") };
-                }
-
-                variant.Thumbs = thumbs!;
-                variant.Images = images!;
-
                 variant.FlavorTexts = faces
                     .EnumerateArray()
                     .Select(f => f.GetPropertyOrEmptyString("flavor_text"))
@@ -402,17 +418,6 @@ namespace Spellbox.Services
             }
             else
             {
-                if (card.TryGetProperty("image_uris", out var cardImg))
-                {
-                    variant.Thumbs = new List<string> { cardImg.GetPropertyOrEmptyString("small") };
-                    variant.Images = new List<string> { cardImg.GetPropertyOrEmptyString("normal") };
-                }
-                else
-                {
-                    variant.Thumbs = new List<string> { "" };
-                    variant.Images = new List<string> { "" };
-                }
-
                 variant.FlavorTexts = new List<string> { card.GetPropertyOrEmptyString("flavor_text") };
             }
 
@@ -441,18 +446,24 @@ namespace Spellbox.Services
                 {
                     var oracleId = Guid.Parse(face.GetProperty("oracle_id").GetString()!);
 
+                    var scryfallId = i == 0
+                        ? Guid.Parse(scryfallIdStr)
+                        : Guid.Parse(scryfallIdStr[..^2] + scryfallIdStr[^1] + scryfallIdStr[^2]);
+
                     var parent = await db.Oracles
                         .Where(o => o.OracleId == oracleId)
                         .SingleOrDefaultAsync();
 
                     if (parent is null)
+                    {
+                        _logger.LogInformation("Skipping reversible card {scryfallIdStr} {i}", scryfallId, i);
                         continue;
-
-                    var img = face.GetProperty("image_uris");
+                    }
 
                     variants.Add(new CardVariant
                     {
-                        ScryfallId = Guid.Parse(scryfallIdStr[..^1] + i.ToString()),
+                        IsReversed = i == 1,
+                        ScryfallId = scryfallId,
                         OracleId = oracleId,
 
                         SetName = card.GetPropertyOrEmptyString("set_name"),
@@ -471,9 +482,7 @@ namespace Spellbox.Services
 
                         SearchName = face.GetPropertyOrEmptyString("name"),
                         Artist = face.GetPropertyOrEmptyString("artist"),
-                        FlavorTexts = new List<string> { face.GetPropertyOrEmptyString("flavor_text") },
-                        Thumbs = new List<string> { img.GetPropertyOrEmptyString("small").ToString() },
-                        Images = new List<string> { img.GetPropertyOrEmptyString("normal").ToString() }
+                        FlavorTexts = new List<string> { face.GetPropertyOrEmptyString("flavor_text") }
                     });
 
                     i++;

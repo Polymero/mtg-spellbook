@@ -82,6 +82,9 @@ namespace Spellbox.Migrations.OracleDb
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Legalities")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -121,9 +124,8 @@ namespace Spellbox.Migrations.OracleDb
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Images")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<bool>("IsReversed")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("OracleId")
                         .HasColumnType("TEXT");
@@ -145,10 +147,6 @@ namespace Spellbox.Migrations.OracleDb
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SetName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Thumbs")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

@@ -97,6 +97,7 @@
 
 
 @inject CollectionService CollectionService
+@inject CrossService CrossService
 @inject ISnackbar Snackbar
 @code {
 
@@ -140,7 +141,7 @@
         if (_targetBinder?.Id == CurrentBinderId)
             Cancel();
 
-        var movedIds = await CollectionService.MoveAllocationsAsync(AllocationIds, _targetBinder?.Id, _targetDeck?.ActiveSnapshotId, _targetZoneType);
+        var movedIds = await CrossService.MoveAllocationsAsync(AllocationIds, _targetBinder?.Id, _targetDeck?.Id, _targetZoneType);
         MudDialog.Close(DialogResult.Ok(new MoveAllocationsCallback(movedIds)));
 
         var targetName = "Unassigned";

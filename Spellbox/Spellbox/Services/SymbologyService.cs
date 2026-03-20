@@ -80,6 +80,12 @@ namespace Spellbox.Services
             if (String.IsNullOrEmpty(text))
                 return "";
 
+            if (!text.StartsWith('{'))
+                text = '{' + text;
+
+            if (!text.EndsWith('}'))
+                text += '}';
+
             if (!SymbolRegex().IsMatch(text))
                 return "";
 

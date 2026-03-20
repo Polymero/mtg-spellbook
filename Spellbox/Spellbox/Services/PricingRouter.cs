@@ -32,6 +32,10 @@ namespace Spellbox.Services
         );
 
         Task<List<PricingEditDto>> GetPricingEditsAsync();
+
+        Task ApplyPricingEditsAsync(
+            List<PricingEditDto> edits
+        );
     }
 
 
@@ -157,6 +161,20 @@ namespace Spellbox.Services
                 .Single(s => s.Marketplace == prefs.Marketplace);
 
             return await service.GetPricingEditsAsync(
+                prefs.NonFoilMetric,
+                prefs.FoilMetric
+            );
+        }
+
+        public async Task ApplyPricingEditsAsync(List<PricingEditDto> edits)
+        {
+            var prefs = (await _session.GetAsync()).PricingSettings;
+
+            var service = _services
+                .Single(s => s.Marketplace == prefs.Marketplace);
+
+            await service.ApplyPricingEditsAsync(
+                edits,
                 prefs.NonFoilMetric,
                 prefs.FoilMetric
             );

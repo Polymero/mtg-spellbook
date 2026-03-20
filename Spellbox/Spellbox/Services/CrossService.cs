@@ -19,6 +19,8 @@ namespace Spellbox.Services
         }
 
 
+        // PRIVATE METHODS
+
         private async Task<List<CollectionGroupedOracleDto>> GroupAllocations(
             IEnumerable<CollectionAllocationDto> allocations
         )
@@ -98,6 +100,9 @@ namespace Spellbox.Services
                 .ToList();
         }
 
+
+        // PUBLIC METHODS
+
         public async Task<List<CollectionGroupedOracleDto>> GetUnassignedGroupsAsync()
         {
             var allocations = await _collection.GetUnassignedAllocationsAsync();
@@ -148,6 +153,42 @@ namespace Spellbox.Services
             };
         }
 
+
+        public async Task<List<Guid>> MoveAllocationsAsync(
+            IEnumerable<Guid> allocationIds,
+            Guid? binderId,
+            Guid? deckId,
+            DeckZoneType zoneType = DeckZoneType.Mainboard
+        )
+        {
+            var sourceIds = await _collection.GetSourceIdsAsync(allocationIds);
+
+            if (deckId.HasValue)
+                sourceIds.Add(deckId.Value);
+
+            var moved = await _collection.MoveAllocationsAsync(allocationIds, binderId, deckId, zoneType);
+
+            foreach (var sourceId in sourceIds)
+            {
+                await RefreshDeckPropertiesAsync(sourceId);
+            };
+
+            return moved;
+        }
+
+
+        public async Task<DeckDto> RefreshDeckPropertiesAsync(
+            Guid deckId
+        )
+        {
+            var oracleIds = await _collection.GetColorIdentityDefiningIdsAsync(deckId);
+            var colorIdentity = await _oracle.GetColorIdentityAsync(oracleIds);
+
+            var legalityStatus = false;
+
+            return await _collection.UpdateDeckPropertiesAsync(deckId, colorIdentity, legalityStatus);
+        }
+
     }
 
 
@@ -161,6 +202,8 @@ namespace Spellbox.Services
         public AllocationType Type { get; init; }
 
         public List<CollectionGroupedVariantDto> Variants { get; set; } = [];
+        public int Quantity => Variants.Sum(v => v.Quantity);
+        public decimal Price => Variants.Sum(v => v.Price);
     }
 
     public sealed class CollectionGroupedVariantDto
@@ -173,8 +216,8 @@ namespace Spellbox.Services
         public int? CardMarketProductId { get; init; } = null;
         
         public List<CollectionAllocationDto> Allocations { get; set; } = [];
-        public int Quantity =>
-            Allocations.Count;
+        public int Quantity => Allocations.Count;
+        public decimal Price => Allocations.Sum(a => a.Price ?? 0m);
     }
 
 

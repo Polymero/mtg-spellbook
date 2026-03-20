@@ -48,6 +48,8 @@ namespace Spellbox.Model
                 UpdatedAt = b.UpdatedAt,
                 Quantity = b.Cards.Count
             };
+
+        public override string ToString() => Name;
     }
 
     public sealed class EditableBinderDto

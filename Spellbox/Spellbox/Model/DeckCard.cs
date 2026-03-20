@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace Spellbox.Model
 {
+
     public class DeckCard
     {
         [Key]
@@ -12,8 +14,10 @@ namespace Spellbox.Model
 
         public Guid OracleId { get; set; }
         public Guid VariantId { get; set; }
-
         public int Quantity { get; set; }
+
+        public DateTime AddedAt { get; set; }
+        public DateTime AllocatedAt { get; set; }
     }
 
     public class DeckCardDto
@@ -24,4 +28,5 @@ namespace Spellbox.Model
         public Guid VariantId { get; init; }
         public int Quantity { get; init; }
     }
+    
 }

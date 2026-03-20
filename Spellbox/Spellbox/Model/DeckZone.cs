@@ -16,12 +16,6 @@ namespace Spellbox.Model
         public ICollection<CollectionAllocation> Allocations { get; set; } = [];
     }
 
-    public class DeckZoneDto
-    {
-        public Guid Id { get; init; }
-        public DeckZoneType ZoneType { get; init; }
-    }
-
     public enum DeckZoneType
     {
         Commanders = 0,

@@ -31,6 +31,9 @@
                       Immediate="true"
                       AutoGrow />
 
+        <MudTextField @bind-Value="_editDto.Sleeves"
+                      Label="Sleeves" />
+
         <MudTextField @bind-Value="_editDto.CoverImage"
                       Label="Cover Image" />
     </DialogContent>
@@ -71,6 +74,7 @@
 
 
 @inject CollectionService CollectionService
+@inject CrossService CrossService
 @inject ISnackbar Snackbar
 @code {
 
@@ -91,6 +95,7 @@
     private async Task SaveAsync()
     {
         var updatedDto = await CollectionService.UpdateDeckAsync(_editDto);
+        await CrossService.RefreshDeckPropertiesAsync(_editDto.Id);
         MudDialog.Close(DialogResult.Ok(new EditDeckCallback(
             updatedDto,
             false,

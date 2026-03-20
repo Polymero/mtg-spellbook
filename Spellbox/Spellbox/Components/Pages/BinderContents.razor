@@ -65,8 +65,6 @@ else
                   AlignItems="AlignItems.End"
                   StretchItems="StretchItems.None">
 
-            
-
             <MudContainer Style="width: 40%"
                           Class="ma-0 pa-0">
                 <MudStack Row="true"
@@ -138,6 +136,15 @@ else
 
     <MudPaper Class="pa-4"
               Outlined="true">
+
+        <MudText Typo="Typo.h6" 
+                 Align="Align.Center"
+                 Class="mt-n2">
+            <span style="font-size: 0.75em"><i>
+                @_filteredGroups.Sum(g => g.Quantity)
+                &nbsp; €@_filteredGroups.Sum(g => g.Price).ToString("0.00")
+            </i></span>
+        </MudText>
 
         @if (_displayMode == CardDisplayMode.Grid)
         {

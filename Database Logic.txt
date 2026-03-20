@@ -1,0 +1,34 @@
+
+
+OracleDbContext
+    > Oracles <CardOracle>
+        -> many .Faces <CardFace>
+        -> many .Variants <CardVariant>
+    > Faces <CardFace>
+        -> one .Oracle <CardOracle>
+    > Variants <CardVariant>
+        -> one .Oracle <CardOracle>
+    > SyncStates <ScryfallSyncState>
+
+
+CollectionDbContext
+    > Allocations <CollectionAllocation>
+        -> one .CollectionCard <CollectionCard>
+        -> one? .Binder <CollectionBinder>
+        -> one? .Deck <Deck>
+    > CollectionCard
+        -> many .Allocations <CollectionAllocation>
+    > CollectionBinder
+        -> many .Cards <CollectionAllocation>
+    > Deck
+        -> many .Snapshots <DeckSnapshot>
+    > DeckSnapshot
+        -> many .Zones <DeckZone>
+    > DeckZone
+        -> many .Cards <DeckCard>
+        -> many .Allocations <CollectionAllocation>
+
+
+CardMarketDbContext
+    > PriceCaches <CardMarketPriceCache>
+    > SyncStates <PricingSyncState>

@@ -15,6 +15,7 @@ namespace Spellbox.Model
         public List<string> Keywords { get; set; } = [];
         public decimal CMC { get; set; }
         public List<string> ColorIdentity { get; set; } = [];
+        public int Legalities { get; set; } = 0;
 
         public ICollection<CardFace> Faces { get; set; } = [];
         public ICollection<CardVariant> Variants { get; set; } = [];
@@ -28,6 +29,7 @@ namespace Spellbox.Model
         public List<string> Keywords { get; init; } = null!;
         public decimal CMC { get; init; }
         public List<string> ColorIdentity { get; init; } = null!;
+        public CardLegality Legalities { get; init; } = null!;
 
         public static Expression<Func<CardOracle, CardOracleDto>> FromEntity => o
             => new()
@@ -37,7 +39,8 @@ namespace Spellbox.Model
                 TypeLine = o.TypeLine,
                 Keywords = o.Keywords,
                 CMC = o.CMC,
-                ColorIdentity = o.ColorIdentity
+                ColorIdentity = o.ColorIdentity,
+                Legalities = CardLegality.FromInt(o.Legalities)
             };
     }
 

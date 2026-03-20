@@ -1,7 +1,5 @@
 using System.Collections.Immutable;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Spellbox.Contexts;
 using Spellbox.Model;
 
@@ -42,28 +40,13 @@ namespace Spellbox.Services
             {
                 (var oracleId, var variantId) = group.Key;
 
-                // Get existing collection card
-                var collectionCard = await db.CollectionCards.FirstOrDefaultAsync(c => 
-                    c.OracleId == oracleId && c.VariantId == variantId);
-
-                // Create entry if unavailable
-                if (collectionCard == null)
-                {
-                    collectionCard = new CollectionCard
-                    {
-                        Id = Guid.NewGuid(),
-                        OracleId = oracleId,
-                        VariantId = variantId
-                    };
-                    db.CollectionCards.Add(collectionCard);
-                }
-
                 foreach (var newAlloc in group)
                 {
                     db.Allocations.Add(new CollectionAllocation
                     {
                         Id = Guid.NewGuid(),
-                        CollectionCardId = collectionCard.Id,
+                        OracleId = oracleId,
+                        VariantId = variantId,
                         AllocationIndex = allocationIndex,
                         BinderId = binderId,
                         ZoneId = zoneId,
@@ -196,8 +179,8 @@ namespace Spellbox.Services
                             Id = a.Id,
                             ZoneId = a.ZoneId,
                             DeckName = a.Zone!.Snapshot.Deck.Name,
-                            OracleId = a.CollectionCard.OracleId,
-                            VariantId = a.CollectionCard.VariantId,
+                            OracleId = a.OracleId,
+                            VariantId = a.VariantId,
                             Finish = a.Finish,
                             Language = a.Language,
                             Condition = a.Condition,
@@ -294,7 +277,6 @@ namespace Spellbox.Services
             using var db = await _factory.CreateDbContextAsync();
 
             var alloc = await db.Allocations
-                .Include(a => a.CollectionCard)
                 .SingleAsync(a => a.Id == allocationId);
 
             if (alloc is null)
@@ -302,25 +284,17 @@ namespace Spellbox.Services
 
             db.Allocations.Remove(alloc);
 
-            var inUse = await db.Allocations
-                .AnyAsync(a => 
-                    a.CollectionCardId == alloc.CollectionCardId
-                    && a.Id != allocationId);
-
-            if (!inUse)
-                db.CollectionCards.Remove(alloc.CollectionCard);
-
             await db.SaveChangesAsync();
         }
 
         public async Task<List<Guid>> MoveAllocationsAsync(
             IEnumerable<Guid> allocationIds,
             Guid? binderId,
-            Guid? snapshotId,
-            DeckZoneType zoneType
+            Guid? deckId,
+            DeckZoneType zoneType = DeckZoneType.Mainboard
         )
         {
-            if (binderId.HasValue && snapshotId.HasValue)
+            if (binderId.HasValue && deckId.HasValue)
                 throw new InvalidOperationException();
                 
             using var db = await _factory.CreateDbContextAsync();
@@ -331,7 +305,7 @@ namespace Spellbox.Services
 
             var allocIndex = binderId.HasValue 
                 ? AllocationIndex.Binder 
-                : snapshotId.HasValue 
+                : deckId.HasValue 
                     ? AllocationIndex.Deck 
                     : AllocationIndex.Unassigned;
 
@@ -343,11 +317,11 @@ namespace Spellbox.Services
 
                 alloc.AllocationIndex = allocIndex;
                 alloc.BinderId = binderId;
-                alloc.ZoneId = snapshotId.HasValue
-                    ? db.Zones
-                        .Where(z => z.SnapshotId == snapshotId)
-                        .Single(z => z.ZoneType == zoneType)
-                        .Id
+                alloc.ZoneId = deckId.HasValue
+                    ? await db.Zones
+                        .Where(z => z.Snapshot.DeckId == deckId && z.Snapshot.IsActive && z.ZoneType == zoneType)
+                        .Select(z => z.Id)
+                        .SingleAsync()
                     : null;
 
                 alloc.AllocatedAt = DateTime.UtcNow;
@@ -484,6 +458,7 @@ namespace Spellbox.Services
                 Type = deck.Type,
                 Description = String.IsNullOrWhiteSpace(deck.Description) ? null : deck.Description.Trim(),
                 CoverImage = deck.CoverImage,
+                Sleeves = deck.Sleeves,
 
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -530,7 +505,8 @@ namespace Spellbox.Services
                     Name = d.Name,
                     Type = d.Type,
                     Description = d.Description,
-                    CoverImage = d.CoverImage
+                    CoverImage = d.CoverImage,
+                    Sleeves = d.Sleeves
                 })
                 .SingleAsync();
         }
@@ -549,6 +525,7 @@ namespace Spellbox.Services
             deck.Type = editDto.Type;
             deck.Description = editDto.Description?.Trim();
             deck.CoverImage = editDto.CoverImage;
+            deck.Sleeves = editDto.Sleeves?.Trim();
 
             deck.UpdatedAt = DateTime.UtcNow;
 
@@ -645,6 +622,100 @@ namespace Spellbox.Services
             await DeleteDeckAsync(deckDto.Id);
 
             return await GetBinderDetails(binder.Id);
+        }
+
+
+        public async Task<IEnumerable<Guid>> GetColorIdentityDefiningIdsAsync(
+            Guid deckId
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var oracleIds = new List<Guid>();
+
+            var activeSnapshotId = await db.Snapshots
+                .Where(s => s.DeckId == deckId && s.IsActive)
+                .Select(s => s.Id)
+                .SingleAsync();
+
+            var commandZoneId = await db.Zones
+                .Where(z => z.SnapshotId == activeSnapshotId && z.ZoneType == DeckZoneType.Commanders)
+                .Select(z => z.Id)
+                .SingleOrDefaultAsync();
+
+            if (commandZoneId != Guid.Empty)
+            {
+                oracleIds.AddRange(await db.Allocations
+                    .Where(a => a.ZoneId == commandZoneId)
+                    .Select(a => a.OracleId)
+                    .Distinct()
+                    .ToListAsync());
+
+                oracleIds.AddRange(await db.DeckCards
+                    .Where(c => c.ZoneId == commandZoneId)
+                    .Select(c => c.OracleId)
+                    .Distinct()
+                    .ToListAsync());
+            }
+
+            if (oracleIds.Count == 0)
+            {
+                var mainboardId = await db.Zones
+                    .Where(z => z.SnapshotId == activeSnapshotId && z.ZoneType == DeckZoneType.Mainboard)
+                    .Select(z => z.Id)
+                    .SingleAsync();
+
+                oracleIds.AddRange(await db.Allocations
+                    .Where(a => a.ZoneId == mainboardId)
+                    .Select(a => a.OracleId)
+                    .Distinct()
+                    .ToListAsync());
+
+                oracleIds.AddRange(await db.DeckCards
+                    .Where(c => c.ZoneId == mainboardId)
+                    .Select(c => c.OracleId)
+                    .Distinct()
+                    .ToListAsync());
+            }
+            
+            return oracleIds.Distinct();
+        }
+
+        public async Task<DeckDto> UpdateDeckPropertiesAsync(
+            Guid deckId,
+            IEnumerable<string> colorIdentity,
+            bool legalityStatus
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var deck = await db.Decks
+                .FindAsync(deckId);
+
+            if (deck is null)
+                return new DeckDto();
+
+            deck.ColorIdentity = colorIdentity.ToList();
+            deck.LegalityStatus = legalityStatus;
+
+            deck.UpdatedAt = DateTime.UtcNow;
+
+            await db.SaveChangesAsync();
+
+            return await GetDeckDetails(deck.Id);
+        }
+
+        public async Task<List<Guid>> GetSourceIdsAsync(
+            IEnumerable<Guid> allocationIds
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .Where(a => allocationIds.Contains(a.Id) && a.AllocationIndex == AllocationIndex.Deck)
+                .Select(a => a.Zone!.Snapshot.Deck.Id)
+                .Distinct()
+                .ToListAsync();
         }
 
     }
