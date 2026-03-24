@@ -1,0 +1,174 @@
+﻿
+
+<MudGrid>
+
+    <MudItem xs="5"
+             Class="my-4">
+
+        <MudImage Src=@(Viewer.Variant.Images.Front.Large) 
+                  Alt="IMG" 
+                  Fluid="true"
+                  Style="border-radius: 5%;" />
+
+    </MudItem>
+
+    <MudItem xs="7">
+
+        <MudText Typo="Typo.h4"
+                 Class="pt-8 pb-4"
+                 Color="Color.Primary">
+            <b>@Viewer.Oracle.Name</b>
+        </MudText>
+
+        <MudText Typo="Typo.h6"
+                 Class="mb-1">
+            Oracle Info
+        </MudText>
+
+        @foreach (var f in Viewer.Faces.OrderBy(f => f.Order))
+        {
+            <MudPaper Class="pa-2 mb-2" 
+                      Elevation="0" 
+                      Outlined="true">
+
+                <MudText Typo="Typo.subtitle1" 
+                         Class="">
+                    @f.Name (@SymbologyService.RenderSymbolText(f.ManaCost))
+                </MudText>
+
+                <MudDivider Class="my-1" />
+
+                <MudText Typo="Typo.caption">
+                    @f.TypeLine
+                </MudText>
+
+                <MudDivider Class="my-1" />
+
+                <MudText Typo="Typo.body2" 
+                         Class="my-2"
+                         Style="white-space: pre-line;">
+                    @SymbologyService.RenderSymbolText(f.OracleText)
+                </MudText>
+
+                @if (Viewer.Variant.FlavorTexts is not null)
+                {
+                    <MudText Typo="Typo.body2"
+                             Class="my-2"
+                             Style="white-space: pre-line;">
+                        <i>@Viewer.Variant.FlavorTexts[f.Order]</i>
+                    </MudText>
+                }
+
+                @if (!String.IsNullOrWhiteSpace(f.Power))
+                {
+                    <MudDivider Class="my-1" />
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Default"
+                             Label="true"
+                             Variant="Variant.Outlined">
+                        <MudText Typo="Typo.subtitle1">
+                            @String.Format("{0} / {1}", f.Power, f.Toughness)
+                        </MudText>
+                    </MudChip>
+                }
+                
+                @if (!String.IsNullOrWhiteSpace(f.Defense))
+                {
+                    <MudDivider Class="my-1" />
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Default"
+                             Label="true"
+                             Variant="Variant.Outlined">
+                        <MudText Typo="Typo.subtitle1">
+                            @f.Defense
+                        </MudText>
+                    </MudChip>
+                }
+
+                @if (!String.IsNullOrWhiteSpace(f.Loyalty))
+                {
+                    <MudDivider Class="my-1" />
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Default"
+                             Label="true"
+                             Variant="Variant.Outlined">
+                        <MudText Typo="Typo.subtitle1">
+                            @f.Loyalty
+                        </MudText>
+                    </MudChip>
+                }
+
+            </MudPaper>
+        }
+
+        <MudText Typo="Typo.h6"
+                 Class="mt-6">
+            Legalities
+        </MudText>
+
+        <MudPaper Class="pa-2 mb-1" 
+                  Elevation="0" 
+                  Outlined="false">
+
+            @foreach (var format in Viewer.Oracle.Legalities.GetType().GetProperties())
+            {
+                <MudChip T="string" 
+                         Variant="Variant.Outlined"
+                         Size="Size.Small"
+                         Label="true"
+                         Color="@_legalityColours[(int) @format.GetValue(Viewer.Oracle.Legalities)!]">
+                    @format.Name 
+                </MudChip>
+            }
+
+        </MudPaper>
+
+        <MudText Typo="Typo.h6"
+                 Class="mt-4">
+            Variant Info
+        </MudText>
+
+        <MudPaper Class="pa-2 mb-1" 
+                  Elevation="0" 
+                  Outlined="false">
+
+            <MudStack Row="true">
+
+                <MudStack Spacing="0" 
+                          AlignItems="AlignItems.End">
+                    <MudText><b>Set</b></MudText>
+                    <MudText><b>Rarity</b></MudText>
+                    <MudText><b>Released</b></MudText>
+                    <MudText><b>Artist</b></MudText>
+                </MudStack>
+
+                <MudStack Spacing="0">
+                    <MudText>@Viewer.Variant.SetName (@Viewer.Variant.SetCode.ToUpper() @Viewer.Variant.CollNum)</MudText>
+                    <MudText Style="text-transform: capitalize">@Viewer.Variant.Rarity</MudText>
+                    <MudText>@Viewer.Variant.Released</MudText>
+                    <MudText>@Viewer.Variant.Artist</MudText>
+                </MudStack>
+
+            </MudStack>
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+
+
+@inject SymbologyService SymbologyService
+@code {
+
+    [Parameter] public CardDetailsViewerDto Viewer { get; set; } = null!;
+
+    private List<MudBlazor.Color> _legalityColours = new List<MudBlazor.Color> {Color.Default, Color.Success, Color.Warning, Color.Error};
+
+}

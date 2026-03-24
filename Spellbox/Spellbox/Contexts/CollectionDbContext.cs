@@ -81,6 +81,8 @@ namespace Spellbox.Contexts
 
             entity.HasIndex(e => e.OracleId);
             entity.HasIndex(e => e.VariantId);
+            entity.HasIndex(e => e.BinderId);
+            entity.HasIndex(e => e.ZoneId);
 
             entity.ToTable(t =>
             {
@@ -172,10 +174,6 @@ namespace Spellbox.Contexts
 
             entity.Property(e => e.UpdatedAt)
                   .IsRequired();
-
-            entity.HasIndex(e => e.DeckId)
-                  .HasFilter("IsActive = 1")
-                  .IsUnique();
 
             entity.HasMany(e => e.Zones)
                   .WithOne(z => z.Snapshot)

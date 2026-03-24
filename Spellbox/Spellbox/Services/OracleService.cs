@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-
+using MudBlazor;
 using Spellbox.Contexts;
 using Spellbox.Model;
 
@@ -49,6 +49,9 @@ namespace Spellbox.Services
             return await db.Variants
                 .Where(v => v.OracleId == oracleId)
                 .OrderByDescending(v => v.Released)
+                .ThenBy(v => v.SetCode.Length)
+                .ThenBy(v => v.SetCode)
+                .ThenBy(v => v.CollNum.Length)
                 .ThenBy(v => v.CollNum)
                 .Select(CardVariantDto.FromEntity)
                 .ToListAsync();
@@ -87,6 +90,32 @@ namespace Spellbox.Services
                 .Where(v => targets.Contains(v.SetCode + v.CollNum))
                 .Select(CardVariantDto.FromEntity)
                 .ToDictionaryAsync(v => Tuple.Create(v.SetCode, v.CollNum));
+        }
+
+        public async Task<(CardOracleDto?, CardVariantDto?)> GetOracleVariantBySetCollAsync(
+            string setCode,
+            string collNum
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            var variantQuery = db.Variants
+                .Where(v => v.SetCode == setCode.ToLower() && v.CollNum == collNum.ToLower())
+                .AsQueryable();
+
+            if (!await variantQuery.AnyAsync())
+                return (null, null);
+
+            var variant = await variantQuery
+                .Select(CardVariantDto.FromEntity)
+                .SingleOrDefaultAsync();
+
+            var oracle = await variantQuery
+                .Select(v => v.Oracle)
+                .Select(CardOracleDto.FromEntity)
+                .SingleOrDefaultAsync();
+
+            return (oracle, variant);
         }
 
 
@@ -172,19 +201,24 @@ namespace Spellbox.Services
         }
 
 
-        public async Task<IEnumerable<string>> GetColorIdentityAsync(
+        public async Task<CardColours> GetColorIdentityAsync(
             IEnumerable<Guid> oracleIds
         )
         {
             using var db = await _factory.CreateDbContextAsync();
 
-            var tmp = await db.Oracles
+            var colorIdentities = await db.Oracles
                 .Where(o => oracleIds.Contains(o.OracleId))
                 .Select(o => o.ColorIdentity)
                 .Distinct()
                 .ToListAsync();
 
-            return tmp.SelectMany(x => x).Distinct();
+            var value = 0;
+
+            foreach (var colors in colorIdentities)
+                value |= colors;
+
+            return CardColours.FromInt(value);
         }
 
     }

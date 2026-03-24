@@ -114,13 +114,7 @@ namespace Spellbox.Services
 
             return await db.Symbols
                 .Where(s => !String.IsNullOrWhiteSpace(s.SvgData))
-                .Select(s => new SymbolDto
-                {
-                    Id = s.Id,
-                    Code = s.Code,
-                    SvgData = s.SvgData,
-                    Tip = s.Tip
-                })
+                .Select(SymbolDto.FromEntity)
                 .ToDictionaryAsync(s => s.Code, ct);
         }
 

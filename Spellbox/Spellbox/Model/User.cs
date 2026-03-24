@@ -15,7 +15,6 @@ namespace Spellbox.Model
         public DateTime UpdatedAt { get; set; }
     }
 
-
     public sealed class UserPricingSettings
     {
         [Key]
@@ -39,10 +38,7 @@ namespace Spellbox.Model
     {
         Low = 1,
         Avg = 2,
-        Trend = 3,
-        Avg1 = 4,
-        Avg7 = 5,
-        Avg30 = 6
+        Trend = 3
     }
 
 }

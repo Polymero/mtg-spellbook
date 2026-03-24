@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+
 
 namespace Spellbox.Model
 {
+
     public class Symbol
     {
         [Key]
@@ -18,5 +21,15 @@ namespace Spellbox.Model
         public string Code { get; init; } = null!;
         public string? SvgData { get; init; }
         public string? Tip { get; init; }
+
+        public static Expression<Func<Symbol, SymbolDto>> FromEntity => e
+            => new()
+            {
+                Id = e.Id,
+                Code = e.Code,
+                SvgData = e.SvgData,
+                Tip = e.Tip
+            };
     }
+
 }

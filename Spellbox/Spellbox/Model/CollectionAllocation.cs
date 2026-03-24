@@ -48,7 +48,6 @@ namespace Spellbox.Model
         public Guid? ZoneId { get; init; }
         public string? DeckName { get; init; }
 
-        // from CollectionCard
         public Guid OracleId { get; init; }
         public Guid VariantId { get; init; }
 
@@ -68,43 +67,49 @@ namespace Spellbox.Model
 
         public decimal? Price { get; set; }
 
-
-        public static Expression<Func<CollectionAllocation, CollectionAllocationDto>> FromCollectionEntity => a
+        public static Expression<Func<CollectionAllocation, CollectionAllocationDto>> FromCollectionEntity => e
             => new()
             {
-                Id = a.Id,
+                Id = e.Id,
                 Type = AllocationType.Collection,
-                BinderId = a.BinderId,
-                BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
-                ZoneId = a.ZoneId,
-                DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
-                OracleId = a.OracleId,
-                VariantId = a.VariantId,
-                Finish = a.Finish,
-                Language = a.Language,
-                Condition = a.Condition,
-                IsAltered = a.IsAltered,
-                IsMisprint = a.IsMisprint,
-                IsSigned = a.IsSigned,
-                IsStamped = a.IsStamped,
-                BoughtFor = a.BoughtFor,
-                AddedAt = a.AddedAt,
-                AllocatedAt = a.AllocatedAt
+
+                BinderId = e.BinderId,
+                BinderName = e.BinderId.HasValue ? e.Binder!.Name : null,
+                ZoneId = e.ZoneId,
+                DeckName = e.ZoneId.HasValue ? e.Zone!.Snapshot.Deck.Name : null,
+
+                OracleId = e.OracleId,
+                VariantId = e.VariantId,
+
+                Finish = e.Finish,
+                Language = e.Language,
+                Condition = e.Condition,
+
+                IsAltered = e.IsAltered,
+                IsMisprint = e.IsMisprint,
+                IsSigned = e.IsSigned,
+                IsStamped = e.IsStamped,
+
+                BoughtFor = e.BoughtFor,
+
+                AddedAt = e.AddedAt,
+                AllocatedAt = e.AllocatedAt
             };
 
-        public static Expression<Func<DeckCard, CollectionAllocationDto>> FromGhostEntity => a
+        public static Expression<Func<DeckCard, CollectionAllocationDto>> FromGhostEntity => e
             => new()
             {
+                Id = e.Id,
                 Type = AllocationType.Ghost,
-                // BinderId = a.BinderId,
-                // BinderName = a.BinderId.HasValue ? a.Binder!.Name : null,
-                ZoneId = a.ZoneId,
-                // DeckName = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Name : null,
-                DeckName = a.Zone.Snapshot.Deck.Name,
-                OracleId = a.OracleId,
-                VariantId = a.VariantId,
-                AddedAt = a.AddedAt,
-                AllocatedAt = a.AllocatedAt
+
+                ZoneId = e.ZoneId,
+                DeckName = e.Zone.Snapshot.Deck.Name,
+
+                OracleId = e.OracleId,
+                VariantId = e.VariantId,
+
+                AddedAt = e.AddedAt,
+                AllocatedAt = e.AllocatedAt
             };
     }
 
@@ -131,24 +136,29 @@ namespace Spellbox.Model
         public Guid? SnapshotId { get; set; }
         public Guid? ZoneId { get; set; }
 
-        public static Expression<Func<CollectionAllocation, EditableAllocationDto>> FromEntity => a
+        public static Expression<Func<CollectionAllocation, EditableAllocationDto>> FromEntity => e
             => new()
             {
-                AllocationId = a.Id,
-                OracleId = a.OracleId,
-                VariantId = a.VariantId,
-                Finish = a.Finish,
-                Language = a.Language,
-                Condition = a.Condition,
-                IsAltered = a.IsAltered,
-                IsMisprint = a.IsMisprint,
-                IsSigned = a.IsSigned,
-                IsStamped = a.IsStamped,
-                BoughtFor = a.BoughtFor,
-                BinderId = a.BinderId,
-                DeckId = a.ZoneId.HasValue ? a.Zone!.Snapshot.Deck.Id : null,
-                SnapshotId = a.ZoneId.HasValue ? a.Zone!.Snapshot.Id : null,
-                ZoneId = a.ZoneId
+                AllocationId = e.Id,
+
+                OracleId = e.OracleId,
+                VariantId = e.VariantId,
+
+                Finish = e.Finish,
+                Language = e.Language,
+                Condition = e.Condition,
+
+                IsAltered = e.IsAltered,
+                IsMisprint = e.IsMisprint,
+                IsSigned = e.IsSigned,
+                IsStamped = e.IsStamped,
+
+                BoughtFor = e.BoughtFor,
+
+                BinderId = e.BinderId,
+                DeckId = e.ZoneId.HasValue ? e.Zone!.Snapshot.Deck.Id : null,
+                SnapshotId = e.ZoneId.HasValue ? e.Zone!.Snapshot.Id : null,
+                ZoneId = e.ZoneId
             };
     }
 
@@ -228,4 +238,5 @@ namespace Spellbox.Model
         Collection = 0,
         Ghost = 1
     }
+    
 }

@@ -73,17 +73,12 @@
             }
         </MudTd>
         <MudTd>
-            @if (r.Allocation.Finish == CardFinish.NonFoil)
+            @switch (r.Allocation.Finish)
             {
-                <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
-            }
-            else if (r.Allocation.Finish == CardFinish.Foil)
-            {
-                <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
-            }
-            else
-            {
-                @r.Allocation.Finish
+                case CardFinish.Unknown: <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                case CardFinish.NonFoil: <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" /> break;
+                case CardFinish.Foil: <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" /> break;
+                default: @r.Allocation.Finish.ToString() break;
             }
         </MudTd>
         <MudTd>
@@ -92,45 +87,21 @@
         <MudTd>
             @switch (r.Allocation.Condition)
             {
-                case CardCondition.Mint:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>MT</b></MudChip>
-                    break;
-                case CardCondition.NearMint:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>NM</b></MudChip>
-                    break;
-                case CardCondition.Excellent:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>EX</b></MudChip>
-                    break;
-                case CardCondition.Good:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>GD</b></MudChip>
-                    break;
-                case CardCondition.LightPlayed:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>LP</b></MudChip>
-                    break;
-                case CardCondition.Played:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>PL</b></MudChip>
-                    break;
-                case CardCondition.Poor:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>PO</b></MudChip>
-                    break;
-                default:
-                    <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip>
-                    break;
+                case CardCondition.Mint: <MudChip T="string" Label="true" Size="Size.Small"><b>MT</b></MudChip> break;
+                case CardCondition.NearMint: <MudChip T="string" Label="true" Size="Size.Small"><b>NM</b></MudChip> break;
+                case CardCondition.Excellent: <MudChip T="string" Label="true" Size="Size.Small"><b>EX</b></MudChip> break;
+                case CardCondition.Good: <MudChip T="string" Label="true" Size="Size.Small"><b>GD</b></MudChip> break;
+                case CardCondition.LightPlayed: <MudChip T="string" Label="true" Size="Size.Small"><b>LP</b></MudChip> break;
+                case CardCondition.Played: <MudChip T="string" Label="true" Size="Size.Small"><b>PL</b></MudChip> break;
+                case CardCondition.Poor: <MudChip T="string" Label="true" Size="Size.Small"><b>PO</b></MudChip> break;
+                default: <MudChip T="string" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
             }
         </MudTd>
         <MudTd>
-            @if (r.Allocation.IsAltered)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
-            }
-            @if (r.Allocation.IsSigned)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" />
-            }
-            @if (r.Allocation.IsStamped)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
-            }
+            @if (r.Allocation.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+            @if (r.Allocation.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+            @if (r.Allocation.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
+            @if (r.Allocation.IsMisprint) { <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Title="Misprint" /> }
         </MudTd>
         <MudTd>
             @if (r.Allocation.BoughtFor.HasValue)

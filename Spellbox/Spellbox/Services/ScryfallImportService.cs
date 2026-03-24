@@ -293,11 +293,10 @@ namespace Spellbox.Services
 
                 ColorIdentity = card.TryGetProperty("color_identity", out var colorIdentity) &&
                                 colorIdentity.ValueKind == JsonValueKind.Array
-                    ? colorIdentity.EnumerateArray()
+                    ? CardColours.FromEnumerable(colorIdentity.EnumerateArray()
                         .Select(c => c.GetString())
-                        .Where(c => !string.IsNullOrWhiteSpace(c))
-                        .ToList()!
-                    : new List<string>()
+                        .Where(c => !String.IsNullOrWhiteSpace(c))!).ToInt()
+                    : 0
             };
 
             if (card.TryGetProperty("legalities", out var legalities) &&

@@ -99,35 +99,42 @@ else
                         </MudSelect>
                     </MudContainer>
 
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
+                    <MudToggleIconButton Icon="@SymbologyService.RenderSymbolIcon("{C}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["C"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("C"))" />
+                            Style=@(_CIF.C ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.C"
+                            @bind-Value:after="ApplyFilter" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
                             Size="Size.Large"
-                            Style=@(_CIF["W"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("W"))" />
+                            Style=@(_CIF.W ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.W"
+                            @bind-Value:after="ApplyFilter" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["U"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("U"))" />
+                            Style=@(_CIF.U ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.U"
+                            @bind-Value:after="ApplyFilter" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["B"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("B"))" />
+                            Style=@(_CIF.B ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.B"
+                            @bind-Value:after="ApplyFilter" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["R"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("R"))" />
+                            Style=@(_CIF.R ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.R"
+                            @bind-Value:after="ApplyFilter" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
                             Size="Size.Large"
-                            Style=@(_CIF["G"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("G"))" />
+                            Style=@(_CIF.G ? "" : "opacity: 0.3")
+                            @bind-Value="_CIF.G"
+                            @bind-Value:after="ApplyFilter" />>
+
                 </MudStack>
             </MudContainer>
 
@@ -186,10 +193,11 @@ else
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
-    private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
+    @* private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
     {
         {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
-    };
+    }; *@
+    private CardColours _CIF = new CardColours();
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
     private string _search = "";
 
@@ -328,53 +336,44 @@ else
         Contain
     }
 
-    private void ToggleCIF(string colour)
-    {
-        _CIF[colour] = !_CIF[colour];
-
-        ApplyFilter();
-    }
-
     private void ApplyFilter()
     {
         _filteredGroups = _groups;
+        var _cif = _CIF.ToInt();
 
-        if (_CIF.Values.Any(v => v))
+        if (_cif != 0)
         {
-            var colours = _CIF
-                .Where(kvp => kvp.Value)
-                .Select(kvp => kvp.Key);
-
             if (_CIFMode == ColorIdentityFilterMode.AtMost)
             {
                 _filteredGroups = _filteredGroups
-                    .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c)))
+                    .Where(oracle => ((oracle.ColorIdentity | _cif) ^ _cif) == 0 )
                     .ToList();
 
-                if (!_CIF["C"])
+                if (!_CIF.C)
                     _filteredGroups = _filteredGroups
-                        .Where(oracle => oracle.ColorIdentity.Count > 0)
+                        .Where(oracle => oracle.ColorIdentity > 0)
                         .ToList();
             }
 
             if (_CIFMode == ColorIdentityFilterMode.Equals)
             {
-                if (colours.Count() == 1 && colours.First() == "C")
+                if (_cif == 16)
                     _filteredGroups = _filteredGroups
-                        .Where(oracle => oracle.ColorIdentity.Count == 0)
+                        .Where(oracle => oracle.ColorIdentity == 0)
                         .ToList();
                 else
                     _filteredGroups = _filteredGroups
-                        .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c))
-                            && oracle.ColorIdentity.Count == colours.Count())
+                        .Where(oracle => oracle.ColorIdentity == _cif)
                         .ToList();
             }
 
             if (_CIFMode == ColorIdentityFilterMode.Contain)
             {
                 _filteredGroups = _filteredGroups
-                    .Where(oracle => colours.Where(c => c != "C").All(c => oracle.ColorIdentity.Contains(c))
-                        || (_CIF["C"] ? oracle.ColorIdentity.Count == 0 : false))
+                    .Where(oracle => 
+                        (oracle.ColorIdentity & _cif) == (_cif & 47) ||
+                        _CIF.C ? oracle.ColorIdentity == 0 : false
+                    )
                     .ToList();
             }
         }

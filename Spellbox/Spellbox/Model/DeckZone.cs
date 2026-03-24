@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace Spellbox.Model
 {
+    
     public class DeckZone
     {
         [Key]

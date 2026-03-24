@@ -48,60 +48,26 @@ namespace Spellbox.Model
 
         public int? CardMarketProductId { get; set; }
 
-        public static Expression<Func<CardVariant, CardVariantDto>> FromEntity => v
+        public static Expression<Func<CardVariant, CardVariantDto>> FromEntity => e
             => new()
             {
-                ScryfallId = v.ScryfallId,
-                OracleId = v.OracleId,
-                Name = v.SearchName,
-                SetName = v.SetName,
-                SetCode = v.SetCode,
-                CollNum = v.CollNum,
-                Finishes = v.Finishes,
-                Artist = v.Artist,
-                Released = v.Released,
-                Rarity = v.Rarity,
-                FlavorTexts = v.FlavorTexts,
-                Images = new CardImage(v.ScryfallId, v.IsReversed)
+                ScryfallId = e.ScryfallId,
+                OracleId = e.OracleId,
+
+                Name = e.SearchName,
+                SetName = e.SetName,
+                SetCode = e.SetCode,
+                CollNum = e.CollNum,
+                Finishes = e.Finishes,
+                Artist = e.Artist,
+                Released = e.Released,
+                Rarity = e.Rarity,
+                FlavorTexts = e.FlavorTexts,
+
+                Images = new CardImage(e.ScryfallId, e.IsReversed)
             };
-    }
 
-    public class CardImage
-    {
-        private static string ScryfallId = null!;
-        public Side Front;
-        public Side Back;
-
-        public CardImage(Guid scryfallId, bool isReversed)
-        {
-            ScryfallId = scryfallId.ToString();
-
-            if (isReversed)
-                ScryfallId = ScryfallId[..^2] + ScryfallId[^1] + ScryfallId[^2];
-
-            Front = new(ScryfallId, isReversed ? "back" : "front");
-            Back = new(ScryfallId, isReversed ? "front" : "back");
-        }
-
-        public class Side(
-            string ScryfallId,
-            string side
-        )
-        {
-            readonly string uri = String.Join("/", [
-                "https://cards.scryfall.io",
-                "{0}",
-                side,
-                ScryfallId[0],
-                ScryfallId[1],
-                ScryfallId
-            ]) + ".jpg";
-
-            public string Small => String.Format(uri, "small");
-            public string Normal => String.Format(uri, "normal");
-            public string Large => String.Format(uri, "large");
-            public string ArtCrop => String.Format(uri, "art_crop");
-        }
+        public override string ToString() => $"{SetCode.ToUpper()} ({CollNum.ToUpper()}) - {SetName}";
     }
 
 }

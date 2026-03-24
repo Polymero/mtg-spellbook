@@ -294,14 +294,11 @@
 @code {
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public Guid? VariantId { get; set; } = null;
-    [Parameter]
-    public List<CollectionAllocationDto> Allocations { get; set; } = [];
-    [Parameter]
-    public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
+    [Parameter] public Guid? VariantId { get; set; } = null;
+    [Parameter] public List<CollectionAllocationDto> Allocations { get; set; } = [];
+    [Parameter] public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
 
 
     private CardDetailsViewerDto _viewerDto = new();

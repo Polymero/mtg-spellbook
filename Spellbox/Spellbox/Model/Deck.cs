@@ -16,7 +16,7 @@ namespace Spellbox.Model
         public string? CoverImage { get; set; }
         public string? Sleeves { get; set; }
 
-        public List<string> ColorIdentity { get; set; } = [];
+        public int ColorIdentity { get; set; }
         public bool LegalityStatus { get; set; } = false;
 
         public DateTime CreatedAt { get; set; }
@@ -24,7 +24,6 @@ namespace Spellbox.Model
 
         public ICollection<DeckSnapshot> Snapshots { get; set; } = [];
     }
-
 
     public sealed class DeckDto
     {
@@ -35,7 +34,7 @@ namespace Spellbox.Model
         public string? CoverImage { get; init; }
         public string? Sleeves { get; init; }
 
-        public List<string> ColorIdentity { get; init; } = [];
+        public CardColours ColorIdentity { get; init; } = null!;
         public bool LegalityStatus { get; init; } = false;
 
         public DateTime CreatedAt { get; init; }
@@ -51,43 +50,46 @@ namespace Spellbox.Model
         public decimal PriceValue { get; set; }
         public int PriceMissing { get; set; }
 
-        public static Expression<Func<Deck, DeckDto>> FromEntity => d
+        public static Expression<Func<Deck, DeckDto>> FromEntity => e
             => new()
             {
-                Id = d.Id,
+                Id = e.Id,
 
-                Name = d.Name,
-                Type = d.Type,
-                Description = d.Description,
-                CoverImage = d.CoverImage,
-                Sleeves = d.Sleeves,
+                Name = e.Name,
+                Type = e.Type,
+                Description = e.Description,
+                CoverImage = e.CoverImage,
+                Sleeves = e.Sleeves,
 
-                ColorIdentity = d.ColorIdentity,
-                LegalityStatus = d.LegalityStatus,
+                ColorIdentity = CardColours.FromInt(e.ColorIdentity),
+                LegalityStatus = e.LegalityStatus,
 
-                CreatedAt = d.CreatedAt,
-                UpdatedAt = d.UpdatedAt,
+                CreatedAt = e.CreatedAt,
+                UpdatedAt = e.UpdatedAt,
 
-                ActiveSnapshotId = d.Snapshots
+                ActiveSnapshotId = e.Snapshots
                     .Single(s => s.IsActive)
                     .Id,
-                ActiveMainboardId = d.Snapshots
+                ActiveMainboardId = e.Snapshots
                     .First(s => s.IsActive)
                     .Zones
                     .First(z => z.ZoneType == DeckZoneType.Mainboard)
                     .Id,
 
-                Quantity = d.Snapshots
-                    .First(s => s.IsActive)
-                    .Zones
-                    .Sum(z => z.Allocations.Count) +
-                    d.Snapshots
+                Quantity = (
+                    e.Snapshots
+                        .First(s => s.IsActive)
+                        .Zones
+                        .Sum(z => z.Allocations.Count) +
+                    e.Snapshots
                         .First(s => s.IsActive)
                         .Zones
                         .Sum(z => z.Cards.Count)
+                )
             };
-    }
 
+        public override string ToString() => Name;
+    }
 
     public sealed class EditableDeckDto
     {
@@ -99,25 +101,36 @@ namespace Spellbox.Model
         public string? CoverImage { get; set; }
         public string? Sleeves { get; set; }
 
-        public static Expression<Func<Deck, EditableDeckDto>> FromEntity => d
+        public static Expression<Func<Deck, EditableDeckDto>> FromEntity => e
             => new()
             {
-                Id = d.Id,
+                Id = e.Id,
 
-                Name = d.Name,
-                Type = d.Type,
-                Description = d.Description,
-                CoverImage = d.CoverImage,
-                Sleeves = d.Sleeves
+                Name = e.Name,
+                Type = e.Type,
+                Description = e.Description,
+                CoverImage = e.CoverImage,
+                Sleeves = e.Sleeves
             };
     }
-
 
     public enum DeckType
     {
         Unassigned = 0,
-        Commander = 1,
-        Oathbreaker = 2
+        Standard = 1,
+        Modern = 2,
+        Pioneer = 3,
+        Legacy = 4,
+        Vintage = 5,
+        Pauper = 6,
+        Penny = 7,
+        Commander = 8,
+        Oathbreaker = 9,
+        PauperCommander = 10,
+        DuelCommander = 11,
+        OldSchool = 12,
+        PreModern = 13,
+        PreDH = 14
     }
 
 }

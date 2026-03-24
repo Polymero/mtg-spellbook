@@ -54,11 +54,10 @@ namespace Spellbox.Contexts
             entity.Property(e => e.CMC)
                   .IsRequired();
 
+            entity.Property(e => e.Colors)
+                  .IsRequired();
+
             entity.Property(e => e.ColorIdentity)
-                  .HasConversion(
-                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
-                        e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
-                  )
                   .IsRequired();
 
             entity.Property(e => e.Legalities)
@@ -93,10 +92,7 @@ namespace Spellbox.Contexts
             entity.Property(e => e.TypeLine)
                   .IsRequired();
 
-            entity.HasIndex(e => new { e.OracleId, e.Order})
-                  .IsUnique();
-
-            entity.HasIndex(x => x.OracleId);
+            entity.HasIndex(e => e.OracleId);
 
             entity.HasOne(e => e.Oracle)
                   .WithMany(o => o.Faces)
@@ -145,14 +141,13 @@ namespace Spellbox.Contexts
                         e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
                   );
 
-            entity.HasIndex(e => e.SearchName);
+            entity.Property(e => e.SearchName)
+                  .IsRequired();
 
             entity.HasIndex(e => new { e.SetCode, e.CollNum })
                   .IsUnique();
 
             entity.HasIndex(e => e.OracleId);
-
-            entity.HasIndex(e => e.CardMarketProductId);
 
             entity.HasOne(e => e.Oracle)
                   .WithMany(o => o.Variants)

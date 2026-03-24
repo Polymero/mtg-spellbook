@@ -30,7 +30,6 @@ namespace Spellbox.Contexts
     {
         public void Configure(EntityTypeBuilder<CardMarketPriceCache> entity)
         {
-
             entity.HasKey(e => e.ProductId);
 
             entity.Property(e => e.Low)
@@ -50,7 +49,6 @@ namespace Spellbox.Contexts
 
             entity.Property(e => e.FoilTrend)
                   .HasColumnType("decimal(10,2)");
-
         }
     }
 
@@ -58,12 +56,10 @@ namespace Spellbox.Contexts
     {
         public void Configure(EntityTypeBuilder<CardMarketProductId> entity)
         {
-            
             entity.HasKey(e => e.VariantId);
 
             entity.Property(e => e.ProductId)
                 .IsRequired();
-
         }
     }
 
@@ -71,9 +67,7 @@ namespace Spellbox.Contexts
     {
         public void Configure(EntityTypeBuilder<PricingSyncState> entity)
         {
-
             entity.HasKey(e => e.Key);
-            
         }
     }
 

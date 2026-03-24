@@ -21,16 +21,17 @@
 
                     <!-- Card oracle search by name -->
                     <MudContainer Class="pa-0" 
-                                      Style="width: 100%">
+                                  Style="width: 100%">
                         <MudAutocomplete T="CardOracleDto"
                                         Label="Search..."
                                         Dense="true"
                                         Clearable="true"
+                                        ToStringFunc="@(o => o is not null ? o.Name : "")"
                                         SearchFunc="OracleSearchFuncAsync"
-                                        ToStringFunc="o => o.Name"
                                         ResetValueOnEmptyText="true"
                                         OnClearButtonClick="ClearSelection"
-                                        ValueChanged="OracleSelectFuncAsync">
+                                        @bind-Value:after="@(() => OracleSelectFuncAsync(_selectedOracle))"
+                                        @bind-Value="_selectedOracle">
 
                             <ItemTemplate Context="o">
                                 <div class="d-flex flex-column">
@@ -80,7 +81,9 @@
                     <MudSelect T="CardVariantDto"
                             Label="Select variant..."
                             Dense="true"
-                            ValueChanged="VariantSelectFuncAsync">
+                            @bind-Value:after="@(() => VariantSelectFuncAsync(_selectedVariant))"
+                            @bind-Value="_selectedVariant"
+                            Immediate>
                         @foreach (var v in _availableVariants)
                         {
                             <MudSelectItem Value="v">
@@ -96,14 +99,14 @@
                       Class="mx-n4 pa-4">
 
                 <!-- Card info viewer -->
-                @if (_selectedVariant is not null)
+                @if (_viewer is not null)
                 {
                     <MudGrid Class="mt-n6">
 
                         <!-- Card image -->
                         <MudItem xs="5"
                                 Class="my-auto">
-                            <MudImage Src=@(_selectedVariant.Images.Front.Large) 
+                            <MudImage Src=@(_viewer.Images.Front.Large) 
                                     Alt="IMG" 
                                     Fluid="true"
                                     Style="border-radius: 5%;"/>
@@ -117,7 +120,7 @@
                                 Info
                             </MudText>
 
-                            @foreach (var f in _selectedVariant!.Faces.OrderBy(f => f.Order))
+                            @foreach (var f in _viewer.Faces.OrderBy(f => f.Order))
                             {
                                 <MudPaper Class="pa-2 mb-2" 
                                         Elevation="0" 
@@ -146,12 +149,12 @@
                                     </MudText>
 
                                     <!-- Flavor text, if any -->
-                                    @if (_selectedVariant.FlavorTexts is not null)
+                                    @if (_viewer.FlavorTexts is not null)
                                     {
                                         <MudText Typo="Typo.body2"
                                                 Class="my-2"
                                                 Style="white-space: pre-line;">
-                                            <i>@_selectedVariant.FlavorTexts[f.Order]</i>
+                                            <i>@_viewer.FlavorTexts[f.Order]</i>
                                         </MudText>
                                     }
 
@@ -197,23 +200,23 @@
 
                                 <!-- Set -->
                                 <MudText Typo="Typo.body1">
-                                    <b>Set:</b> @_selectedVariant.SetName (@_selectedVariant.SetCode.ToUpper() @_selectedVariant.CollNum)
+                                    <b>Set:</b> @_viewer.SetName (@_viewer.SetCode.ToUpper() @_viewer.CollNum)
                                 </MudText>
 
                                 <!-- Rarity -->
                                 <MudText Typo="Typo.body1"
                                         Style="text-transform: capitalize">
-                                    <b>Rarity:</b> @_selectedVariant.Rarity
+                                    <b>Rarity:</b> @_viewer.Rarity
                                 </MudText>
 
                                 <!-- Release date -->
                                 <MudText Typo="Typo.body1">
-                                    <b>Released:</b> @_selectedVariant.Released
+                                    <b>Released:</b> @_viewer.Released
                                 </MudText>
 
                                 <!-- Artist -->
                                 <MudText Typo="Typo.body1">
-                                    <b>Artist:</b> @_selectedVariant.Artist
+                                    <b>Artist:</b> @_viewer.Artist
                                 </MudText>
 
                             </MudPaper>
@@ -327,33 +330,15 @@
                       Elevation="0">
             
                 <HeaderContent>
-                    <MudTh>
-                        Name
-                    </MudTh>
-                    <MudTh>
-                        Set Code
-                    </MudTh>
-                    <MudTh>
-                        Finish
-                    </MudTh>
-                    <MudTh>
-                        Language
-                    </MudTh>
-                    <MudTh>
-                        Condition
-                    </MudTh>
-                    <MudTh>
-                        Flags
-                    </MudTh>
-                    <MudTh>
-                        Bought
-                    </MudTh>
-                    <MudTh>
-                        Price
-                    </MudTh>
-                    <MudTh>
-                    
-                    </MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Set Code</MudTh>
+                    <MudTh>Finish</MudTh>
+                    <MudTh>Language</MudTh>
+                    <MudTh>Condition</MudTh>
+                    <MudTh>Flags</MudTh>
+                    <MudTh>Bought</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh></MudTh>
                 </HeaderContent>
 
                 <RowTemplate Context="a">
@@ -364,17 +349,11 @@
                         @a.SetCode.ToUpper() - @a.CollNum
                     </MudTh>
                     <MudTh>
-                        @if (a.Finish == CardFinish.NonFoil)
+                        @switch (a.Finish)
                         {
-                            <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" />
-                        }
-                        else if (a.Finish == CardFinish.Foil)
-                        {
-                            <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" />
-                        }
-                        else
-                        {
-                            @a.Finish
+                            case CardFinish.NonFoil: <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Title="NonFoil" /> break;
+                            case CardFinish.Foil: <MudIcon Icon="@Icons.Material.Rounded.Star" Title="Foil" /> break;
+                            default: <MudText>@a.Finish</MudText> break;
                         }
                     </MudTh>
                     <MudTh>
@@ -384,18 +363,9 @@
                         @a.Condition
                     </MudTh>
                     <MudTh>
-                        @if (a.IsAltered)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" />
-                        }
-                        @if (a.IsSigned)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" />
-                        }
-                        @if (a.IsStamped)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" />
-                        }
+                        @if (a.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+                        @if (a.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+                        @if (a.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
                     </MudTh>
                     <MudTh>
                         @if (a.BoughtFor.HasValue) 
@@ -496,7 +466,6 @@
 
 
 @inject CollectionService CollectionService
-@inject CrossService CrossService
 @inject OracleService OracleService
 @inject IPricingRouter PricingRouter
 @inject ISnackbar Snackbar
@@ -504,8 +473,7 @@
 @code {
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
-
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     // UI Caches
     private IReadOnlyList<CollectionBinderDto> BinderCache = null!;
@@ -517,8 +485,10 @@
     private string? _setCode;
     private string? _collNum;
 
+    private CardOracleDto? _selectedOracle;
+    private CardVariantDto? _selectedVariant;
     private IEnumerable<CardVariantDto>? _availableVariants;
-    private CardViewerDto? _selectedVariant;
+    private CardViewerDto? _viewer;
 
     private NewAllocationDto _newAlloc = new NewAllocationDto();
     private int _quantity = 1;
@@ -565,14 +535,25 @@
             
         _availableVariants = await OracleService.GetVariantsByOracleIdAsync(oracleDto.OracleId);
 
-        _selectedVariant = await OracleService.GetCardInfoByVariantIdAsync(_availableVariants.First().ScryfallId);
+        await VariantSelectFuncAsync(_availableVariants.First());
     }
 
-    private async void VariantSelectFuncAsync(CardVariantDto variantDto)
+    private async Task VariantSelectFuncAsync(CardVariantDto variantDto)
     {
-        _selectedVariant = await OracleService.GetCardInfoByVariantIdAsync(variantDto.ScryfallId);
+        if (_viewer is null || (variantDto.ScryfallId != _viewer.ScryfallId))
+        {
+            _viewer = await OracleService.GetCardInfoByVariantIdAsync(variantDto.ScryfallId);
 
+            _setCode = null;
+            _collNum = null;
+
+            StateHasChanged();
+        }
+
+        _selectedVariant = variantDto;
         _newAlloc.Finish = GetAvailableFinishes().First();
+        
+        StateHasChanged();
     }
 
     private async Task LookupVariantBySetCollAsync()
@@ -580,17 +561,20 @@
         if (_setCode is null || _collNum is null)
             return;
 
-        _selectedVariant = await OracleService.GetCardViewerBySetCollAsync(_setCode, _collNum);
+        _viewer = await OracleService.GetCardViewerBySetCollAsync(_setCode, _collNum);
 
-        if (_selectedVariant is null)
+        if (_viewer is null)
         {
             Snackbar.Add("No matching card variant was found.", Severity.Warning);
             return;
         }
 
-        _newAlloc.Finish = GetAvailableFinishes().First();
+        _selectedOracle = null;
 
-        _availableVariants = await OracleService.GetVariantsByOracleIdAsync(_selectedVariant.OracleId);
+        _availableVariants = await OracleService.GetVariantsByOracleIdAsync(_viewer.OracleId);
+
+        await VariantSelectFuncAsync(_availableVariants
+            .Single(v => v.SetCode == _viewer.SetCode && v.CollNum == _viewer.CollNum));
     }
 
     private IEnumerable<CardFinish> GetAvailableFinishes()
@@ -610,7 +594,9 @@
         _setCode = null;
         _collNum = null;
         _availableVariants = null;
+        _selectedOracle = null;
         _selectedVariant = null;
+        _viewer = null;
         _newAlloc = new NewAllocationDto();
         _quantity = 1;
     }

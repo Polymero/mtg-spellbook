@@ -30,23 +30,23 @@ namespace Spellbox.Model
         public DateTime CreatedAt { get; init; }
         public DateTime UpdatedAt { get; init; }
 
-        // CollectionService
         public int Quantity { get; init; }
 
-        // PricingService
         public decimal PriceValue { get; set; }
         public int PriceMissing { get; set; }
 
-        public static Expression<Func<CollectionBinder, CollectionBinderDto>> FromEntity => b
+        public static Expression<Func<CollectionBinder, CollectionBinderDto>> FromEntity => e
             => new()
             {
-                Id = b.Id,
-                Name = b.Name,
-                Description = b.Description,
-                CoverImage = b.CoverImage,
-                CreatedAt = b.CreatedAt,
-                UpdatedAt = b.UpdatedAt,
-                Quantity = b.Cards.Count
+                Id = e.Id,
+                Name = e.Name,
+                Description = e.Description,
+                CoverImage = e.CoverImage,
+
+                CreatedAt = e.CreatedAt,
+                UpdatedAt = e.UpdatedAt,
+
+                Quantity = e.Cards.Count
             };
 
         public override string ToString() => Name;
@@ -60,13 +60,15 @@ namespace Spellbox.Model
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
 
-        public static Expression<Func<CollectionBinder, EditableBinderDto>> FromEntity => b
+        public static Expression<Func<CollectionBinder, EditableBinderDto>> FromEntity => e
             => new()
             {
-                Id = b.Id,
-                Name = b.Name,
-                Description = b.Description,
-                CoverImage = b.CoverImage
+                Id = e.Id,
+
+                Name = e.Name,
+                Description = e.Description,
+                CoverImage = e.CoverImage
             };
     }
+    
 }

@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace Spellbox.Model
 {
+
     public class DeckSnapshot
     {
         [Key]
@@ -19,4 +21,5 @@ namespace Spellbox.Model
 
         public ICollection<DeckZone> Zones { get; set; } = [];
     }
+    
 }

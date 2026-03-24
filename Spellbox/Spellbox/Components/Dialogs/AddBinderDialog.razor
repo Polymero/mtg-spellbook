@@ -17,8 +17,7 @@
         <MudTextField @bind-Value="_newBinder.Description" 
                       Label="Description" 
                       Lines="3"
-                      Immediate="true"
-                      AutoGrow />
+                      Immediate="true" />
 
         <MudTextField @bind-Value="_newBinder.CoverImage"
                       Label="Cover Image" />
@@ -44,7 +43,7 @@
 @code {
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = null!;
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     private EditableBinderDto _newBinder = new();
 

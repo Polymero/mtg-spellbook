@@ -1,0 +1,172 @@
+﻿
+
+<MudStack Row="true" 
+          Justify="Justify.SpaceEvenly"
+          AlignItems="AlignItems.End"
+          StretchItems="StretchItems.Start">
+
+    <MudContainer Class="pa-0" 
+                  Style="width: 100%">
+        <MudAutocomplete T="CardOracleDto"
+                         Label="Search..."
+                         Clearable="true"
+                         Dense="true"
+                         ToStringFunc="@(o => o is not null ? o.Name : "")"
+                         SearchFunc="OracleSearchFuncAsync"
+                         ResetValueOnEmptyText="true"
+                         OnClearButtonClick="ClearSelection"
+                         @bind-Value:after="@(() => OracleSelectFuncAsync(SelectedOracle))"
+                         @bind-Value="SelectedOracle">
+
+            <ItemTemplate Context="o">
+                <div class="d-flex flex-column">
+                    @{ 
+                        var nameSplit = o.Name.Split(" // "); 
+                        var nameJoin = from i in Enumerable.Range(0, nameSplit.Count()) select nameSplit[i] + " (" + o.ManaCosts[i] + ')';
+                    }
+                    <MudText>@o.Name (@SymbologyService.RenderSymbolText(String.Join("//", o.ManaCosts.Where(c => !String.IsNullOrEmpty(c)))))</MudText>
+                    <span class="mud-text mud-text-caption">@o.TypeLine</span>
+                </div>
+            </ItemTemplate>
+
+            <NoItemsTemplate>
+                <MudText Typo="Typo.caption">
+                    No matching cards found...
+                </MudText>
+            </NoItemsTemplate>
+
+        </MudAutocomplete>
+    </MudContainer>
+
+    <MudText>
+        OR
+    </MudText>
+
+    <MudTextField Label="Set Code"
+                Immediate="true"
+                @bind-Value="_setCode" 
+                OnKeyDown="OnKeyDownAsync" />
+
+    <MudTextField Label="Coll Num"
+                Immediate="true"
+                @bind-Value="_collNum" 
+                OnKeyDown="OnKeyDownAsync" />
+
+    <MudButton Variant="Variant.Outlined"
+            Color="Color.Success"
+            Disabled="@(!CanLookupVariantBySetColl)"
+            OnClick="LookupVariantBySetCollAsync"
+            Size="Size.Small"
+            Style="height: 100%">
+        Go
+    </MudButton>
+
+</MudStack>
+
+<MudSelect T="CardVariantDto"
+           Class="pt-2"
+           Label="Select variant..."
+           Dense="true"
+           @bind-Value:after="@(() => VariantSelectFuncAsync(SelectedVariant))"
+           @bind-Value="SelectedVariant"
+           Disabled="@(!AvailableVariants.Any())">
+    @foreach (var v in AvailableVariants)
+    {
+        <MudSelectItem Value="v">
+            @String.Format("{0} ({1}) - {2}", v.SetCode.ToUpper(), v.CollNum, v.SetName)
+        </MudSelectItem>
+    }
+</MudSelect>
+
+
+@inject CrossService CrossService
+@inject OracleService OracleService
+@inject ISnackbar Snackbar
+@inject SymbologyService SymbologyService
+@code {
+
+    [Parameter] public EventCallback<CardDetailsViewerDto> OnSelectFunc { get; set; }
+
+    [Parameter] public CardOracleDto? SelectedOracle { get; set; } = null;
+    [Parameter] public CardVariantDto? SelectedVariant { get; set; } = null;
+    [Parameter] public IEnumerable<CardVariantDto> AvailableVariants { get; set; } = [];
+    
+    private string? _setCode;
+    private string? _collNum;
+    private CardDetailsViewerDto? _viewer = null;
+
+    private bool CanLookupVariantBySetColl =>
+        !string.IsNullOrWhiteSpace(_setCode) &&
+        !string.IsNullOrWhiteSpace(_collNum);
+
+
+    private async Task<IEnumerable<CardOracleDto>> OracleSearchFuncAsync(
+        string search,
+        CancellationToken ct
+    )
+    {
+        return await OracleService.OracleSearchFuncAsync(search, ct);
+    }
+
+    private async Task OracleSelectFuncAsync(CardOracleDto oracleDto)
+    {
+        if (oracleDto is null)
+            return;
+            
+        AvailableVariants = await OracleService.GetVariantsByOracleIdAsync(oracleDto.OracleId);
+
+        await VariantSelectFuncAsync(AvailableVariants.First());
+    }
+
+    private async Task VariantSelectFuncAsync(CardVariantDto variantDto)
+    {
+        SelectedVariant = variantDto;
+
+        _viewer = await CrossService.GetCardDetailsViewerDtoAsync(SelectedVariant.ScryfallId);
+
+        await OnSelectFunc.InvokeAsync(_viewer);
+    }
+
+    private async Task LookupVariantBySetCollAsync()
+    {
+        if (_setCode is null || _collNum is null)
+            return;
+
+        (SelectedOracle, SelectedVariant) = await OracleService.GetOracleVariantBySetCollAsync(_setCode, _collNum);
+
+        if (SelectedVariant is null)
+        {
+            Snackbar.Add("No matching card variant was found.", Severity.Warning);
+            return;
+        }
+
+        AvailableVariants = await OracleService.GetVariantsByOracleIdAsync(SelectedVariant.OracleId);
+
+        await VariantSelectFuncAsync(AvailableVariants
+            .Single(v => v.SetCode == SelectedVariant.SetCode && v.CollNum == SelectedVariant.CollNum));
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs args)
+    {
+        switch(args.Key) 
+        {
+            case "Enter":
+            case "NumpadEnter":
+                if (CanLookupVariantBySetColl)
+                {
+                    await LookupVariantBySetCollAsync();
+                }
+                break;
+        }
+    }
+
+    private void ClearSelection()
+    {
+        _setCode = null;
+        _collNum = null;
+        AvailableVariants = [];
+        SelectedOracle = null;
+        SelectedVariant = null;
+    }
+
+}

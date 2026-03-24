@@ -59,9 +59,6 @@ namespace Spellbox.Migrations.OracleDb
 
                     b.HasIndex("OracleId");
 
-                    b.HasIndex("OracleId", "Order")
-                        .IsUnique();
-
                     b.ToTable("Faces");
                 });
 
@@ -152,11 +149,7 @@ namespace Spellbox.Migrations.OracleDb
 
                     b.HasKey("ScryfallId");
 
-                    b.HasIndex("CardMarketProductId");
-
                     b.HasIndex("OracleId");
-
-                    b.HasIndex("SearchName");
 
                     b.HasIndex("SetCode", "CollNum")
                         .IsUnique();

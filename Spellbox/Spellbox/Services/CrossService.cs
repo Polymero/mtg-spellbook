@@ -65,7 +65,7 @@ namespace Spellbox.Services
                         {
                             OracleId = oracleGroup.Key,
                             Name = oracle.Name,
-                            ColorIdentity = oracle.ColorIdentity,
+                            ColorIdentity = oracle.ColorIdentity.ToInt(),
 
                             Type = typeGroup.Key,
 
@@ -143,13 +143,23 @@ namespace Spellbox.Services
         )
         {
             var variant = (await _oracle.GetVariantsByIdsAsync([variantId]))[variantId];
+
             (var oracle, var faces) = await _oracle.GetSingleOracleAsync(variant.OracleId);
+
+            var allocations = await _collection.GetAllocationsByVariantIdAsync(variantId);
+
+            var prices = await _pricing.GetPriceBatchAsync(allocations);
+            foreach (var alloc in allocations)
+            {
+                alloc.Price = prices[alloc.Id];
+            }
 
             return new CardDetailsViewerDto
             {
                 Oracle = oracle,
                 Faces = faces,
-                Variant = variant
+                Variant = variant,
+                Allocations = allocations
             };
         }
 
@@ -197,7 +207,7 @@ namespace Spellbox.Services
     {
         public Guid OracleId { get; init; }
         public string Name { get; init; } = null!;
-        public List<string> ColorIdentity { get; init; } = [];
+        public int ColorIdentity { get; init; }
 
         public AllocationType Type { get; init; }
 

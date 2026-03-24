@@ -7,9 +7,9 @@
 ### To-do
 -----------
 
-> Add update logic to deck contents page
-
 > Release test build
+
+> Add update logic to deck contents page
 
 > Update binder/deck cover image selection
 
@@ -22,10 +22,6 @@
 > Add paged viewer to CardGridView
 
 > Reset db migrations
-
-> Add to db:
-> - Deck: .Sleeves, .LegalityStatus, .ColorIdentity
-> -
 
 
 ### Changelog

@@ -2,6 +2,7 @@
 
 namespace Spellbox.Model
 {
+
     public sealed class RenderCard
     {
         public Guid OracleId { get; init; }
@@ -13,4 +14,5 @@ namespace Spellbox.Model
         public CardImage Images { get; init; } = null!;
         public IReadOnlyList<CollectionAllocationDto> Allocations { get; init; } = [];
     }
+    
 }

@@ -13,7 +13,7 @@
           "Microsoft.EntityFrameworkCore": "9.0.0-preview.6.24327.4",
           "Microsoft.EntityFrameworkCore.Sqlite": "9.0.0-preview.6.24327.4",
           "Microsoft.EntityFrameworkCore.Tools": "9.0.0-preview.6.24327.4",
-          "MudBlazor": "7.3.0",
+          "MudBlazor": "9.2.0",
           "Newtonsoft.Json": "13.0.3",
           "SQLitePCLRaw.bundle_e_sqlite3": "2.1.8"
         },
@@ -95,64 +95,64 @@
           }
         }
       },
-      "Microsoft.AspNetCore.Authorization/8.0.6": {
+      "Microsoft.AspNetCore.Authorization/8.0.12": {
         "dependencies": {
-          "Microsoft.AspNetCore.Metadata": "8.0.6",
+          "Microsoft.AspNetCore.Metadata": "8.0.12",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0-preview.6.24327.7",
           "Microsoft.Extensions.Options": "9.0.0-preview.6.24327.7"
         },
         "runtime": {
           "lib/net8.0/Microsoft.AspNetCore.Authorization.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
-      "Microsoft.AspNetCore.Components/8.0.6": {
+      "Microsoft.AspNetCore.Components/8.0.12": {
         "dependencies": {
-          "Microsoft.AspNetCore.Authorization": "8.0.6",
-          "Microsoft.AspNetCore.Components.Analyzers": "8.0.6"
+          "Microsoft.AspNetCore.Authorization": "8.0.12",
+          "Microsoft.AspNetCore.Components.Analyzers": "8.0.12"
         },
         "runtime": {
           "lib/net8.0/Microsoft.AspNetCore.Components.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Analyzers/8.0.6": {},
-      "Microsoft.AspNetCore.Components.Forms/8.0.6": {
+      "Microsoft.AspNetCore.Components.Analyzers/8.0.12": {},
+      "Microsoft.AspNetCore.Components.Forms/8.0.12": {
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.6"
+          "Microsoft.AspNetCore.Components": "8.0.12"
         },
         "runtime": {
           "lib/net8.0/Microsoft.AspNetCore.Components.Forms.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
-      "Microsoft.AspNetCore.Components.Web/8.0.6": {
+      "Microsoft.AspNetCore.Components.Web/8.0.12": {
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.6",
-          "Microsoft.AspNetCore.Components.Forms": "8.0.6",
+          "Microsoft.AspNetCore.Components": "8.0.12",
+          "Microsoft.AspNetCore.Components.Forms": "8.0.12",
           "Microsoft.Extensions.DependencyInjection": "9.0.0-preview.6.24327.7",
           "Microsoft.Extensions.Primitives": "9.0.0-preview.6.24327.7",
-          "Microsoft.JSInterop": "8.0.6",
+          "Microsoft.JSInterop": "8.0.12",
           "System.IO.Pipelines": "9.0.0-preview.6.24327.7"
         },
         "runtime": {
           "lib/net8.0/Microsoft.AspNetCore.Components.Web.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
-      "Microsoft.AspNetCore.Metadata/8.0.6": {
+      "Microsoft.AspNetCore.Metadata/8.0.12": {
         "runtime": {
           "lib/net8.0/Microsoft.AspNetCore.Metadata.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
@@ -526,22 +526,22 @@
           "runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-arm",
             "assetType": "native",
-            "fileVersion": "5.2.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-arm64",
             "assetType": "native",
-            "fileVersion": "5.2.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-x64",
             "assetType": "native",
-            "fileVersion": "5.2.0.0"
+            "fileVersion": "0.0.0.0"
           },
           "runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-x86",
             "assetType": "native",
-            "fileVersion": "5.2.0.0"
+            "fileVersion": "0.0.0.0"
           }
         }
       },
@@ -700,25 +700,25 @@
           }
         }
       },
-      "Microsoft.Extensions.Localization/8.0.6": {
+      "Microsoft.Extensions.Localization/8.0.12": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0-preview.6.24327.7",
-          "Microsoft.Extensions.Localization.Abstractions": "8.0.6",
+          "Microsoft.Extensions.Localization.Abstractions": "8.0.12",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.0-preview.6.24327.7",
           "Microsoft.Extensions.Options": "9.0.0-preview.6.24327.7"
         },
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.Localization.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
-      "Microsoft.Extensions.Localization.Abstractions/8.0.6": {
+      "Microsoft.Extensions.Localization.Abstractions/8.0.12": {
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.Localization.Abstractions.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
@@ -860,11 +860,11 @@
           }
         }
       },
-      "Microsoft.JSInterop/8.0.6": {
+      "Microsoft.JSInterop/8.0.12": {
         "runtime": {
           "lib/net8.0/Microsoft.JSInterop.dll": {
             "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.624.26909"
+            "fileVersion": "8.0.1224.60312"
           }
         }
       },
@@ -894,16 +894,16 @@
           }
         }
       },
-      "MudBlazor/7.3.0": {
+      "MudBlazor/9.2.0": {
         "dependencies": {
-          "Microsoft.AspNetCore.Components": "8.0.6",
-          "Microsoft.AspNetCore.Components.Web": "8.0.6",
-          "Microsoft.Extensions.Localization": "8.0.6"
+          "Microsoft.AspNetCore.Components": "8.0.12",
+          "Microsoft.AspNetCore.Components.Web": "8.0.12",
+          "Microsoft.Extensions.Localization": "8.0.12"
         },
         "runtime": {
           "lib/net8.0/MudBlazor.dll": {
-            "assemblyVersion": "7.3.0.0",
-            "fileVersion": "7.3.0.0"
+            "assemblyVersion": "9.2.0.0",
+            "fileVersion": "9.2.0.0"
           }
         }
       },
@@ -1359,47 +1359,47 @@
       "path": "medalliontopologicalsort/1.0.0",
       "hashPath": "medalliontopologicalsort.1.0.0.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Authorization/8.0.6": {
+    "Microsoft.AspNetCore.Authorization/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-H1CSbD7UeSPsrJSUpvbms6SqWMa5y8ch4Rw+gyHh2uztOEb20fTP2r0AUnStn1Q9WYghikiDO5wzkgV+n6KC2Q==",
-      "path": "microsoft.aspnetcore.authorization/8.0.6",
-      "hashPath": "microsoft.aspnetcore.authorization.8.0.6.nupkg.sha512"
+      "sha512": "sha512-x3E6p69tEktHakgch0cR771EGvJmxRz86HD3YAg0Mag8IimC/OcZtPBwp48zLJvnxj3W4ZELSQ+gZStgClzuRg==",
+      "path": "microsoft.aspnetcore.authorization/8.0.12",
+      "hashPath": "microsoft.aspnetcore.authorization.8.0.12.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Components/8.0.6": {
+    "Microsoft.AspNetCore.Components/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-Je2l+rd5i8gB+ZWsN5wBHOsnyAh81h6+a5vNq6rjfQhM2ZYxH+BVsmanCYa+F8BFy6rmd+ZL61SEiNaAyAOgtg==",
-      "path": "microsoft.aspnetcore.components/8.0.6",
-      "hashPath": "microsoft.aspnetcore.components.8.0.6.nupkg.sha512"
+      "sha512": "sha512-oNKQXyuEpfGGcG8bRbl4kKzkTENkAWTZWmT7W69j2srrpbruM9JCguxBZeOqT1ER48hSEdxuMB0EtR0sL/6EKA==",
+      "path": "microsoft.aspnetcore.components/8.0.12",
+      "hashPath": "microsoft.aspnetcore.components.8.0.12.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Components.Analyzers/8.0.6": {
+    "Microsoft.AspNetCore.Components.Analyzers/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-SEL0CN1jJdJkCDwRox3kSY1ffMnahlOCDJZYrYWfQ6ftjqRuuiPtwyvI3VIeVHLcpT3VP1AXww8wzKDK3oeFxg==",
-      "path": "microsoft.aspnetcore.components.analyzers/8.0.6",
-      "hashPath": "microsoft.aspnetcore.components.analyzers.8.0.6.nupkg.sha512"
+      "sha512": "sha512-pZVRMJrtscHDxZE9JvdlIWin5zPHhbCod/J6g7hP4tyLyxFI7w+2XT9KRR9oo5pSGBHOWl9SHvSoRTh6UVihBg==",
+      "path": "microsoft.aspnetcore.components.analyzers/8.0.12",
+      "hashPath": "microsoft.aspnetcore.components.analyzers.8.0.12.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Components.Forms/8.0.6": {
+    "Microsoft.AspNetCore.Components.Forms/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-49wIE1ns3ZGDU4NPMcKCSTC716IxujUeaynsUyflM5Qmb2WlF6M6m4pMcJ6UET1Ixmn027nZjMEc8J7pU4BLBg==",
-      "path": "microsoft.aspnetcore.components.forms/8.0.6",
-      "hashPath": "microsoft.aspnetcore.components.forms.8.0.6.nupkg.sha512"
+      "sha512": "sha512-2AuVSp77xo3N6wvmAdP7bhxXdy5nKJiypCVEfSXqtd+oNQZxdZ/dKtbs8bYtDwSXpBN/fukaKt/3WjME1J9pDw==",
+      "path": "microsoft.aspnetcore.components.forms/8.0.12",
+      "hashPath": "microsoft.aspnetcore.components.forms.8.0.12.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Components.Web/8.0.6": {
+    "Microsoft.AspNetCore.Components.Web/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-xxYlTpcTEWsxaWUscDLN32mM32ysslLFtNQBS6wJOxaKJ9LCvusXDyBVEKL2DPbB8PZdereNvyrVr0deHkuOEw==",
-      "path": "microsoft.aspnetcore.components.web/8.0.6",
-      "hashPath": "microsoft.aspnetcore.components.web.8.0.6.nupkg.sha512"
+      "sha512": "sha512-7dw3N6kH9FNUmJIQgvDtwcVCEdrN0GBwv1Dsej2B+GoaTRtCLuA1tkPm0Vyk+LpLHa0p9CTOUYvRJa07+ksXAw==",
+      "path": "microsoft.aspnetcore.components.web/8.0.12",
+      "hashPath": "microsoft.aspnetcore.components.web.8.0.12.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.Metadata/8.0.6": {
+    "Microsoft.AspNetCore.Metadata/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-3e7S/kz1MGds8zDA8SfQiutqifyVcULs5P/8Bxpes0WIkJRMGkU/l+XlMllj9KrDfCGwHW8bgjRy/zxfoILgfg==",
-      "path": "microsoft.aspnetcore.metadata/8.0.6",
-      "hashPath": "microsoft.aspnetcore.metadata.8.0.6.nupkg.sha512"
+      "sha512": "sha512-TVB3Kcm8CBvFJ3roOCJ4XcTCiY/G2pUjKIm6M1QyslJYlJGmL6WFdr6o8OsT4jdqDnB2Heu+MQtQsyWMpTaAlw==",
+      "path": "microsoft.aspnetcore.metadata/8.0.12",
+      "hashPath": "microsoft.aspnetcore.metadata.8.0.12.nupkg.sha512"
     },
     "Microsoft.Bcl.AsyncInterfaces/7.0.0": {
       "type": "package",
@@ -1590,19 +1590,19 @@
       "path": "microsoft.extensions.dependencymodel/9.0.0-preview.6.24327.7",
       "hashPath": "microsoft.extensions.dependencymodel.9.0.0-preview.6.24327.7.nupkg.sha512"
     },
-    "Microsoft.Extensions.Localization/8.0.6": {
+    "Microsoft.Extensions.Localization/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-EXcSpQE6E80Qutej0ZShz1oRWBFocDzir/R3Gd1jAqZ5SnPpSr1Ep/tH5ha0cRXY22cWVuOb7I9rM32Ew+ju7g==",
-      "path": "microsoft.extensions.localization/8.0.6",
-      "hashPath": "microsoft.extensions.localization.8.0.6.nupkg.sha512"
+      "sha512": "sha512-Ef7P8kpJzX/khXB8oYxt3vFHXw48uWY+NirCrh8u8gokCHxr/Noc3OxME+Ji1ugqoMvUVSPu73mYctmUMDlOCA==",
+      "path": "microsoft.extensions.localization/8.0.12",
+      "hashPath": "microsoft.extensions.localization.8.0.12.nupkg.sha512"
     },
-    "Microsoft.Extensions.Localization.Abstractions/8.0.6": {
+    "Microsoft.Extensions.Localization.Abstractions/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-oQdKQ4xlb+Qa4t1gWGj58cocLdWZynP+wLExIAxozh2SrvffEzTvTGI2IbRx4mBNgg9jbbyoPE8nNOwJ1Thddg==",
-      "path": "microsoft.extensions.localization.abstractions/8.0.6",
-      "hashPath": "microsoft.extensions.localization.abstractions.8.0.6.nupkg.sha512"
+      "sha512": "sha512-bgwe0gy9v12hr6gLAXIeEWaTYm295Nfmp7B/DLmS75GBJXvs4JHn7pi8gn3jXMNNkNIkx9iWG+pXKmLAmjdGZg==",
+      "path": "microsoft.extensions.localization.abstractions/8.0.12",
+      "hashPath": "microsoft.extensions.localization.abstractions.8.0.12.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/9.0.0-preview.6.24327.7": {
       "type": "package",
@@ -1688,12 +1688,12 @@
       "path": "microsoft.identitymodel.tokens/6.35.0",
       "hashPath": "microsoft.identitymodel.tokens.6.35.0.nupkg.sha512"
     },
-    "Microsoft.JSInterop/8.0.6": {
+    "Microsoft.JSInterop/8.0.12": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-E1djWS3d41fcd++7sGlbYhOHde5Pb0oBpOcNvUbn+1ga/yCvsjzUfbd/tDRg1qacNKS0iwKWYOIqTZxJnh99dQ==",
-      "path": "microsoft.jsinterop/8.0.6",
-      "hashPath": "microsoft.jsinterop.8.0.6.nupkg.sha512"
+      "sha512": "sha512-zpSj954QMEIc9AHxFKQSP+WXGJSdbrnZrGwJ65vvT2XQGQ7h5rSfif7JLFXhxuuFkRbboTms/Y74yafRhQUd8w==",
+      "path": "microsoft.jsinterop/8.0.12",
+      "hashPath": "microsoft.jsinterop.8.0.12.nupkg.sha512"
     },
     "Microsoft.NETCore.Platforms/5.0.0": {
       "type": "package",
@@ -1730,12 +1730,12 @@
       "path": "mono.texttemplating/3.0.0-preview-0052-g5d0f76c785",
       "hashPath": "mono.texttemplating.3.0.0-preview-0052-g5d0f76c785.nupkg.sha512"
     },
-    "MudBlazor/7.3.0": {
+    "MudBlazor/9.2.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-yLZbuZUQaGGCpEbj0eebLIxtvlLFlWug7oI68ecX/QbCKr+474q6qUN5sCstMMDYkdnzExk3puEa+Hif3rLDEQ==",
-      "path": "mudblazor/7.3.0",
-      "hashPath": "mudblazor.7.3.0.nupkg.sha512"
+      "sha512": "sha512-ckAndxv3to3CahczgLrqKdzhPV3750B7taqICSIAdKXoh0dSyqcUcjAI5YlE5s7NB7C+NdpkfWpK+dKQwxvUOA==",
+      "path": "mudblazor/9.2.0",
+      "hashPath": "mudblazor.9.2.0.nupkg.sha512"
     },
     "NetTopologySuite/2.0.0": {
       "type": "package",

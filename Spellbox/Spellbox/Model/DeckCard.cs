@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 
 namespace Spellbox.Model
@@ -27,6 +28,16 @@ namespace Spellbox.Model
         public Guid OracleId { get; init; }
         public Guid VariantId { get; init; }
         public int Quantity { get; init; }
+
+        public static Expression<Func<DeckCard, DeckCardDto>> FromEntity => e
+            => new()
+            {
+                Id = e.Id,
+                ZoneId = e.ZoneId,
+                OracleId = e.OracleId,
+                VariantId = e.VariantId,
+                Quantity = e.Quantity
+            };
     }
     
 }

@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
+
 namespace Spellbox.Model
 {
+    
     public class CardMarketPriceCache
     {
         [Key]
@@ -37,4 +39,5 @@ namespace Spellbox.Model
         public decimal? PriceNonFoil { get; set; }
         public decimal? PriceFoil { get; set; }
     }
+
 }

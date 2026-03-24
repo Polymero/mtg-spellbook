@@ -683,7 +683,7 @@ namespace Spellbox.Services
 
         public async Task<DeckDto> UpdateDeckPropertiesAsync(
             Guid deckId,
-            IEnumerable<string> colorIdentity,
+            CardColours colorIdentity,
             bool legalityStatus
         )
         {
@@ -695,7 +695,7 @@ namespace Spellbox.Services
             if (deck is null)
                 return new DeckDto();
 
-            deck.ColorIdentity = colorIdentity.ToList();
+            deck.ColorIdentity = colorIdentity.ToInt();
             deck.LegalityStatus = legalityStatus;
 
             deck.UpdatedAt = DateTime.UtcNow;
@@ -712,9 +712,24 @@ namespace Spellbox.Services
             using var db = await _factory.CreateDbContextAsync();
 
             return await db.Allocations
+                .AsNoTracking()
                 .Where(a => allocationIds.Contains(a.Id) && a.AllocationIndex == AllocationIndex.Deck)
                 .Select(a => a.Zone!.Snapshot.Deck.Id)
                 .Distinct()
+                .ToListAsync();
+        }
+
+
+        public async Task<List<CollectionAllocationDto>> GetAllocationsByVariantIdAsync(
+            Guid variantId
+        )
+        {
+            using var db = await _factory.CreateDbContextAsync();
+
+            return await db.Allocations
+                .AsNoTracking()
+                .Where(a => a.VariantId == variantId)
+                .Select(CollectionAllocationDto.FromCollectionEntity)
                 .ToListAsync();
         }
 

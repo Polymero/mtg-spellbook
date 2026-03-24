@@ -1,143 +1,159 @@
 @page "/search"
-@using MudBlazor
-@using Spellbox.Model
 
-<MudAutocomplete T="OracleCardProj" 
-    Label="Search..."
-    Dense="true"
-    Clearable="true"
-    ResetValueOnEmptyText="true"
-    MinCharacters="2"
-    DebounceInterval="300"
-    MaxItems="20"
-    SearchFunc="@OracleSearchAsync" 
-    ToStringFunc="@(c => c.Name)"
-    ValueChanged="@OracleCardSelect"
-    CoerceText="true"
-    CoerceValue="false">
 
-    <ItemTemplate Context="card">
-        <div class="d-flex flex-column">
-            <span class="fw-semibold">@card.Name</span>
-            <span class="mud-text mud-text-caption">@card.TypeLine</span>
-        </div>
-    </ItemTemplate>
-    
-    <NoItemsTemplate>
-        <MudText Typo="Typo.caption">
-            No cards found
-        </MudText>
-    </NoItemsTemplate>
-    
-</MudAutocomplete>
+<PageTitle>Card Search</PageTitle>
 
-@if (searchCard.Name is not null)
-{
-    searchVariants = searchCard.Variants.ToList();
 
-    @if (chosenVariant is null)
-    {
-        chosenVariant = searchVariants.First();
-    }
-    
-    <MudSelect Label="Variant" @bind-Value="chosenVariant" Placeholder="Pick variant...">
-        @foreach (var variant in searchVariants)
-        {
-            <MudSelectItem Value="@variant">
-                @String.Format("{0} ({1}) - {2}", variant.SetCode.ToUpper(), variant.CollNum, variant.SetName)
-            </MudSelectItem>
-        }
-    </MudSelect>
+<MudContainer Style="max-width: 1280px">
 
-    <MudGrid Spacing="2">
+    <MudStack Spacing="2">
 
-        <MudItem xs="4">
-            <MudImage Src=@("") Width="256" Height="null" Alt="IMG" Style="border-radius: 16px;" />
-        </MudItem>
+        <MudPaper Outlined="true"
+                  Class="px-4 pb-4 pt-2">
 
-        <MudItem xs="8">
-
-        </MudItem>
-
-    </MudGrid>
-
-    @foreach (var face in searchCard.Faces.OrderBy(f => f.Order))
-    {
-        <MudPaper Class="pa-2 mb-2" Elevation="0" Outlined="true">
-
-            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
-                @face.Name
-            </MudText>
-
-            <MudDivider Class="my-1" />
-
-            <MudText Typo="Typo.caption">
-                @face.TypeLine
-            </MudText>
-
-            <MudDivider Class="my-1" />
-
-            <MudText Typo="Typo.body2" Style="white-space: pre-line;">
-                @face.OracleText
-            </MudText>
+            <CardSearchComponent OnSelectFunc="OnVariantSelect" />
 
         </MudPaper>
-    }
 
-}
+        @if (_viewer is null)
+        {
+            <MudPaper Outlined="true"
+                      Class="pa-4">
 
-@inject CollectionDbContext collectionContext
-@inject OracleDbContext oracleContext
+                <MudText>No card selected...</MudText>
+
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Outlined="true"
+                      Class="py-0 px-4">
+
+                <CardViewerComponent Viewer="_viewer" />
+
+            </MudPaper>
+
+            <MudPaper Outlined="true"
+                      Class="pa-4">
+
+                <MudText Typo="Typo.h6">
+                    Copies in your Collection
+                </MudText>
+
+                @if (_viewer.Allocations.Count == 0)
+                {
+                    <MudText Class="pt-2"><i>None. :c</i></MudText>
+                }
+                else
+                {
+                    <MudTable Items="_viewer.Allocations"
+                              Dense="true"
+                              Hover="true"
+                              Elevation="0"
+                              Class="pt-2">
+                    
+                        <HeaderContent>
+                            <MudTh Style="text-align: start">Location</MudTh>
+                            <MudTh Style="text-align: center">Set Code</MudTh>
+                            <MudTh Style="text-align: center">Finish</MudTh>
+                            <MudTh Style="text-align: center">Language</MudTh>
+                            <MudTh Style="text-align: center">Condition</MudTh>
+                            <MudTh Style="text-align: center">Flags</MudTh>
+                            <MudTh Style="text-align: center">Bought</MudTh>
+                            <MudTh Style="text-align: center">Price</MudTh>
+                            <MudTh Style="text-align: end"></MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate Context="a">
+                            <MudTd  Style="text-align: start">
+                                @if (a.BinderName is not null) { @a.BinderName }
+                                else if (a.DeckName is not null) { @a.DeckName }
+                                else { <MudText Typo="Typo.caption"><i>Unassigned</i></MudText> }
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @String.Format("{0} {1}", _viewer.Variant.SetCode.ToUpper(), _viewer.Variant.CollNum)
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @switch (a.Finish)
+                                {
+                                    case CardFinish.Unknown: <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                                    case CardFinish.NonFoil: <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Color="Color.Default" Title="NonFoil" /> break;
+                                    case CardFinish.Foil: <MudIcon Icon="@Icons.Material.Rounded.Star" Color="Color.Warning" Title="Foil" /> break;
+                                    default: <MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning" Label="true" Size="Size.Small">@a.Finish.ToString()</MudChip> break;
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @a.Language
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @switch (a.Condition)
+                                {
+                                    case CardCondition.Mint: <MudChip T="string" Variant="Variant.Outlined" Style="color: #17a2b8; border-color: #17a2b8;" Label="true" Size="Size.Small"><b>MT</b></MudChip> break;
+                                    case CardCondition.NearMint: <MudChip T="string" Variant="Variant.Outlined" Style="color: #3caf56; border-color: #3caf56;" Label="true" Size="Size.Small"><b>NM</b></MudChip> break;
+                                    case CardCondition.Excellent: <MudChip T="string" Variant="Variant.Outlined" Style="color: #82891e; border-color: #82891e;" Label="true" Size="Size.Small"><b>EX</b></MudChip> break;
+                                    case CardCondition.Good: <MudChip T="string" Variant="Variant.Outlined" Style="color: #ffc107; border-color: #ffc107;" Label="true" Size="Size.Small"><b>GD</b></MudChip> break;
+                                    case CardCondition.LightPlayed: <MudChip T="string" Variant="Variant.Outlined" Style="color: #fd8b2b; border-color: #fd8b2b;" Label="true" Size="Size.Small"><b>LP</b></MudChip> break;
+                                    case CardCondition.Played: <MudChip T="string" Variant="Variant.Outlined" Style="color: #e56874; border-color: #e56874;" Label="true" Size="Size.Small"><b>PL</b></MudChip> break;
+                                    case CardCondition.Poor: <MudChip T="string" Variant="Variant.Outlined" Style="color: #dc3545; border-color: #dc3545;" Label="true" Size="Size.Small"><b>PO</b></MudChip> break;
+                                    default: <MudChip T="string" Variant="Variant.Outlined" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @if (a.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+                                @if (a.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+                                @if (a.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
+                                @if (a.IsMisprint) { <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Title="Misprint" /> }
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @if (a.BoughtFor.HasValue)
+                                {
+                                    @if (a.Price.HasValue && a.Price.Value > 0m && a.BoughtFor > 0m)
+                                    {
+                                        var shift = 100 * (a.Price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
+
+                                        @if (shift < 0m) { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText></span> }
+                                        else { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText></span> }
+                                    }
+                                    else { <span>€@a.BoughtFor.Value.ToString("0.00")</span> }
+                                }
+                                else { <span>—</span> }
+                            </MudTd>
+                            <MudTd Style="text-align: center">
+                                @if (a.Price.HasValue) { <span>€@a.Price.Value.ToString("0.00")</span> }
+                                else { <span>—</span> }
+                            </MudTd>
+                            <MudTd Style="text-align: end">
+                                @* <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                Color="Color.Warning"
+                                                Size="Size.Small" 
+                                                OnClick="@(() => EditAllocationAsync(a.Id))" /> *@
+                            </MudTd>
+                        </RowTemplate>
+                    
+                    </MudTable>
+                }
+
+            </MudPaper>
+        }
+
+    </MudStack>
+
+</MudContainer>
+
+
 @code {
-    public record OracleCardProj
-    (
-        Guid OracleId,
-        string Name,
-        string TypeLine
-    );
 
-    public CardOracle searchCard { get; set; } = new CardOracle();
-    List<CardVariant> searchVariants = new List<CardVariant>();
-    public CardVariant? chosenVariant { get; set; }
+    private CardDetailsViewerDto? _viewer;
 
 
-    private async Task<IEnumerable<OracleCardProj>> OracleSearchAsync(string value, CancellationToken token)
+    private void OnVariantSelect(CardDetailsViewerDto viewer)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
-            return Enumerable.Empty<OracleCardProj>();
-
-        return await oracleContext.Oracles
-            .AsNoTracking()
-            .Where( c =>
-                EF.Functions.Like(c.Name, $"{value}%") ||
-                EF.Functions.Like(c.Name, $"% {value}%"))
-            .OrderBy(c =>
-                EF.Functions.Like(c.Name, $"{value}%") ? 0 :
-                EF.Functions.Like(c.Name, $"% {value}%") ? 1 :
-                2)
-            .ThenBy(c => c.Name)
-            .Select(c => new OracleCardProj(
-                c.OracleId,
-                c.Name,
-                c.TypeLine
-            ))
-            .Take(20)
-            .ToListAsync();
-    }
-
-
-    private async void OracleCardSelect(OracleCardProj proj)
-    {
-        if (proj is null)
+        if (viewer is null)
             return;
 
-        // Clear chosen variant
-        chosenVariant = null;
+        _viewer = viewer;
 
-        searchCard = await oracleContext.Oracles
-            .Include(c => c.Variants)
-            .Include(c => c.Faces)
-            .SingleAsync(c => c.OracleId == proj.OracleId);
+        StateHasChanged();
     }
 
 }
