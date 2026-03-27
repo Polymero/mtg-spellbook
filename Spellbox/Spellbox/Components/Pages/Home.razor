@@ -55,7 +55,7 @@
             <MudCardHeader>
                 <CardHeaderContent>
                     <MudText Typo="Typo.h5">
-                        Your @BinderCache.Count binders:
+                        Your @FilteredBinderCache.Count binders:
                     </MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -74,9 +74,15 @@
                 You have no binders. What have you done?
             </MudText>
         }
+        else if (FilteredBinderCache.Count == 0)
+        {
+            <MudText>
+                No matching binders.
+            </MudText>
+        }
         else
         {    
-            @foreach (var binder in BinderCache)
+            @foreach (var binder in FilteredBinderCache)
             {
                 <MudItem xs="12">
                     <CollectionBinderCard Binder="binder"
@@ -89,24 +95,59 @@
 
 
     <!-- Decks -->
-    <MudGrid Spacing="2">
+    <MudStack Spacing="2">
 
-        <MudItem xs="12" Class="mb-n4 mt-8">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h5">
-                        Your @DeckCache.Count decks:
-                    </MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <MudIconButton @onclick="OpenAddDeckDialog" 
-                                   Icon="@Icons.Material.Filled.Add"
-                                   Variant="Variant.Outlined" 
-                                   Color="Color.Success"
-                                   Size="Size.Small" />
-                </CardHeaderActions>
-            </MudCardHeader>
-        </MudItem>
+        <MudStack Row="true"
+                  Class="px-2 pt-8"
+                  AlignItems="AlignItems.End"
+                  Spacing="0">
+
+            <MudContainer Gutters="false"
+                          Style="width:25%"
+                          Class="d-flex justify-start">
+                <MudText Typo="Typo.h5">Your @FilteredDeckCache.Count decks:</MudText>
+            </MudContainer>
+
+            <MudContainer Gutters="false"
+                          Style="width: 50%">
+                <MudStack Row="true">
+
+                    <MudTextField Label="Name..."
+                                  T="string"
+                                  Clearable="true"
+                                  @bind-Value="_deckNameSearch"
+                                  @bind-Value:after="ApplyDeckFilter"
+                                  Immediate="true"
+                                  DebounceInterval="0" />
+
+                    <MudSelect T="string"
+                               Label="Tags..."
+                               Clearable="true"
+                               MultiSelection="true"
+                               @bind-SelectedValues="_deckTagsSelect"
+                               @bind-SelectedValues:after="ApplyDeckFilter">
+                        @foreach (var tag in DeckCache.SelectMany(d => d.Tags).Distinct().Order())
+                        {
+                            <MudSelectItem T="string" Value="@tag">@tag</MudSelectItem>
+                        }
+                    </MudSelect>
+                    
+                </MudStack>
+            </MudContainer>
+
+            <MudContainer Gutters="false"
+                          Style="width:25%"
+                          Class="d-flex justify-end">
+                <MudIconButton @onclick="OpenAddDeckDialog"
+                               Icon="@Icons.Material.Filled.Add"
+                               Variant="Variant.Outlined"
+                               Color="Color.Tertiary"
+                               Size="Size.Small" />
+            </MudContainer>
+
+            
+
+        </MudStack>
 
         @if (DeckCache.Count == 0)
         {
@@ -114,18 +155,22 @@
                 You have no decks yet. Why not build one?
             </MudText>
         }
+        else if (FilteredDeckCache.Count == 0)
+        {
+            <MudText>
+                No matching decks.
+            </MudText>
+        }
         else
         {    
-            @foreach (var deck in DeckCache)
+            @foreach (var deck in FilteredDeckCache)
             {
-                <MudItem xs="12">
-                    <CollectionDeckCard Deck="deck"
-                                        OnEdit="OpenEditDeckDialog" />
-                </MudItem>
+                <CollectionDeckCard Deck="deck"
+                                    OnEdit="OpenEditDeckDialog" />
             }   
         }
 
-    </MudGrid>
+    </MudStack>
 </MudStack>
 
 @inject CollectionService CollectionService
@@ -136,7 +181,9 @@
 
     // UI caches
     private List<CollectionBinderDto> BinderCache { get; set; } = new List<CollectionBinderDto>();
+    private List<CollectionBinderDto> FilteredBinderCache { get; set; } = new List<CollectionBinderDto>();
     private List<DeckDto> DeckCache { get; set; } = new List<DeckDto>();
+    private List<DeckDto> FilteredDeckCache { get; set; } = new List<DeckDto>();
     
     private sealed record UnassignedDto
     (
@@ -150,6 +197,10 @@
     private int _collectionQuantity;
     private decimal _collectionPriceValue;
     private int _collectionPriceMissing;
+
+    private string? _deckNameSearch;
+    private IReadOnlyCollection<string> _deckTagsSelect = [];
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -175,6 +226,9 @@
         _collectionPriceMissing = Unassigned.PriceMissing +
             BinderCache.Sum(b => b.PriceMissing) +
             DeckCache.Sum(d => d.PriceMissing);
+
+        ApplyBinderFilter();
+        ApplyDeckFilter();
     }
 
     private async Task<UnassignedDto> LoadUnassigned()
@@ -373,6 +427,27 @@
 
         var dialog = await DialogService.ShowAsync<AddAllocationDialog>("Add Card", parameters, options);
         var result = await dialog.Result;
+    }
+
+
+    private void ApplyBinderFilter()
+    {
+        FilteredBinderCache = BinderCache;
+    }
+
+    private void ApplyDeckFilter()
+    {
+        FilteredDeckCache = DeckCache;
+
+        if (!String.IsNullOrWhiteSpace(_deckNameSearch))
+            FilteredDeckCache = FilteredDeckCache
+                .Where(d => d.Name.Contains(_deckNameSearch, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        if (_deckTagsSelect.Count > 0)
+            FilteredDeckCache = FilteredDeckCache
+                .Where(d => _deckTagsSelect.All(t => d.Tags.Contains(t)))
+                .ToList();
     }
 
 }

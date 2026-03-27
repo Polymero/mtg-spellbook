@@ -135,10 +135,6 @@ namespace Spellbox.Contexts
                   .IsRequired();
 
             entity.Property(e => e.ColorIdentity)
-                  .HasConversion(
-                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
-                        e => JsonSerializer.Deserialize<List<string>>(e, (JsonSerializerOptions?)null)!
-                  )
                   .IsRequired();
 
             entity.Property(e => e.LegalityStatus)

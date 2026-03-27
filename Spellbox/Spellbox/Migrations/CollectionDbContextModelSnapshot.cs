@@ -86,7 +86,7 @@ namespace Spellbox.Migrations
 
                     b.ToTable("Allocations", t =>
                         {
-                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\n                    (\n                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR\n                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)\n                    )\n                    ");
+                            t.HasCheckConstraint("CK_CollectionAllocation_AllocationIndex", "\r\n                    (\r\n                        (AllocationIndex = 0 AND BinderId IS NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 1 AND BinderId IS NOT NULL AND ZoneId IS NULL) OR\r\n                        (AllocationIndex = 2 AND BinderId IS NULL AND ZoneId IS NOT NULL)\r\n                    )\r\n                    ");
                         });
                 });
 
@@ -123,9 +123,8 @@ namespace Spellbox.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ColorIdentity")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ColorIdentity")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CoverImage")
                         .HasColumnType("TEXT");
@@ -144,6 +143,9 @@ namespace Spellbox.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Sleeves")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tags")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Type")

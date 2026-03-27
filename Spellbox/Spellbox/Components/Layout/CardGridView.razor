@@ -293,13 +293,12 @@
         var dialog = await DialogService.ShowAsync<MoveAllocationDialog>("Move Allocations", parameters, options);
         var result = await dialog.Result;
 
-        if (!result!.Canceled &&
-            result.Data is MoveAllocationsCallback callback)
+        if (!(result!.Canceled) && result.Data is MoveAllocationsCallback callback)
         {
             await OnMoveSuccess.InvokeAsync(callback);
 
             _selectedAllocations.Clear();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 

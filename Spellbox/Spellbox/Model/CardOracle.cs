@@ -13,7 +13,7 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public string TypeLine { get; set; } = null!;
         public List<string> Keywords { get; set; } = [];
-        public decimal CMC { get; set; }
+        public int CMC { get; set; }
         
         public int Colors { get; set; }
         public int ColorIdentity { get; set; }
@@ -46,7 +46,7 @@ namespace Spellbox.Model
                 Name = e.Name,
                 TypeLine = e.TypeLine,
                 Keywords = e.Keywords,
-                CMC = e.CMC,
+                CMC = (decimal) (e.CMC / 10),
 
                 Colors = CardColours.FromInt(e.Colors),
                 ColorIdentity = CardColours.FromInt(e.ColorIdentity),

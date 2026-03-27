@@ -15,6 +15,7 @@ namespace Spellbox.Model
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
         public string? Sleeves { get; set; }
+        public string? Tags { get; set; }
 
         public int ColorIdentity { get; set; }
         public bool LegalityStatus { get; set; } = false;
@@ -33,6 +34,7 @@ namespace Spellbox.Model
         public string? Description { get; init; }
         public string? CoverImage { get; init; }
         public string? Sleeves { get; init; }
+        public List<string> Tags { get; init; } = [];
 
         public CardColours ColorIdentity { get; init; } = null!;
         public bool LegalityStatus { get; init; } = false;
@@ -60,6 +62,9 @@ namespace Spellbox.Model
                 Description = e.Description,
                 CoverImage = e.CoverImage,
                 Sleeves = e.Sleeves,
+                Tags = String.IsNullOrEmpty(e.Tags) 
+                    ? new List<string>() 
+                    : e.Tags.Split(',', StringSplitOptions.TrimEntries).ToList(),
 
                 ColorIdentity = CardColours.FromInt(e.ColorIdentity),
                 LegalityStatus = e.LegalityStatus,
@@ -100,6 +105,7 @@ namespace Spellbox.Model
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
         public string? Sleeves { get; set; }
+        public string? Tags { get; set; }
 
         public static Expression<Func<Deck, EditableDeckDto>> FromEntity => e
             => new()
@@ -110,7 +116,8 @@ namespace Spellbox.Model
                 Type = e.Type,
                 Description = e.Description,
                 CoverImage = e.CoverImage,
-                Sleeves = e.Sleeves
+                Sleeves = e.Sleeves,
+                Tags = e.Tags
             };
     }
 

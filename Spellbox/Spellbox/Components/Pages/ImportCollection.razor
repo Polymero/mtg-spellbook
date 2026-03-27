@@ -208,10 +208,10 @@
 
                     <MudContainer Gutters="false">
                         <MudSelect T="CollectionBinderDto"
-                                Label="Binder"
-                                Clearable="true"
-                                Disabled="@(_selectedDeck is not null)"
-                                @bind-Value="_selectedBinder">
+                                   Label="Binder"
+                                   Clearable="true"
+                                   @bind-Value="_selectedBinder"
+                                   @bind-Value="@(() => _selectedDeck = null)">
                             @foreach (var b in BinderCache)
                             {
                                 <MudSelectItem Value="b">
@@ -232,10 +232,10 @@
 
                     <MudContainer Gutters="false">
                         <MudSelect T="DeckDto"
-                                Label="Deck"
-                                Clearable="true"
-                                Disabled="@(_selectedBinder is not null)"
-                                @bind-Value="_selectedDeck">
+                                   Label="Deck"
+                                   Clearable="true"
+                                   @bind-Value="_selectedDeck"
+                                   @bind-Value="@(() => _selectedBinder = null)">
                             @foreach (var d in DeckCache)
                             {
                                 <MudSelectItem Value="d">
@@ -255,9 +255,9 @@
                 </MudStack>
 
                 <MudButton Variant="Variant.Filled"
-                        Color="Color.Primary"
-                        Disabled="@(!CanSubmit)"
-                        OnClick="SubmitAsync">
+                           Color="Color.Primary"
+                           Disabled="@(!CanSubmit)"
+                           OnClick="SubmitAsync">
                     Add @_parsed.Cards.Count Cards to Collection
                 </MudButton>
 

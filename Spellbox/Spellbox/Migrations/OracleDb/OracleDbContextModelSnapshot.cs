@@ -57,7 +57,8 @@ namespace Spellbox.Migrations.OracleDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OracleId");
+                    b.HasIndex("OracleId", "Order")
+                        .IsUnique();
 
                     b.ToTable("Faces");
                 });
@@ -68,12 +69,14 @@ namespace Spellbox.Migrations.OracleDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("CMC")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("CMC")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ColorIdentity")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ColorIdentity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Colors")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Keywords")
                         .IsRequired()

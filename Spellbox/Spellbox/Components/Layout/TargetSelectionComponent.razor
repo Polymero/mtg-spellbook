@@ -1,0 +1,135 @@
+﻿
+
+<MudStack AlignItems="AlignItems.Center"
+                      Spacing="3">
+    
+    <MudStack Row="true"
+              AlignItems="AlignItems.End"
+              Spacing="4"
+              StretchItems="StretchItems.None"
+              Style="width: 90%"
+              Class="mt-n2 mb-2">
+
+        <MudContainer Gutters="false"
+                        Style="width: 100%">
+            <MudSelect T="CollectionBinderDto"
+                       Label="Binder"
+                       Clearable="true"
+                       @bind-Value="TargetBinder"
+                       @bind-Value:after="@(() => TargetDeck = null)">
+                @foreach (var b in BinderCache)
+                {
+                    <MudSelectItem Value="b">
+                        @b.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudContainer>
+
+        <MudIconButton @onclick="OpenAddBinderDialog" 
+                       Icon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Outlined"
+                       Color="Color.Success"
+                       Size="Size.Small"
+                       Class="ml-n4" />
+
+        <MudText>or</MudText>
+
+        <MudContainer Gutters="false"
+                        Style="width: 100%">
+            <MudSelect T="DeckDto"
+                       Label="Deck"
+                       Clearable="true"
+                       @bind-Value="TargetDeck"
+                       @bind-Value:after="@(() => TargetBinder = null)">
+                @foreach (var d in DeckCache)
+                {
+                    <MudSelectItem Value="d">
+                        @d.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudContainer>
+
+        <MudContainer Gutters="false"
+                      Style="width: 40%">
+            <MudSelect T="DeckZoneType"
+                       Label="Zone"
+                       Disabled="@(TargetDeck is null)"
+                       @bind-Value="TargetZoneType"
+                       Class="ml-n4">
+                @foreach (var zt in Enum.GetValues<DeckZoneType>())
+                {
+                    <MudSelectItem Value="zt">
+                        @zt
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </MudContainer>
+
+        <MudIconButton @onclick="OpenAddDeckDialog" 
+                       Icon="@Icons.Material.Filled.Add"
+                       Variant="Variant.Outlined" 
+                       Color="Color.Success"
+                       Size="Size.Small"
+                       Class="ml-n8" />
+    
+    </MudStack>
+
+</MudStack>
+
+
+@inject IDialogService DialogService
+@code {
+
+    [Parameter] public CollectionBinderDto? TargetBinder { get; set; }
+    [Parameter] public DeckDto? TargetDeck { get; set; }
+    [Parameter] public DeckZoneType TargetZoneType { get; set; } = DeckZoneType.Mainboard;
+
+    [Parameter] public List<CollectionBinderDto> BinderCache { get; set; } = [];
+    [Parameter] public List<DeckDto> DeckCache { get; set; } = [];
+
+
+    private async Task OpenAddBinderDialog()
+    {
+        var options = new DialogOptions 
+        {
+            CloseButton = true, 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddBinderDialog>("Add Binder", options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditBinderCallback callback)
+        {
+            BinderCache.Add(callback.Binder);
+            TargetBinder = callback.Binder;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenAddDeckDialog()
+    {
+        var options = new DialogOptions 
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddDeckDialog>("Add Deck", options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditDeckCallback callback)
+        {
+            DeckCache.Add(callback.Deck);
+            TargetDeck = callback.Deck;
+            StateHasChanged();
+        }
+    }
+
+}

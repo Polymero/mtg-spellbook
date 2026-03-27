@@ -459,6 +459,9 @@ namespace Spellbox.Services
                 Description = String.IsNullOrWhiteSpace(deck.Description) ? null : deck.Description.Trim(),
                 CoverImage = deck.CoverImage,
                 Sleeves = deck.Sleeves,
+                Tags = deck.Tags is null 
+                    ? null
+                    : String.Join(',', deck.Tags.Split(',', StringSplitOptions.TrimEntries & StringSplitOptions.RemoveEmptyEntries)),
 
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -499,15 +502,7 @@ namespace Spellbox.Services
 
             return await db.Decks
                 .Where(d => d.Id == deckId)
-                .Select(d => new EditableDeckDto
-                {
-                    Id = d.Id,
-                    Name = d.Name,
-                    Type = d.Type,
-                    Description = d.Description,
-                    CoverImage = d.CoverImage,
-                    Sleeves = d.Sleeves
-                })
+                .Select(EditableDeckDto.FromEntity)
                 .SingleAsync();
         }
 
@@ -526,6 +521,9 @@ namespace Spellbox.Services
             deck.Description = editDto.Description?.Trim();
             deck.CoverImage = editDto.CoverImage;
             deck.Sleeves = editDto.Sleeves?.Trim();
+            deck.Tags = editDto.Tags is null 
+                ? null
+                : String.Join(',', editDto.Tags.Split(',', StringSplitOptions.TrimEntries & StringSplitOptions.RemoveEmptyEntries));
 
             deck.UpdatedAt = DateTime.UtcNow;
 

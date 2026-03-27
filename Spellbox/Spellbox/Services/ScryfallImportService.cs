@@ -288,8 +288,15 @@ namespace Spellbox.Services
                 CMC = card.TryGetProperty("cmc", out var cmcElem) &&
                       cmcElem.ValueKind == JsonValueKind.Number &&
                       cmcElem.TryGetDecimal(out var cmc)
-                    ? cmc
-                    : 0m,
+                    ? (int) (10 * cmc)
+                    : 0,
+
+                Colors = card.TryGetProperty("colors", out var colors) &&
+                                colors.ValueKind == JsonValueKind.Array
+                    ? CardColours.FromEnumerable(colors.EnumerateArray()
+                        .Select(c => c.GetString())
+                        .Where(c => !String.IsNullOrWhiteSpace(c))!).ToInt()
+                    : 0,
 
                 ColorIdentity = card.TryGetProperty("color_identity", out var colorIdentity) &&
                                 colorIdentity.ValueKind == JsonValueKind.Array

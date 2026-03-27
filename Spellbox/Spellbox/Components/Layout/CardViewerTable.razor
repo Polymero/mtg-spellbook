@@ -1,0 +1,141 @@
+﻿
+
+<MudText Typo="Typo.h6">
+    @Viewer.Allocations.Count Copies in your Collection
+</MudText>
+
+@if (Viewer.Allocations.Count == 0)
+{
+    <MudText Class="pt-2"><i>None. :c</i></MudText>
+}
+else
+{
+    <MudTable Items="Viewer.Allocations"
+              Dense="true"
+              Hover="true"
+              Elevation="0"
+              Class="pt-2">
+    
+        <HeaderContent>
+            <MudTh Style="text-align: start">Location</MudTh>
+            <MudTh Style="text-align: center">Set Code</MudTh>
+            <MudTh Style="text-align: center">Finish</MudTh>
+            <MudTh Style="text-align: center">Language</MudTh>
+            <MudTh Style="text-align: center">Condition</MudTh>
+            <MudTh Style="text-align: center">Flags</MudTh>
+            <MudTh Style="text-align: center">Bought</MudTh>
+            <MudTh Style="text-align: center">Price</MudTh>
+            <MudTh Style="text-align: end"></MudTh>
+        </HeaderContent>
+
+        <RowTemplate Context="a">
+            <MudTd  Style="text-align: start">
+                @if (a.BinderName is not null) { @a.BinderName }
+                else if (a.DeckName is not null) { @a.DeckName }
+                else { <MudText Typo="Typo.caption"><i>Unassigned</i></MudText> }
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @String.Format("{0} {1}", Viewer.Variant.SetCode.ToUpper(), Viewer.Variant.CollNum)
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @switch (a.Finish)
+                {
+                    case CardFinish.Unknown: <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                    case CardFinish.NonFoil: <MudIcon Icon="@Icons.Material.Rounded.StarBorder" Color="Color.Default" Title="NonFoil" /> break;
+                    case CardFinish.Foil: <MudIcon Icon="@Icons.Material.Rounded.Star" Color="Color.Warning" Title="Foil" /> break;
+                    default: <MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning" Label="true" Size="Size.Small">@a.Finish.ToString()</MudChip> break;
+                }
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @a.Language
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @switch (a.Condition)
+                {
+                    case CardCondition.Mint: <MudChip T="string" Variant="Variant.Outlined" Style="color: #17a2b8; border-color: #17a2b8;" Label="true" Size="Size.Small"><b>MT</b></MudChip> break;
+                    case CardCondition.NearMint: <MudChip T="string" Variant="Variant.Outlined" Style="color: #3caf56; border-color: #3caf56;" Label="true" Size="Size.Small"><b>NM</b></MudChip> break;
+                    case CardCondition.Excellent: <MudChip T="string" Variant="Variant.Outlined" Style="color: #82891e; border-color: #82891e;" Label="true" Size="Size.Small"><b>EX</b></MudChip> break;
+                    case CardCondition.Good: <MudChip T="string" Variant="Variant.Outlined" Style="color: #ffc107; border-color: #ffc107;" Label="true" Size="Size.Small"><b>GD</b></MudChip> break;
+                    case CardCondition.LightPlayed: <MudChip T="string" Variant="Variant.Outlined" Style="color: #fd8b2b; border-color: #fd8b2b;" Label="true" Size="Size.Small"><b>LP</b></MudChip> break;
+                    case CardCondition.Played: <MudChip T="string" Variant="Variant.Outlined" Style="color: #e56874; border-color: #e56874;" Label="true" Size="Size.Small"><b>PL</b></MudChip> break;
+                    case CardCondition.Poor: <MudChip T="string" Variant="Variant.Outlined" Style="color: #dc3545; border-color: #dc3545;" Label="true" Size="Size.Small"><b>PO</b></MudChip> break;
+                    default: <MudChip T="string" Variant="Variant.Outlined" Label="true" Size="Size.Small"><b>—</b></MudChip> break;
+                }
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @if (a.IsAltered) { <MudIcon Icon="@Icons.Material.Filled.Filter" Title="Altered" /> }
+                @if (a.IsSigned) { <MudIcon Icon="@Icons.Material.Filled.Draw" Title="Signed" /> }
+                @if (a.IsStamped) { <MudIcon Icon="@Icons.Material.Filled.Bookmark" Title="Stamped" /> }
+                @if (a.IsMisprint) { <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Title="Misprint" /> }
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @if (a.BoughtFor.HasValue)
+                {
+                    @if (a.Price.HasValue && a.Price.Value > 0m && a.BoughtFor > 0m)
+                    {
+                        var shift = 100 * (a.Price.Value - a.BoughtFor.Value) / a.BoughtFor.Value;
+
+                        @if (shift < 0m) { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Error">(@shift.ToString("0.0")%)</MudText></span> }
+                        else { <span>€@a.BoughtFor.Value.ToString("0.00") <MudText Typo="Typo.caption" Color="Color.Success">(+@shift.ToString("0.0")%)</MudText></span> }
+                    }
+                    else { <span>€@a.BoughtFor.Value.ToString("0.00")</span> }
+                }
+                else { <span>—</span> }
+            </MudTd>
+            <MudTd Style="text-align: center">
+                @if (a.Price.HasValue) { <span>€@a.Price.Value.ToString("0.00")</span> }
+                else { <span>—</span> }
+            </MudTd>
+            <MudTd Style="text-align: end">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                Color="Color.Warning"
+                                Size="Size.Small" 
+                                OnClick="@(() => EditAllocationAsync(a.Id))" />
+            </MudTd>
+        </RowTemplate>
+    
+    </MudTable>
+}
+
+
+@inject IDialogService DialogService
+@code {
+
+    [Parameter] public CardDetailsViewerDto Viewer { get; set; } = null!;
+
+    private async Task EditAllocationAsync(Guid allocationId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["AllocationId"] = allocationId
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditAllocationDialog>("Edit Allocation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is EditAllocationCallback callback)
+        {
+            if (callback.IsUpdated)
+            {
+                var index = Viewer.Allocations
+                    .FindIndex(a => a.Id == callback.Allocation.Id);
+
+                if (index >= 0)
+                    Viewer.Allocations[index] = callback.Allocation;
+            }
+
+            if (callback.IsDeleted)
+                Viewer.Allocations.RemoveAll(a => a.Id == callback.Allocation.Id);
+
+            StateHasChanged();
+        }
+    }
+
+}

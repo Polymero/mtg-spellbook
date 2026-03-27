@@ -94,7 +94,8 @@
                 <MudSelect T="Guid?"
                            Label="Binder"
                            Clearable="true"
-                           @bind-Value="_editDto.BinderId">
+                           @bind-Value="_editDto.BinderId"
+                           @bind-Value:after="@(() => _editDto.ZoneId = null)">
                     @foreach (var b in _binders)
                     {
                         <MudSelectItem Value="@( (Guid?) b.Id)">
@@ -116,7 +117,8 @@
                 <MudSelect T="Guid?"
                            Label="Deck"
                            Clearable="true"
-                           @bind-Value=_editDto.ZoneId>
+                           @bind-Value="_editDto.ZoneId"
+                           @bind-Value:after="@(() => _editDto.BinderId = null)">
                     @foreach (var d in _decks)
                     {
                         <MudSelectItem Value="@( (Guid?) d.ActiveMainboardId)">
@@ -161,6 +163,7 @@
 
 
 @inject CollectionService CollectionService
+@inject CrossService CrossService
 @inject ISnackbar Snackbar
 @code {
 
@@ -180,7 +183,7 @@
     private bool CanSave =>
         !(
             _editDto.BinderId.HasValue && 
-            _editDto.SnapshotId.HasValue
+            _editDto.ZoneId.HasValue
         );
 
 
@@ -195,7 +198,7 @@
 
     private async Task SaveAsync()
     {
-        var updatedDto = await CollectionService.UpdateAllocationAsync(_editDto);
+        var updatedDto = await CrossService.UpdateAllocationAsync(_editDto);
         MudDialog.Close(DialogResult.Ok(new EditAllocationCallback(
             updatedDto,
             true, 

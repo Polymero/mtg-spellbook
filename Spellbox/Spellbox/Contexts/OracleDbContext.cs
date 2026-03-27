@@ -92,7 +92,8 @@ namespace Spellbox.Contexts
             entity.Property(e => e.TypeLine)
                   .IsRequired();
 
-            entity.HasIndex(e => e.OracleId);
+            entity.HasIndex(e => new {e.OracleId, e.Order})
+                  .IsUnique();
 
             entity.HasOne(e => e.Oracle)
                   .WithMany(o => o.Faces)

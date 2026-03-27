@@ -164,6 +164,25 @@ namespace Spellbox.Services
         }
 
 
+        public async Task<CollectionAllocationDto> UpdateAllocationAsync(
+            EditableAllocationDto editDto
+        )
+        {
+            var sourceIds = await _collection.GetSourceIdsAsync([editDto.AllocationId]);
+
+            var edited = await _collection.UpdateAllocationAsync(editDto);
+
+            sourceIds.AddRange(await _collection.GetSourceIdsAsync([edited.Id]));
+
+            foreach (var sourceId in sourceIds.Distinct())
+            {
+                await RefreshDeckPropertiesAsync(sourceId);
+            };
+
+            return edited;
+        }
+
+
         public async Task<List<Guid>> MoveAllocationsAsync(
             IEnumerable<Guid> allocationIds,
             Guid? binderId,

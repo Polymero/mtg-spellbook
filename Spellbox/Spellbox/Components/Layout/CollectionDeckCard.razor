@@ -53,18 +53,33 @@
 
             <MudStack Row="true"
                       Spacing="1"
-                      AlignItems="AlignItems.Center">
-
-                @* @foreach (var colour in Deck.ColorIdentity)
-                {
-                    <MudIcon Icon=@SymbologyService.RenderSymbolIcon(colour)
-                             Size="Size.Small" />
-                } *@
+                      AlignItems="AlignItems.Center"
+                      Class="mb-n1">
 
                 <MudText Style="font-size: 1.28em;"
-                         Class="mb-0">
-                    @SymbologyService.RenderSymbolText('{' + String.Join("}{", Deck.ColorIdentity) + '}')
+                         Class="">
+                    @SymbologyService.RenderSymbolText(Deck.ColorIdentity.ToString())
                 </MudText>
+
+                @if (Deck.Tags.Count > 0)
+                {
+                    <MudStack Row="true"
+                              Spacing="0"
+                              Class="ml-1">
+                        @foreach (var tag in Deck.Tags)
+                        {
+                            <MudChip T="string"
+                                    Label="true"
+                                    Variant="Variant.Outlined"
+                                    Size="Size.Small"
+                                    Color="Color.Inherit"
+                                    Class="mr-0 pa-1"
+                                    Style="height: 22px">
+                                <span style="font-size: .7rem">@tag</span>
+                            </MudChip>
+                        }
+                    </MudStack>
+                }
 
                 @if (!String.IsNullOrWhiteSpace(Deck.Sleeves))
                 {

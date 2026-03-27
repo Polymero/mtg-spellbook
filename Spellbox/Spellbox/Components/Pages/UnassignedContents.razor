@@ -99,41 +99,35 @@ else
                         </MudSelect>
                     </MudContainer>
 
-                    <MudToggleIconButton Icon="@SymbologyService.RenderSymbolIcon("{C}")"
-                            Size="Size.Large" 
-                            Style=@(_CIF.C ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.C"
-                            @bind-Value:after="ApplyFilter" />
+                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
+                             Size="Size.Large" 
+                             Style=@(_CIF.C ? "" : "opacity: 0.3")
+                             @onclick="@(() => {_CIF.C = !_CIF.C; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
                             Size="Size.Large"
                             Style=@(_CIF.W ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.W"
-                            @bind-Value:after="ApplyFilter" />
+                            @onclick="@(() => {_CIF.W = !_CIF.W; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
                             Size="Size.Large" 
                             Style=@(_CIF.U ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.U"
-                            @bind-Value:after="ApplyFilter" />
+                            @onclick="@(() => {_CIF.U = !_CIF.U; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
                             Size="Size.Large" 
                             Style=@(_CIF.B ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.B"
-                            @bind-Value:after="ApplyFilter" />
+                            @onclick="@(() => {_CIF.B = !_CIF.B; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
                             Size="Size.Large" 
                             Style=@(_CIF.R ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.R"
-                            @bind-Value:after="ApplyFilter" />
+                            @onclick="@(() => {_CIF.R = !_CIF.R; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
                             Size="Size.Large"
                             Style=@(_CIF.G ? "" : "opacity: 0.3")
-                            @bind-Value="_CIF.G"
-                            @bind-Value:after="ApplyFilter" />>
+                            @onclick="@(() => {_CIF.G = !_CIF.G; ApplyFilter();})" />
 
                 </MudStack>
             </MudContainer>
@@ -141,13 +135,13 @@ else
             <MudContainer Style="width: 40%"
                           Class="ma-0 pa-0">
                 <MudTextField Label="Search" 
-                            T="string"
-                            Variant="Variant.Text"
-                            Clearable="true"
-                            @bind-Value="_search"
-                            @bind-Value:after="ApplyFilter"
-                            Immediate="true"
-                            DebounceInterval="0" />
+                              T="string"
+                              Variant="Variant.Text"
+                              Clearable="true"
+                              @bind-Value="_search"
+                              @bind-Value:after="ApplyFilter"
+                              Immediate="true"
+                              DebounceInterval="0" />
             </MudContainer>
 
         </MudStack>
@@ -156,6 +150,15 @@ else
 
     <MudPaper Class="pa-4"
               Outlined="true">
+
+        <MudText Typo="Typo.h6" 
+                 Align="Align.Center"
+                 Class="mt-n2">
+            <span style="font-size: 0.75em"><i>
+                @_filteredGroups.Sum(g => g.Quantity)
+                &nbsp; €@_filteredGroups.Sum(g => g.Price).ToString("0.00")
+            </i></span>
+        </MudText>
 
         @if (_displayMode == CardDisplayMode.Grid)
         {
@@ -193,10 +196,6 @@ else
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
-    @* private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
-    {
-        {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
-    }; *@
     private CardColours _CIF = new CardColours();
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
     private string _search = "";
@@ -252,9 +251,9 @@ else
             if (variant.Allocations.Count == 0)
                 RemoveVariant(variant);
         }
-
-        ApplyFilter();
+        
         StateHasChanged();
+        ApplyFilter();
     }
 
     private void UpdateCacheOnEdit(EditAllocationCallback callback)
@@ -265,8 +264,8 @@ else
         else if (callback.IsUpdated)
             UpdateAllocation(callback.Allocation, removeIfMoved: true);
 
-        ApplyFilter();
         StateHasChanged();
+        ApplyFilter();
     }
 
     private void RemoveAllocation(CollectionAllocationDto deletedAllocation)
@@ -384,7 +383,6 @@ else
                 .Where(oracle => oracle.Name.ToLowerInvariant().Contains(_search.ToLowerInvariant()))
                 .ToList();
         }
-        
     }
 
 }

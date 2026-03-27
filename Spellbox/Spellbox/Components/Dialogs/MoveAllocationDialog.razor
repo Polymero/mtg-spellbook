@@ -9,67 +9,12 @@
     </TitleContent>
 
     <DialogContent>
-    
-        <MudGrid Class="mb-4">
 
-            <!-- Binder allocation -->
-            <MudItem xs="5">
-                <MudSelect T="CollectionBinderDto"
-                           Label="Binder"
-                           Clearable="true"
-                           @bind-Value="_targetBinder">
-                    @foreach (var b in _binders)
-                    {
-                        <MudSelectItem Value="b">
-                            @b.Name
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-
-            <MudItem xs="2"
-                     Class="d-flex align-end">
-                <MudText>
-                    OR
-                </MudText>
-            </MudItem>
-
-            <!-- Deck allocation -->
-            <MudItem xs="5">
-                <MudSelect T="DeckDto"
-                           Label="Deck"
-                           Clearable="true"
-                           @bind-Value="_targetDeck">
-                    @foreach (var d in _decks)
-                    {
-                        <MudSelectItem Value="d">
-                            @d.Name
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-
-            @if (_targetDeck is not null)
-            {
-                <MudItem xs="7">
-
-                </MudItem>
-
-                <MudItem xs="5">
-                    <MudSelect T="DeckZoneType"
-                               Label="Zone"
-                               @bind-Value="_targetZoneType">
-                        @foreach (var zt in Enum.GetValues<DeckZoneType>())
-                        {
-                            <MudSelectItem Value="zt">
-                                @zt
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-            }
-        
-        </MudGrid>
+        <TargetSelectionComponent BinderCache="_binders"
+                                  DeckCache="_decks"
+                                  TargetBinder="_targetBinder"
+                                  TargetDeck="_targetDeck"
+                                  TargetZoneType="_targetZoneType"/>
 
     </DialogContent>
 
@@ -98,6 +43,7 @@
 
 @inject CollectionService CollectionService
 @inject CrossService CrossService
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @code {
 
@@ -138,12 +84,8 @@
 
     private async Task MoveAsync()
     {
-        if (_targetBinder?.Id == CurrentBinderId)
-            Cancel();
-
         var movedIds = await CrossService.MoveAllocationsAsync(AllocationIds, _targetBinder?.Id, _targetDeck?.Id, _targetZoneType);
-        MudDialog.Close(DialogResult.Ok(new MoveAllocationsCallback(movedIds)));
-
+        
         var targetName = "Unassigned";
         if (_targetBinder is not null)
             targetName = _targetBinder.Name;
@@ -151,7 +93,12 @@
             targetName = _targetDeck.Name;
 
         Snackbar.Add($"Moved {movedIds.Count} card(s) to '{targetName}.'", Severity.Success);
+
+        MudDialog.Close(DialogResult.Ok(new MoveAllocationsCallback(movedIds.AsEnumerable())));
     }
+
+
+
 
 
     private void Cancel() => MudDialog.Cancel();

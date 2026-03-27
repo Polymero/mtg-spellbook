@@ -87,34 +87,35 @@ else
                     </MudContainer>
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
-                            Size="Size.Large" 
-                            Style=@(_CIF["C"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("C"))" />
+                             Size="Size.Large" 
+                             Style=@(_CIF.C ? "" : "opacity: 0.3")
+                             @onclick="@(() => {_CIF.C = !_CIF.C; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
                             Size="Size.Large"
-                            Style=@(_CIF["W"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("W"))" />
+                            Style=@(_CIF.W ? "" : "opacity: 0.3")
+                            @onclick="@(() => {_CIF.W = !_CIF.W; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["U"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("U"))" />
+                            Style=@(_CIF.U ? "" : "opacity: 0.3")
+                            @onclick="@(() => {_CIF.U = !_CIF.U; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["B"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("B"))" />
+                            Style=@(_CIF.B ? "" : "opacity: 0.3")
+                            @onclick="@(() => {_CIF.B = !_CIF.B; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
                             Size="Size.Large" 
-                            Style=@(_CIF["R"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("R"))" />
+                            Style=@(_CIF.R ? "" : "opacity: 0.3")
+                            @onclick="@(() => {_CIF.R = !_CIF.R; ApplyFilter();})" />
 
                     <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
                             Size="Size.Large"
-                            Style=@(_CIF["G"] ? "" : "opacity: 0.3")
-                            @onclick="@(() => ToggleCIF("G"))" />
+                            Style=@(_CIF.G ? "" : "opacity: 0.3")
+                            @onclick="@(() => {_CIF.G = !_CIF.G; ApplyFilter();})" />
+
                 </MudStack>
             </MudContainer>
 
@@ -277,10 +278,7 @@ else
 
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
-    private Dictionary<string, bool> _CIF = new Dictionary<string, bool>()
-    {
-        {"C" , false}, {"W" , false}, {"U" , false}, {"B" , false}, {"R" , false}, {"G" , false}
-    };
+    private CardColours _CIF = new CardColours();
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
     private string _search = "";
 
@@ -407,15 +405,10 @@ else
         Contain
     }
 
-    private void ToggleCIF(string colour)
-    {
-        _CIF[colour] = !_CIF[colour];
-
-        ApplyFilter();
-    }
-
     private void ApplyFilter()
     {
+        var _cif = _CIF.ToInt();
+
         foreach (var kvp in _zones)
         {
             kvp.Value.FilteredGroups = kvp.Value.Groups;
@@ -423,42 +416,39 @@ else
             if (kvp.Key == DeckZoneType.Commanders || kvp.Key == DeckZoneType.Companions)
                 continue;
 
-            if (_CIF.Values.Any(v => v))
+            if (_cif != 0)
             {
-                var colours = _CIF
-                    .Where(kvp => kvp.Value)
-                    .Select(kvp => kvp.Key);
-
                 if (_CIFMode == ColorIdentityFilterMode.AtMost)
                 {
                     kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
-                        .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c)))
+                        .Where(oracle => ((oracle.ColorIdentity | _cif) ^ _cif) == 0 )
                         .ToList();
 
-                    if (!_CIF["C"])
+                    if (!_CIF.C)
                         kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
-                            .Where(oracle => oracle.ColorIdentity.Count > 0)
+                            .Where(oracle => oracle.ColorIdentity > 0)
                             .ToList();
                 }
 
                 if (_CIFMode == ColorIdentityFilterMode.Equals)
                 {
-                    if (colours.Count() == 1 && colours.First() == "C")
+                    if (_cif == 16)
                         kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
-                            .Where(oracle => oracle.ColorIdentity.Count == 0)
+                            .Where(oracle => oracle.ColorIdentity == 0)
                             .ToList();
                     else
                         kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
-                            .Where(oracle => oracle.ColorIdentity.All(c => colours.Contains(c))
-                                && oracle.ColorIdentity.Count == colours.Count())
+                            .Where(oracle => oracle.ColorIdentity == _cif)
                             .ToList();
                 }
 
                 if (_CIFMode == ColorIdentityFilterMode.Contain)
                 {
                     kvp.Value.FilteredGroups = kvp.Value.FilteredGroups
-                        .Where(oracle => colours.Where(c => c != "C").All(c => oracle.ColorIdentity.Contains(c))
-                            || (_CIF["C"] ? oracle.ColorIdentity.Count == 0 : false))
+                        .Where(oracle => 
+                            (oracle.ColorIdentity & _cif) == (_cif & 47) ||
+                            _CIF.C ? oracle.ColorIdentity == 0 : false
+                        )
                         .ToList();
                 }
             }

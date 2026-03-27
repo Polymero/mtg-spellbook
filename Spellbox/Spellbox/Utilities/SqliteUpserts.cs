@@ -22,6 +22,7 @@ INSERT INTO Oracles (
     TypeLine,
     Keywords,
     CMC,
+    Colors,
     ColorIdentity,
     Legalities
 )
@@ -31,6 +32,7 @@ VALUES (
     {oracle.TypeLine},
     {oracle.Keywords},
     {oracle.CMC},
+    {oracle.Colors},
     {oracle.ColorIdentity},
     {oracle.Legalities}
 )
@@ -40,6 +42,7 @@ DO UPDATE SET
     TypeLine = excluded.TypeLine,
     Keywords = excluded.Keywords,
     CMC = excluded.CMC,
+    Colors = excluded.Colors,
     ColorIdentity = excluded.ColorIdentity,
     Legalities = excluded.Legalities
 ", ct);

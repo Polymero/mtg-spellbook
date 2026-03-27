@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using MudBlazor.Utilities
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -8,11 +9,12 @@
 <MudLayout Style="min-height: calc(100vh - 7.5rem)">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudLink Typo="Typo.h5"
-                       Href="/"
-                       Class="ml-3">
-                       <b>Spellbox</b>
-                    </MudLink>
+        <MudLink Typo="Typo.caption"
+                 Style="font-size: 1.5rem"
+                 Href="/"
+                 Class="ml-3">
+            <span style=@($"color: {_darkPalette.Primary}")><b>Spell</b></span><span style=@($"color: {_darkPalette.Primary}")><b>box</b></span>
+        </MudLink>
         <MudSpacer />
         <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
