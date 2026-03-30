@@ -9,7 +9,7 @@ namespace Spellbox.Model
         public Side Front;
         public Side Back;
 
-        public CardImage(Guid scryfallId, bool isReversed)
+        public CardImage(Guid scryfallId, bool isReversed = false)
         {
             ScryfallId = scryfallId.ToString();
 

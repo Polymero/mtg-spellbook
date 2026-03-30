@@ -102,6 +102,7 @@ else
 @code {
 
     [Parameter] public CardDetailsViewerDto Viewer { get; set; } = null!;
+    [Parameter] public string Name { get; set; } = "your Collection";
 
     private async Task EditAllocationAsync(Guid allocationId)
     {

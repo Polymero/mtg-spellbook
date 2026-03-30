@@ -345,7 +345,7 @@ namespace Spellbox.Services
                Id = binderId,
                Name = binder.Name.Trim(),
                Description = String.IsNullOrWhiteSpace(binder.Description) ? null : binder.Description.Trim(),
-               CoverImage = binder.CoverImage,
+               CoverImages = binder.CoverImages,
 
                CreatedAt = DateTime.UtcNow,
                UpdatedAt = DateTime.UtcNow
@@ -378,7 +378,7 @@ namespace Spellbox.Services
 
             binder.Name = editDto.Name.Trim();
             binder.Description = editDto.Description?.Trim();
-            binder.CoverImage = editDto.CoverImage;
+            binder.CoverImages = editDto.CoverImages;
 
             binder.UpdatedAt = DateTime.UtcNow;
 
@@ -423,7 +423,7 @@ namespace Spellbox.Services
                 Name = binderDto.Name,
                 Type = DeckType.Unassigned,
                 Description = binderDto.Description,
-                CoverImage = binderDto.CoverImage
+                CoverImages = binderDto.CoverImages
             });
 
             var allocations = await db.Allocations
@@ -457,7 +457,7 @@ namespace Spellbox.Services
                 Name = deck.Name,
                 Type = deck.Type,
                 Description = String.IsNullOrWhiteSpace(deck.Description) ? null : deck.Description.Trim(),
-                CoverImage = deck.CoverImage,
+                CoverImages = deck.CoverImages,
                 Sleeves = deck.Sleeves,
                 Tags = deck.Tags is null 
                     ? null
@@ -519,7 +519,7 @@ namespace Spellbox.Services
             deck.Name = editDto.Name.Trim();
             deck.Type = editDto.Type;
             deck.Description = editDto.Description?.Trim();
-            deck.CoverImage = editDto.CoverImage;
+            deck.CoverImages = editDto.CoverImages;
             deck.Sleeves = editDto.Sleeves?.Trim();
             deck.Tags = editDto.Tags is null 
                 ? null
@@ -586,7 +586,7 @@ namespace Spellbox.Services
                 Id = deckDto.Id,
                 Name = deckDto.Name,
                 Description = deckDto.Description,
-                CoverImage = deckDto.CoverImage
+                CoverImages = deckDto.CoverImages
             });
 
             var snapshots = await db.Snapshots

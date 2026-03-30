@@ -13,6 +13,7 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
+        public List<Guid> CoverImages { get; set; } = [];
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -26,6 +27,7 @@ namespace Spellbox.Model
         public string Name { get; init; } = null!;
         public string? Description { get; init; }
         public string? CoverImage { get; init; }
+        public List<Guid> CoverImages { get; init; } = [];
 
         public DateTime CreatedAt { get; init; }
         public DateTime UpdatedAt { get; init; }
@@ -42,6 +44,7 @@ namespace Spellbox.Model
                 Name = e.Name,
                 Description = e.Description,
                 CoverImage = e.CoverImage,
+                CoverImages = e.CoverImages,
 
                 CreatedAt = e.CreatedAt,
                 UpdatedAt = e.UpdatedAt,
@@ -59,6 +62,7 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string? CoverImage { get; set; }
+        public List<Guid> CoverImages { get; set; } = [];
 
         public static Expression<Func<CollectionBinder, EditableBinderDto>> FromEntity => e
             => new()
@@ -67,7 +71,21 @@ namespace Spellbox.Model
 
                 Name = e.Name,
                 Description = e.Description,
-                CoverImage = e.CoverImage
+                CoverImage = e.CoverImage,
+                CoverImages = e.CoverImages
+            };
+
+        public CollectionBinderDto Preview
+            => new()
+            {
+                Id = Id,
+
+                Name = Name,
+                Description = Description,
+                CoverImage = CoverImage,
+                CoverImages = CoverImages,
+
+                UpdatedAt = DateTime.UtcNow,
             };
     }
     

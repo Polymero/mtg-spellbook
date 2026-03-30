@@ -211,7 +211,13 @@ namespace Spellbox.Services
                 .Where(p => variantIds.Contains(p.VariantId))
                 .ToDictionaryAsync(p => p.VariantId, p => p.ProductId);
 
-            addedMap.ToList().ForEach(kvp => priceMap.Add(kvp.Key, kvp.Value));
+            foreach (var kvp in addedMap)
+            {
+                if (priceMap.TryGetValue(kvp.Key, out var id))
+                    priceMap[kvp.Key] = addedMap[kvp.Key];
+                else
+                    priceMap.Add(kvp.Key, kvp.Value);
+            }
 
             var prices = await marketDb.PriceCaches
                 .AsNoTracking()

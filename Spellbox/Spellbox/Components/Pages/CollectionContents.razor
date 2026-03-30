@@ -144,6 +144,15 @@ else
     <MudPaper Class="pa-4"
               Outlined="true">
 
+        <MudText Typo="Typo.h6" 
+                 Align="Align.Center"
+                 Class="mt-n2">
+            <span style="font-size: 0.75em"><i>
+                @_filteredGroups.Sum(g => g.Quantity) cards
+                &nbsp; (€@_filteredGroups.Sum(g => g.Price).ToString("0.00"))
+            </i></span>
+        </MudText>
+
         @if (_displayMode == CardDisplayMode.Grid)
         {
             <CardGridView Groups="_filteredGroups"

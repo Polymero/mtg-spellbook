@@ -6,10 +6,15 @@
 
     <MudStack Row="true" Spacing="3">
 
-        <div class="cover-container">
-            <img class="cover-image border-0" 
-                 src="@Deck.CoverImage"
-                 @onclick="@(() => NavigationManager.NavigateTo($"/decks/{Deck.Id}"))" />
+        <div class="cover-container" 
+             @onclick="@(() => NavigationManager.NavigateTo($"/decks/{Deck.Id}"))">
+            @foreach (var id in Deck.CoverImages)
+            {
+                var src = new CardImage(id).Front.ArtCrop;
+                <img class="cover-image"
+                     style=@($"width: {100 / Deck.CoverImages.Count}%")
+                     src="@src" />
+            }
         </div>
 
         <MudStack Class="flex-grow-1"

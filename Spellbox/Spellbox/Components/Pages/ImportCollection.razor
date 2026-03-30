@@ -17,16 +17,16 @@
             </MudText>
 
             <InputFile id="_inputFile" 
-                    accept=".csv"
-                    style="display:none"
-                    OnChange="HandleFileSelected" />
+                       accept=".csv"
+                       style="display:none"
+                       OnChange="HandleFileSelected" />
 
             <label for="_inputFile">
                 <MudButton Variant="Variant.Filled"
-                        Color="Color.Primary"
-                        StartIcon="@Icons.Material.Filled.FileUpload"
-                        HtmlTag="_inputFile"
-                        Disabled="_isLoading">
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.FileUpload"
+                           HtmlTag="_inputFile"
+                           Disabled="_isLoading">
                     Upload
                 </MudButton>
             </label>
@@ -36,23 +36,23 @@
                 @if (_result.Errors.Count > 0)
                 {
                     <MudAlert Severity="Severity.Warning"
-                            Dense="true">
+                              Dense="true">
                         <MudText>
                         
                         </MudText>
                         <MudList T="string"
-                                Dense="true">
+                                 Dense="true">
                             @foreach (var error in _result.Errors)
                             {
                                 <MudListItem Text="@error"
-                                            Icon="@Icons.Material.Filled.ErrorOutline" />
+                                             Icon="@Icons.Material.Filled.ErrorOutline" />
                             }
                         </MudList>
                     </MudAlert>
                 }
 
                 <MudAlert Severity="Severity.Success"
-                        Dense="true">
+                          Dense="true">
                     <MudText>
                         @_result.Cards.Sum(c => c.Quantity) entries detected in <MudChip T="string" Color="Color.Info">@_fileName</MudChip> ~ !
                     </MudText>
@@ -69,9 +69,9 @@
     @if (_result is not null)
     {
         <MudPaper Class="pa-4"
-                Outlined="true">
+                  Outlined="true">
             <MudStack AlignItems="AlignItems.Center"
-                    Spacing="3">
+                      Spacing="3">
 
                 <MudText>
                     Step 2: Parse entries into Spellbox cards.
@@ -82,9 +82,9 @@
                              @bind-Value="_isParsePurchasePrices" />
 
                 <MudButton Variant="Variant.Filled"
-                        Color="Color.Primary"
-                        Disabled="@(!CanParse)"
-                        OnClick="ParseAsync">
+                           Color="Color.Primary"
+                           Disabled="@(!CanParse)"
+                           OnClick="ParseAsync">
                     Parse
                 </MudButton>
 
@@ -93,33 +93,33 @@
                     @if (_parsed.Errors.Count > 0)
                     {
                         <MudAlert Severity="Severity.Warning"
-                                Dense="true">
+                                  Dense="true">
                             <MudText>
                             
                             </MudText>
                             <MudList T="string"
-                                    Dense="true">
+                                     Dense="true">
                                 @foreach (var error in _parsed.Errors)
                                 {
                                     <MudListItem Text="@error"
-                                                Icon="@Icons.Material.Filled.ErrorOutline" />
+                                                 Icon="@Icons.Material.Filled.ErrorOutline" />
                                 }
                             </MudList>
                         </MudAlert>
                     }
 
                     <MudAlert Severity="Severity.Success"
-                            Dense="true">
+                              Dense="true">
                         <MudText>
                             @_parsed.Cards.Count of @_result.Cards.Sum(c => c.Quantity) card(s) parsed succesfully ~ !
                         </MudText>
                     </MudAlert>
 
                     <MudTable Items="_parsed.Cards"
-                            T="NewAllocationDto"
-                            Dense="true"
-                            Hover="true"
-                            Style="max-height: 720px; overflow-y: scroll; width: 80%">
+                              T="NewAllocationDto"
+                              Dense="true"
+                              Hover="true"
+                              Style="max-height: 720px; overflow-y: scroll; width: 80%">
 
                         <HeaderContent>
                             <MudTh>
@@ -188,7 +188,7 @@
     @if (_parsed is not null)
     {
         <MudPaper Class="pa-4"
-                Outlined="true">
+                  Outlined="true">
             <MudStack AlignItems="AlignItems.Center"
                       Spacing="3">
 
@@ -211,7 +211,7 @@
                                    Label="Binder"
                                    Clearable="true"
                                    @bind-Value="_selectedBinder"
-                                   @bind-Value="@(() => _selectedDeck = null)">
+                                   @bind-Value:after="@(() => _selectedDeck = null)">
                             @foreach (var b in BinderCache)
                             {
                                 <MudSelectItem Value="b">
@@ -235,7 +235,7 @@
                                    Label="Deck"
                                    Clearable="true"
                                    @bind-Value="_selectedDeck"
-                                   @bind-Value="@(() => _selectedBinder = null)">
+                                   @bind-Value:after="@(() => _selectedBinder = null)">
                             @foreach (var d in DeckCache)
                             {
                                 <MudSelectItem Value="d">

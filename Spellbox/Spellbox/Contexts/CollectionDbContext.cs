@@ -109,6 +109,13 @@ namespace Spellbox.Contexts
             entity.Property(e => e.Name)
                   .IsRequired();
 
+            entity.Property(e => e.CoverImages)
+                  .HasConversion(
+                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
+                        e => JsonSerializer.Deserialize<List<Guid>>(e, (JsonSerializerOptions?)null)!
+                  )
+                  .IsRequired();
+
             entity.Property(e => e.CreatedAt)
                   .IsRequired();
 
@@ -138,6 +145,13 @@ namespace Spellbox.Contexts
                   .IsRequired();
 
             entity.Property(e => e.LegalityStatus)
+                  .IsRequired();
+
+            entity.Property(e => e.CoverImages)
+                  .HasConversion(
+                        e => JsonSerializer.Serialize(e, (JsonSerializerOptions?)null),
+                        e => JsonSerializer.Deserialize<List<Guid>>(e, (JsonSerializerOptions?)null)!
+                  )
                   .IsRequired();
 
             entity.Property(e => e.CreatedAt)

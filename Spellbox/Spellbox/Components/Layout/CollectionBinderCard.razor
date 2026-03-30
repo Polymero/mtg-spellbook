@@ -1,5 +1,4 @@
-﻿@using MudBlazor.Charts
-
+﻿
 
 <MudPaper Elevation="1" 
           Class="pa-3 collection-card" 
@@ -7,16 +6,19 @@
 
     <MudStack Row="true" Spacing="3">
 
-        <div class="cover-container">
-            <img class="cover-image" 
-                 src="@Binder.CoverImage" 
-                 @onclick="@(() => NavigationManager.NavigateTo($"/binders/{Binder.Id}"))" />
+        <div class="cover-container" 
+             @onclick="@(() => NavigationManager.NavigateTo($"/binders/{Binder.Id}"))">
+            @foreach (var id in Binder.CoverImages)
+            {
+                var src = new CardImage(id).Front.ArtCrop;
+                <img class="cover-image"
+                     style=@($"width: {100 / Binder.CoverImages.Count}%")
+                     src="@src" />
+            }
         </div>
 
-        <!-- Right: Content -->
         <MudStack Class="flex-grow-1">
 
-            <!-- Top Row -->
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
 
                 <MudStack Spacing="0">
@@ -54,7 +56,6 @@
 
             </MudStack>
 
-            <!-- Bottom Row -->
             <MudText Typo="Typo.body2" Class="mt-2">
                 @Binder.Description
             </MudText>

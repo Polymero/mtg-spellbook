@@ -9,37 +9,96 @@
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="_newDeck.Name"
-                      Label="Name"
-                      Required="true"
-                      Immediate="true"
-                      Typo="Typo.h5" />
+        
+        <MudStack Spacing="2">
 
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newDeck.Name"
+                              Label="Name" 
+                              Required="true"
+                              Immediate="true"
+                              Typo="Typo.h5" />
+            </MudPaper>
 
-        <MudSelect T="DeckType"
-                    Label="Type"
-                    @bind-Value="_newDeck.Type">
-            @foreach (var v in Enum.GetValues<DeckType>())
-            {
-                <MudSelectItem Value="v">
-                    @v
-                </MudSelectItem>
-            }
-        </MudSelect>
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudSelect T="DeckType"
+                           Label="Type"
+                           @bind-Value="_newDeck.Type">
+                    @foreach (var v in Enum.GetValues<DeckType>())
+                    {
+                        <MudSelectItem Value="v">
+                            @v
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudPaper>
 
-        <MudTextField @bind-Value="_newDeck.Description"
-                      Label="Description"
-                      Lines="3"
-                      Immediate="true" />
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newDeck.Description" 
+                            Label="Description" 
+                            Lines="3"
+                            Immediate="true"
+                            ShrinkLabel="true" />
+            </MudPaper>
 
-        <MudTextField @bind-Value="_newDeck.Sleeves"
-                      Label="Sleeves" />
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newDeck.Tags"
+                              Label="Tags" />
+            </MudPaper>
 
-        <MudTextField @bind-Value="_newDeck.Tags"
-                      Label="Tags" />
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newDeck.Sleeves"
+                              Label="Sleeves" />          
+            </MudPaper>
 
-        <MudTextField @bind-Value="_newDeck.CoverImage"
-                      Label="Cover Image" />
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+
+                <MudText Typo="Typo.caption">
+                    Cover Images
+                </MudText>
+
+                @foreach (var id in _newDeck.CoverImages)
+                {
+                    <MudStack Row="true" 
+                              StretchItems="StretchItems.Start">
+                        <MudText>@id</MudText>
+
+                        <MudIconButton @onclick="@(() => _newDeck.CoverImages.Remove(id))"
+                                       Icon="@Icons.Material.Filled.Remove"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       Size="Size.Small" />
+                    </MudStack>
+                }
+
+                <MudStack Row="true">
+
+                    <MudContainer Gutters="false">
+                        <CardSearchComponent OnSelectFunc="@((_viewer) => _selectedVariantId = _viewer.Variant.ScryfallId)"/>
+                    </MudContainer>
+
+                    <MudIconButton @onclick="@(() => _newDeck.CoverImages.Add(_selectedVariantId!.Value))"
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Tertiary"
+                                   Size="Size.Small"
+                                   Class="mt-4"
+                                   Disabled="@(_selectedVariantId is null)" />
+                </MudStack>
+            </MudPaper>
+
+            <MudContainer Gutters="false">
+                <CollectionDeckCard Deck="_newDeck.Preview" />
+            </MudContainer>
+
+        </MudStack>
+
     </DialogContent>
 
     <DialogActions>
@@ -65,6 +124,7 @@
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     private EditableDeckDto _newDeck = new();
+    private Guid? _selectedVariantId = null;
 
 
     private async Task AddDeck()

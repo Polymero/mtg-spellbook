@@ -13,7 +13,7 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public DeckType Type { get; set; } = DeckType.Unassigned;
         public string? Description { get; set; }
-        public string? CoverImage { get; set; }
+        public List<Guid> CoverImages { get; set; } = [];
         public string? Sleeves { get; set; }
         public string? Tags { get; set; }
 
@@ -32,7 +32,7 @@ namespace Spellbox.Model
         public string Name { get; init; } = null!;
         public DeckType Type { get; init; }
         public string? Description { get; init; }
-        public string? CoverImage { get; init; }
+        public List<Guid> CoverImages { get; init; } = [];
         public string? Sleeves { get; init; }
         public List<string> Tags { get; init; } = [];
 
@@ -60,7 +60,7 @@ namespace Spellbox.Model
                 Name = e.Name,
                 Type = e.Type,
                 Description = e.Description,
-                CoverImage = e.CoverImage,
+                CoverImages = e.CoverImages,
                 Sleeves = e.Sleeves,
                 Tags = String.IsNullOrEmpty(e.Tags) 
                     ? new List<string>() 
@@ -103,7 +103,7 @@ namespace Spellbox.Model
         public string Name { get; set; } = null!;
         public DeckType Type { get; set; }
         public string? Description { get; set; }
-        public string? CoverImage { get; set; }
+        public List<Guid> CoverImages { get; set; } = [];
         public string? Sleeves { get; set; }
         public string? Tags { get; set; }
 
@@ -115,9 +115,29 @@ namespace Spellbox.Model
                 Name = e.Name,
                 Type = e.Type,
                 Description = e.Description,
-                CoverImage = e.CoverImage,
+                CoverImages = e.CoverImages,
                 Sleeves = e.Sleeves,
                 Tags = e.Tags
+            };
+
+        public DeckDto Preview
+            => new()
+            {
+                Id = Id,
+
+                Name = Name,
+                Type = Type,
+                Description = Description,
+                CoverImages = CoverImages,
+
+                Sleeves = Sleeves,
+                Tags = String.IsNullOrEmpty(Tags) 
+                    ? new List<string>() 
+                    : Tags.Split(',', StringSplitOptions.TrimEntries).ToList(),
+
+                ColorIdentity = CardColours.FromInt(0),
+
+                UpdatedAt = DateTime.UtcNow
             };
     }
 

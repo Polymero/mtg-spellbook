@@ -8,19 +8,70 @@
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="_newBinder.Name"
-                      Label="Name" 
-                      Required="true"
-                      Immediate="true"
-                      Typo="Typo.h5" />
 
-        <MudTextField @bind-Value="_newBinder.Description" 
-                      Label="Description" 
-                      Lines="3"
-                      Immediate="true" />
+    <MudStack Spacing="2">
 
-        <MudTextField @bind-Value="_newBinder.CoverImage"
-                      Label="Cover Image" />
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newBinder.Name"
+                            Label="Name" 
+                            Required="true"
+                            Immediate="true"
+                            Typo="Typo.h5" />
+            </MudPaper>
+
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+                <MudTextField @bind-Value="_newBinder.Description" 
+                            Label="Description" 
+                            Lines="3"
+                            Immediate="true"
+                            ShrinkLabel="true" />
+            </MudPaper>
+
+            <MudPaper Outlined="true"
+                      Class="px-4 py-2">
+
+                <MudText Typo="Typo.caption">
+                    Cover Images
+                </MudText>
+
+                @foreach (var id in _newBinder.CoverImages)
+                {
+                    <MudStack Row="true" 
+                              StretchItems="StretchItems.Start">
+                        <MudText>@id</MudText>
+
+                        <MudIconButton @onclick="@(() => _newBinder.CoverImages.Remove(id))"
+                                       Icon="@Icons.Material.Filled.Remove"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       Size="Size.Small" />
+                    </MudStack>
+                }
+
+                <MudStack Row="true">
+
+                    <MudContainer Gutters="false">
+                        <CardSearchComponent OnSelectFunc="@((_viewer) => _selectedVariantId = _viewer.Variant.ScryfallId)"/>
+                    </MudContainer>
+
+                    <MudIconButton @onclick="@(() => _newBinder.CoverImages.Add(_selectedVariantId!.Value))"
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Tertiary"
+                                   Size="Size.Small"
+                                   Class="mt-4"
+                                   Disabled="@(_selectedVariantId is null)" />
+                </MudStack>
+            </MudPaper>
+
+            <MudContainer Gutters="false">
+                <CollectionBinderCard Binder="_newBinder.Preview" />
+            </MudContainer>
+
+        </MudStack>
+
     </DialogContent>
 
     <DialogActions>
@@ -46,6 +97,7 @@
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     private EditableBinderDto _newBinder = new();
+    private Guid? _selectedVariantId = null;
 
 
     private async Task AddBinder()

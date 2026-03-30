@@ -122,6 +122,8 @@
     {
         SelectedVariant = variantDto;
 
+        StateHasChanged();
+
         _viewer = await CrossService.GetCardDetailsViewerDtoAsync(SelectedVariant.ScryfallId);
 
         await OnSelectFunc.InvokeAsync(_viewer);

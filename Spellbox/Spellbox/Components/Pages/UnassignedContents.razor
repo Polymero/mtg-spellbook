@@ -155,8 +155,8 @@ else
                  Align="Align.Center"
                  Class="mt-n2">
             <span style="font-size: 0.75em"><i>
-                @_filteredGroups.Sum(g => g.Quantity)
-                &nbsp; €@_filteredGroups.Sum(g => g.Price).ToString("0.00")
+                @_filteredGroups.Sum(g => g.Quantity) cards
+                &nbsp; (€@_filteredGroups.Sum(g => g.Price).ToString("0.00"))
             </i></span>
         </MudText>
 
