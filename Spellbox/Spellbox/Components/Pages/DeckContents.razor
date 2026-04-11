@@ -14,127 +14,7 @@ else
     <CollectionDeckCard Deck="_deck"
                         OnEdit="OpenEditDeckDialog" />
 
-    <MudPaper Elevation="0"
-              Class="pa-4 mud-transparent">
-        <MudStack Row="true" 
-                  Spacing="0" 
-                  Justify="Justify.SpaceEvenly"
-                  AlignItems="AlignItems.End"
-                  StretchItems="StretchItems.None">
-
-            <MudContainer Style="width: 40%" 
-                          Class="ma-0 pa-0">
-                <MudToggleGroup T="CardDisplayMode"
-                                @bind-Value="_displayMode"
-                                Size="Size.Small">
-                    <MudToggleItem Value="CardDisplayMode.Grid">
-                        <MudIcon Icon="@Icons.Material.Filled.GridView" />
-                            Grid
-                    </MudToggleItem>
-                    <MudToggleItem Value="CardDisplayMode.Table">
-                        <MudIcon Icon="@Icons.Material.Filled.TableRows" />
-                            Table
-                    </MudToggleItem>
-                </MudToggleGroup>
-            </MudContainer>
-
-            <MudContainer Style="width: 40%"
-                          Class="ma-0 pa-0">
-                <MudToggleGroup T="bool"
-                                @bind-Value="_expandVariants"
-                                Size="Size.Small">
-                    <MudToggleItem Value="false">
-                        <MudIcon Icon="@Icons.Material.Filled.Filter1" />
-                            Oracles
-                    </MudToggleItem>
-                    <MudToggleItem Value="true">
-                        <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-                            Variants
-                    </MudToggleItem>
-                </MudToggleGroup>
-            </MudContainer>
-
-        </MudStack>
-    </MudPaper>
-
-    <MudPaper Elevation="0"
-              Class="pa-4 mud-transparent mt-n8">
-        <MudStack Row="true" 
-                  Spacing="0" 
-                  Justify="Justify.SpaceEvenly"
-                  AlignItems="AlignItems.End"
-                  StretchItems="StretchItems.None">
-
-            <MudContainer Style="width: 40%"
-                          Class="ma-0 pa-0">
-                <MudStack Row="true"
-                          Justify="Justify.Center"
-                          AlignItems="AlignItems.End"
-                          Spacing="2">
-
-                    <MudContainer Class="pa-0">
-                        <MudSelect T="ColorIdentityFilterMode"
-                                Dense="true"
-                                @bind-Value="_CIFMode"
-                                @bind-Value:after="ApplyFilter">
-                            @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
-                            {
-                                <MudSelectItem Value="mode">
-                                    @mode
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudContainer>
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
-                             Size="Size.Large" 
-                             Style=@(_CIF.C ? "" : "opacity: 0.3")
-                             @onclick="@(() => {_CIF.C = !_CIF.C; ApplyFilter();})" />
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
-                            Size="Size.Large"
-                            Style=@(_CIF.W ? "" : "opacity: 0.3")
-                            @onclick="@(() => {_CIF.W = !_CIF.W; ApplyFilter();})" />
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
-                            Size="Size.Large" 
-                            Style=@(_CIF.U ? "" : "opacity: 0.3")
-                            @onclick="@(() => {_CIF.U = !_CIF.U; ApplyFilter();})" />
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
-                            Size="Size.Large" 
-                            Style=@(_CIF.B ? "" : "opacity: 0.3")
-                            @onclick="@(() => {_CIF.B = !_CIF.B; ApplyFilter();})" />
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
-                            Size="Size.Large" 
-                            Style=@(_CIF.R ? "" : "opacity: 0.3")
-                            @onclick="@(() => {_CIF.R = !_CIF.R; ApplyFilter();})" />
-
-                    <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
-                            Size="Size.Large"
-                            Style=@(_CIF.G ? "" : "opacity: 0.3")
-                            @onclick="@(() => {_CIF.G = !_CIF.G; ApplyFilter();})" />
-
-                </MudStack>
-            </MudContainer>
-
-            <MudContainer Style="width: 40%"
-                          Class="ma-0 pa-0">
-                <MudTextField Label="Search" 
-                            T="string"
-                            Variant="Variant.Text"
-                            Clearable="true"
-                            @bind-Value="_search"
-                            @bind-Value:after="ApplyFilter"
-                            Immediate="true"
-                            DebounceInterval="0" />
-            </MudContainer>
-
-        </MudStack>
-    </MudPaper>
-
-    <MudPaper Class="px-4 pt-4 mb-4"
+    <MudPaper Class="px-4 pt-2 my-2"
               Outlined="true">
 
         <MudStack Row="true"
@@ -153,7 +33,8 @@ else
                               AllocationIndex="_zones[DeckZoneType.Commanders].AllocationIndex"
                               OnEditSuccess="UpdateCacheOnEdit"
                               OnMoveSuccess="UpdateCacheOnMove"
-                              ExpandVariants="_expandVariants" />
+                              ExpandVariants="_expandVariants"
+                              @bind-SelectedAllocations="_selectedAllocations" />
             </MudContainer>
 
             @if (_zones[DeckZoneType.Companions].Groups.Count > 0)
@@ -177,6 +58,135 @@ else
 
     </MudPaper>
 
+    <MudPaper Class="pa-4 my-2"
+              Outlined="true">
+              
+        <MudPaper Elevation="0"
+                Class="mud-transparent">
+
+            <MudStack Row="true" 
+                    Spacing="0" 
+                    Justify="Justify.SpaceEvenly"
+                    AlignItems="AlignItems.End"
+                    StretchItems="StretchItems.None">
+
+                <MudContainer Style="width: 40%" 
+                            Class="ma-0 pa-0">
+                    <MudToggleGroup T="CardDisplayMode"
+                                    @bind-Value="_displayMode"
+                                    Size="Size.Small">
+                        <MudToggleItem Value="CardDisplayMode.Grid">
+                            <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                                Grid
+                        </MudToggleItem>
+                        <MudToggleItem Value="CardDisplayMode.Table">
+                            <MudIcon Icon="@Icons.Material.Filled.TableRows" />
+                                Table
+                        </MudToggleItem>
+                    </MudToggleGroup>
+                </MudContainer>
+
+                <MudContainer Style="width: 40%"
+                            Class="ma-0 pa-0">
+                    <MudToggleGroup T="bool"
+                                    @bind-Value="_expandVariants"
+                                    Size="Size.Small">
+                        <MudToggleItem Value="false">
+                            <MudIcon Icon="@Icons.Material.Filled.Filter1" />
+                                Oracles
+                        </MudToggleItem>
+                        <MudToggleItem Value="true">
+                            <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                                Variants
+                        </MudToggleItem>
+                    </MudToggleGroup>
+                </MudContainer>
+
+            </MudStack>
+
+        </MudPaper>
+
+        <MudPaper Elevation="0"
+                Class="mud-transparent mt-0">
+
+            <MudStack Row="true" 
+                    Spacing="0" 
+                    Justify="Justify.SpaceEvenly"
+                    AlignItems="AlignItems.End"
+                    StretchItems="StretchItems.None">
+
+                <MudContainer Style="width: 40%"
+                            Class="ma-0 pa-0">
+                    <MudStack Row="true"
+                            Justify="Justify.Center"
+                            AlignItems="AlignItems.End"
+                            Spacing="2">
+
+                        <MudContainer Class="pa-0">
+                            <MudSelect T="ColorIdentityFilterMode"
+                                    Dense="true"
+                                    @bind-Value="_CIFMode"
+                                    @bind-Value:after="ApplyFilter">
+                                @foreach (var mode in Enum.GetValues<ColorIdentityFilterMode>())
+                                {
+                                    <MudSelectItem Value="mode">
+                                        @mode
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudContainer>
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{C}")"
+                                Size="Size.Large" 
+                                Style=@(_CIF.C ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.C = !_CIF.C; ApplyFilter();})" />
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{W}")"
+                                Size="Size.Large"
+                                Style=@(_CIF.W ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.W = !_CIF.W; ApplyFilter();})" />
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{U}")"
+                                Size="Size.Large" 
+                                Style=@(_CIF.U ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.U = !_CIF.U; ApplyFilter();})" />
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{B}")"
+                                Size="Size.Large" 
+                                Style=@(_CIF.B ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.B = !_CIF.B; ApplyFilter();})" />
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{R}")"
+                                Size="Size.Large" 
+                                Style=@(_CIF.R ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.R = !_CIF.R; ApplyFilter();})" />
+
+                        <MudIcon Icon="@SymbologyService.RenderSymbolIcon("{G}")"
+                                Size="Size.Large"
+                                Style=@(_CIF.G ? "" : "opacity: 0.3")
+                                @onclick="@(() => {_CIF.G = !_CIF.G; ApplyFilter();})" />
+
+                    </MudStack>
+                </MudContainer>
+
+                <MudContainer Style="width: 40%"
+                            Class="ma-0 pa-0">
+                    <MudTextField Label="Search" 
+                                T="string"
+                                Variant="Variant.Text"
+                                Clearable="true"
+                                @bind-Value="_search"
+                                @bind-Value:after="ApplyFilter"
+                                Immediate="true"
+                                DebounceInterval="0" />
+                </MudContainer>
+
+            </MudStack>
+
+        </MudPaper>
+
+    </MudPaper>
+
     <MudTabs Outlined="false"
              Rounded="true"
              ApplyEffectsToContainer="false"
@@ -189,18 +199,19 @@ else
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
                     <CardGridView Groups="_zones[DeckZoneType.Mainboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit"
-                                OnMoveSuccess="UpdateCacheOnMove"
-                                ExpandVariants="_expandVariants" />
+                                  VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
+                                  AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
+                                  OnEditSuccess="UpdateCacheOnEdit"
+                                  OnMoveSuccess="UpdateCacheOnMove"
+                                  ExpandVariants="_expandVariants"
+                                  @bind-SelectedAllocations="_selectedAllocations" />
                 }
                 else
                 {
                     <CardTableView Groups="_zones[DeckZoneType.Mainboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit" />
+                                   VariantIndex="_zones[DeckZoneType.Mainboard].VariantIndex"
+                                   AllocationIndex="_zones[DeckZoneType.Mainboard].AllocationIndex"
+                                   OnEditSuccess="UpdateCacheOnEdit" />
                 }
             </MudPaper>
         </MudTabPanel>
@@ -212,18 +223,19 @@ else
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
                     <CardGridView Groups="_zones[DeckZoneType.Sideboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit"
-                                OnMoveSuccess="UpdateCacheOnMove"
-                                ExpandVariants="_expandVariants" />
+                                  VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
+                                  AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
+                                  OnEditSuccess="UpdateCacheOnEdit"
+                                  OnMoveSuccess="UpdateCacheOnMove"
+                                  ExpandVariants="_expandVariants"
+                                  @bind-SelectedAllocations="_selectedAllocations" />
                 }
                 else
                 {
                     <CardTableView Groups="_zones[DeckZoneType.Sideboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit" />
+                                   VariantIndex="_zones[DeckZoneType.Sideboard].VariantIndex"
+                                   AllocationIndex="_zones[DeckZoneType.Sideboard].AllocationIndex"
+                                   OnEditSuccess="UpdateCacheOnEdit" />
                 }
             </MudPaper>
         </MudTabPanel>
@@ -235,23 +247,27 @@ else
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
                     <CardGridView Groups="_zones[DeckZoneType.Maybeboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit"
-                                OnMoveSuccess="UpdateCacheOnMove"
-                                ExpandVariants="_expandVariants" />
+                                  VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
+                                  AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
+                                  OnEditSuccess="UpdateCacheOnEdit"
+                                  OnMoveSuccess="UpdateCacheOnMove"
+                                  ExpandVariants="_expandVariants"
+                                  @bind-SelectedAllocations="_selectedAllocations" />
                 }
                 else
                 {
                     <CardTableView Groups="_zones[DeckZoneType.Maybeboard].FilteredGroups"
-                                VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
-                                AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
-                                OnEditSuccess="UpdateCacheOnEdit" />
+                                   VariantIndex="_zones[DeckZoneType.Maybeboard].VariantIndex"
+                                   AllocationIndex="_zones[DeckZoneType.Maybeboard].AllocationIndex"
+                                   OnEditSuccess="UpdateCacheOnEdit" />
                 }
             </MudPaper>
         </MudTabPanel>
         
     </MudTabs>
+
+    <CardSelectionComponent @bind-SelectedAllocations="_selectedAllocations"
+                            OnMoveSuccess="UpdateCacheOnMove" />
 
 }
 
@@ -278,6 +294,8 @@ else
 
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
+    private HashSet<Guid> _selectedAllocations = new();
+
     private CardColours _CIF = new CardColours();
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
     private string _search = "";

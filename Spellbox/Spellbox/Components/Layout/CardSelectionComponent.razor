@@ -1,0 +1,86 @@
+﻿
+
+@if (SelectedAllocations.Count > 0)
+{
+    <MudPaper Class="gridview-selection-float"
+              Elevation="8">
+
+        <MudPaper Class="px-4 ma-0" Outlined="true">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Spacing="2"
+                      Class="py-4">
+
+                <MudText>
+                    @SelectedAllocations.Count card(s) selected
+                </MudText>
+
+                <MudSpacer />
+
+                <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
+                               Size="Size.Small"
+                               OnClick="OpenMoveDialog"
+                               Color="Color.Info" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                               Size="Size.Small"
+                               OnClick="ClearSelection" 
+                               Color="Color.Error" />
+
+            </MudStack>
+
+        </MudPaper>
+
+    </MudPaper>
+}
+
+
+@inject IDialogService DialogService
+@code {
+
+    [Parameter] public HashSet<Guid> SelectedAllocations { get; set; } = new ();
+    [Parameter] public EventCallback<HashSet<Guid>> SelectedAllocationsChanged { get; set; }
+    [Parameter] public EventCallback<MoveAllocationsCallback> OnMoveSuccess { get; set; }
+
+
+    private async Task OpenMoveDialog()
+    {
+        if (SelectedAllocations.Count == 0)
+            return;
+
+        var parameters = new DialogParameters
+        {
+            ["AllocationIds"] = SelectedAllocations,
+            @* ["CurrentBinderId"] = AllocationIndex[_selectedAllocations.First()].BinderId,
+            ["CurrentZoneId"] = AllocationIndex[_selectedAllocations.First()].ZoneId *@
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<MoveAllocationDialog>("Move Allocations", parameters, options);
+        var result = await dialog.Result;
+
+        if (!(result!.Canceled) && result.Data is MoveAllocationsCallback callback)
+        {
+            await OnMoveSuccess.InvokeAsync(callback);
+
+            SelectedAllocations.Clear();
+            await SelectedAllocationsChanged.InvokeAsync(SelectedAllocations);
+        }
+    }
+
+    private async Task ClearSelection()
+    {
+        SelectedAllocations.Clear();
+        await SelectedAllocationsChanged.InvokeAsync(SelectedAllocations);
+    }
+
+}

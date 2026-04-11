@@ -1,7 +1,7 @@
 ﻿
 
 <MudText Typo="Typo.h6">
-    @Viewer.Allocations.Count Copies in your Collection
+    @Viewer.Allocations.Count Copies in @Name
 </MudText>
 
 @if (Viewer.Allocations.Count == 0)
@@ -35,7 +35,7 @@ else
                 else { <MudText Typo="Typo.caption"><i>Unassigned</i></MudText> }
             </MudTd>
             <MudTd Style="text-align: center">
-                @String.Format("{0} {1}", Viewer.Variant.SetCode.ToUpper(), Viewer.Variant.CollNum)
+                @String.Format("{0} {1}", VariantInfo[a.VariantId].SetCode.ToUpper(), VariantInfo[a.VariantId].CollNum)
             </MudTd>
             <MudTd Style="text-align: center">
                 @switch (a.Finish)
@@ -102,6 +102,7 @@ else
 @code {
 
     [Parameter] public CardDetailsViewerDto Viewer { get; set; } = null!;
+    [Parameter] public Dictionary<Guid, CardVariantDto> VariantInfo { get; set; } = new();
     [Parameter] public string Name { get; set; } = "your Collection";
 
     private async Task EditAllocationAsync(Guid allocationId)

@@ -3,18 +3,18 @@
 <MudDialog>
 
     <TitleContent>
+
         <MudText Typo="Typo.h6">
             Moving @AllocationIds.Count Cards
         </MudText>
+
     </TitleContent>
 
     <DialogContent>
 
         <TargetSelectionComponent BinderCache="_binders"
                                   DeckCache="_decks"
-                                  TargetBinder="_targetBinder"
-                                  TargetDeck="_targetDeck"
-                                  TargetZoneType="_targetZoneType"/>
+                                  @bind-State="_selectionState" />
 
     </DialogContent>
 
@@ -54,17 +54,15 @@
     [Parameter] public Guid? CurrentBinderId { get; set; }
     [Parameter] public Guid? CurrentZoneId { get; set; }
 
-    private CollectionBinderDto? _targetBinder;
-    private DeckDto? _targetDeck;
-    private DeckZoneType _targetZoneType = DeckZoneType.Mainboard;
+    private TargetSelectionComponent.ComponentState _selectionState = new(); 
 
     private List<CollectionBinderDto> _binders = new List<CollectionBinderDto>();
     private List<DeckDto> _decks = new List<DeckDto>();
 
     private bool CanMove =>
         !(
-            _targetBinder is not null && 
-            _targetDeck is not null
+            _selectionState.TargetBinder is not null && 
+            _selectionState.TargetDeck is not null
         );
 
 
@@ -73,10 +71,10 @@
         _binders = await CollectionService.GetAllBinders();
         _decks = await CollectionService.GetAllDecks();
 
-        _targetBinder = CurrentBinderId.HasValue 
+        _selectionState.TargetBinder = CurrentBinderId.HasValue 
             ? _binders.Single(b => b.Id == CurrentBinderId.Value) 
             : null;
-        _targetDeck = CurrentZoneId.HasValue 
+        _selectionState.TargetDeck = CurrentZoneId.HasValue 
             ? _decks.Single(d => d.ActiveZoneIds.Values.Contains(CurrentZoneId.Value)) 
             : null;
     }
@@ -84,21 +82,23 @@
 
     private async Task MoveAsync()
     {
-        var movedIds = await CrossService.MoveAllocationsAsync(AllocationIds, _targetBinder?.Id, _targetDeck?.Id, _targetZoneType);
+        var movedIds = await CrossService.MoveAllocationsAsync(
+            AllocationIds, 
+            _selectionState.TargetBinder?.Id, 
+            _selectionState.TargetDeck?.Id, 
+            _selectionState.TargetZoneType
+        );
         
         var targetName = "Unassigned";
-        if (_targetBinder is not null)
-            targetName = _targetBinder.Name;
-        else if (_targetDeck is not null)
-            targetName = _targetDeck.Name;
+        if (_selectionState.TargetBinder is not null)
+            targetName = _selectionState.TargetBinder.Name;
+        else if (_selectionState.TargetDeck is not null)
+            targetName = _selectionState.TargetDeck.Name;
 
         Snackbar.Add($"Moved {movedIds.Count} card(s) to '{targetName}.'", Severity.Success);
 
         MudDialog.Close(DialogResult.Ok(new MoveAllocationsCallback(movedIds.AsEnumerable())));
     }
-
-
-
 
 
     private void Cancel() => MudDialog.Cancel();

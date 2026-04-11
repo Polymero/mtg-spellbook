@@ -20,9 +20,8 @@
                         {
                             <GridCard Card="row[i]" 
                                       OnClick="OpenCardDialog"
-                                      OnSelect="SelectCard"
-                                      OnDeselect="DeselectCard"
-                                      Selection="_selectedAllocations"/>
+                                      @bind-Selection="SelectedAllocations"
+                                      @bind-Selection:after="@(async () => await SelectedAllocationsChanged.InvokeAsync(SelectedAllocations))" />
                         }
                         else
                         {
@@ -40,40 +39,6 @@
 
 </div>
 
-@if (_selectedAllocations.Count > 0)
-{
-    <MudPaper Class="@($"gridview-selection-float {(_hiding ? "slide-out" : "")}")"
-              Elevation="8">
-        <MudPaper Class="px-4 ma-0" Outlined="true">
-
-            <MudStack Row="true"
-                      AlignItems="AlignItems.Center"
-                      Justify="Justify.Center"
-                      Spacing="2"
-                      Class="py-4">
-
-                <MudText>
-                    @_selectedAllocations.Count card(s) selected
-                </MudText>
-
-                <MudSpacer />
-
-                <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
-                            Size="Size.Small"
-                            OnClick="OpenMoveDialog"
-                            Color="Color.Info" />
-
-                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
-                            Size="Size.Small"
-                            OnClick="@(() => _selectedAllocations.Clear())" 
-                            Color="Color.Error" />
-
-            </MudStack>
-
-        </MudPaper>
-    </MudPaper>
-}
-
 
 @inject IDialogService DialogService
 @inject IJSRuntime JS
@@ -84,6 +49,8 @@
     [Parameter] public IReadOnlyDictionary<Guid, CollectionAllocationDto> AllocationIndex { get; set; } = null!;
     [Parameter] public EventCallback<EditAllocationCallback> OnEditSuccess { get; set; }
     [Parameter] public EventCallback<MoveAllocationsCallback> OnMoveSuccess { get; set; }
+    [Parameter] public HashSet<Guid> SelectedAllocations { get; set; } = new ();
+    [Parameter] public EventCallback<HashSet<Guid>> SelectedAllocationsChanged { get; set; }
     [Parameter] public bool ExpandVariants { get; set; } = false;
 
     // Constants
@@ -100,9 +67,6 @@
     private IJSObjectReference? _module;
     private IJSObjectReference? _resizeObserver;
     private DotNetObjectReference<CardGridView>? _objRef;
-    private bool _hiding = false;
-
-    public HashSet<Guid> _selectedAllocations = new ();
 
 
     protected override void OnParametersSet()
@@ -195,7 +159,6 @@
             .ToList();
     }
 
-
     public async ValueTask DisposeAsync()
     {
         if (_resizeObserver is not null)
@@ -249,57 +212,6 @@
     {
         await OnEditSuccess.InvokeAsync(callback);
         StateHasChanged();
-    }
-
-
-    private void SelectCard(RenderCard card)
-    {
-        foreach (var alloc in card.Allocations)
-        {
-            if (!_selectedAllocations.Contains(alloc.Id))
-                _selectedAllocations.Add(alloc.Id);
-        }
-    }
-
-    private void DeselectCard(RenderCard card)
-    {
-        foreach (var alloc in card.Allocations)
-        {
-            if (_selectedAllocations.Contains(alloc.Id))
-                _selectedAllocations.Remove(alloc.Id);
-        }
-    }
-
-    private async Task OpenMoveDialog()
-    {
-        if (_selectedAllocations.Count == 0)
-            return;
-
-        var parameters = new DialogParameters
-        {
-            ["AllocationIds"] = _selectedAllocations,
-            ["CurrentBinderId"] = AllocationIndex[_selectedAllocations.First()].BinderId,
-            ["CurrentZoneId"] = AllocationIndex[_selectedAllocations.First()].ZoneId
-        };
-
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Large,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<MoveAllocationDialog>("Move Allocations", parameters, options);
-        var result = await dialog.Result;
-
-        if (!(result!.Canceled) && result.Data is MoveAllocationsCallback callback)
-        {
-            await OnMoveSuccess.InvokeAsync(callback);
-
-            _selectedAllocations.Clear();
-            await InvokeAsync(StateHasChanged);
-        }
     }
 
 }

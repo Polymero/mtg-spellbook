@@ -160,7 +160,8 @@ else
                           AllocationIndex="_allocationIndex"
                           OnEditSuccess="UpdateCacheOnEdit"
                           OnMoveSuccess="UpdateCacheOnMove"
-                          ExpandVariants="_expandVariants" />
+                          ExpandVariants="_expandVariants"
+                          @bind-SelectedAllocations="_selectedAllocations" />
         }
         else
         {
@@ -171,6 +172,9 @@ else
         }
 
     </MudPaper>
+
+    <CardSelectionComponent @bind-SelectedAllocations="_selectedAllocations"
+                            OnMoveSuccess="UpdateCacheOnMove" />
 
 }
 
@@ -185,6 +189,7 @@ else
     private List<CollectionGroupedOracleDto> _filteredGroups = [];
     private Dictionary<Guid, CollectionGroupedVariantDto> _variantIndex = new();
     private Dictionary<Guid, CollectionAllocationDto> _allocationIndex = new();
+    private HashSet<Guid> _selectedAllocations = new();
 
     // UI States
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;

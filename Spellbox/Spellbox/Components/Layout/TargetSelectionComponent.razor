@@ -15,8 +15,8 @@
             <MudSelect T="CollectionBinderDto"
                        Label="Binder"
                        Clearable="true"
-                       @bind-Value="TargetBinder"
-                       @bind-Value:after="@(() => TargetDeck = null)">
+                       @bind-Value="State.TargetBinder"
+                       @bind-Value:after="SetTargetBinder">
                 @foreach (var b in BinderCache)
                 {
                     <MudSelectItem Value="b">
@@ -40,8 +40,8 @@
             <MudSelect T="DeckDto"
                        Label="Deck"
                        Clearable="true"
-                       @bind-Value="TargetDeck"
-                       @bind-Value:after="@(() => TargetBinder = null)">
+                       @bind-Value="State.TargetDeck"
+                       @bind-Value:after="SetTargetDeck">
                 @foreach (var d in DeckCache)
                 {
                     <MudSelectItem Value="d">
@@ -55,8 +55,8 @@
                       Style="width: 40%">
             <MudSelect T="DeckZoneType"
                        Label="Zone"
-                       Disabled="@(TargetDeck is null)"
-                       @bind-Value="TargetZoneType"
+                       Disabled="@(State.TargetDeck is null)"
+                       @bind-Value="State.TargetZoneType"
                        Class="ml-n4">
                 @foreach (var zt in Enum.GetValues<DeckZoneType>())
                 {
@@ -82,12 +82,34 @@
 @inject IDialogService DialogService
 @code {
 
-    [Parameter] public CollectionBinderDto? TargetBinder { get; set; }
-    [Parameter] public DeckDto? TargetDeck { get; set; }
-    [Parameter] public DeckZoneType TargetZoneType { get; set; } = DeckZoneType.Mainboard;
+    public sealed class ComponentState
+    {
+        public CollectionBinderDto? TargetBinder { get; set; }
+        public DeckDto? TargetDeck { get; set; }
+        public DeckZoneType TargetZoneType { get; set; } = DeckZoneType.Mainboard;
+    }
+
+    [Parameter] public ComponentState State { get; set; } = new();
+    [Parameter] public EventCallback<ComponentState> StateChanged { get; set; }
 
     [Parameter] public List<CollectionBinderDto> BinderCache { get; set; } = [];
     [Parameter] public List<DeckDto> DeckCache { get; set; } = [];
+
+
+    private async Task SetTargetBinder()
+    {
+        State.TargetDeck = null;
+        State.TargetZoneType = DeckZoneType.Mainboard;
+
+        await StateChanged.InvokeAsync(State);
+    }
+
+    private async Task SetTargetDeck()
+    {
+        State.TargetBinder = null;
+
+        await StateChanged.InvokeAsync(State);
+    }
 
 
     private async Task OpenAddBinderDialog()
@@ -106,8 +128,10 @@
         if (!result!.Canceled && result.Data is EditBinderCallback callback)
         {
             BinderCache.Add(callback.Binder);
-            TargetBinder = callback.Binder;
-            StateHasChanged();
+
+            State.TargetBinder = callback.Binder;
+
+            await SetTargetBinder();
         }
     }
 
@@ -127,8 +151,11 @@
         if (!result!.Canceled && result.Data is EditDeckCallback callback)
         {
             DeckCache.Add(callback.Deck);
-            TargetDeck = callback.Deck;
-            StateHasChanged();
+
+            State.TargetDeck = callback.Deck;
+            State.TargetZoneType = DeckZoneType.Mainboard;
+
+            await SetTargetDeck();
         }
     }
 
