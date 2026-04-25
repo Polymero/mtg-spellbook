@@ -174,7 +174,8 @@ else
     </MudPaper>
 
     <CardSelectionComponent @bind-SelectedAllocations="_selectedAllocations"
-                            OnMoveSuccess="UpdateCacheOnMove" />
+                            OnMoveSuccess="UpdateCacheOnMove"
+                            OnSelectAll="SelectAll" />
 
 }
 
@@ -377,6 +378,15 @@ else
                 .ToList();
         }
         
+    }
+
+    private void SelectAll()
+    {
+        _selectedAllocations
+            .UnionWith(_filteredGroups
+                .SelectMany(og => og.Variants
+                    .SelectMany(vg => vg.Allocations
+                        .Select(a => a.Id))));
     }
 
 }

@@ -458,7 +458,7 @@
                    Color="Color.Success"
                    Disabled="@(!CanSubmitToCollection)"
                    OnClick="SubmitAsync">
-            Submit Cards
+            Submit @SubmissionBatch.Count @(SubmissionBatch.Count == 1 ? "Card" : "Cards")
         </MudButton>
     </DialogActions>
 

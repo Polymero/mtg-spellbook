@@ -35,7 +35,8 @@ namespace Spellbox.Services
         private static readonly IEnumerable<string> DesiredLayouts = new HashSet<string> 
         {
             "normal", "split", "flip", "transform", "modal_dfc", "meld", "leveler", "class",
-            "case", "saga", "adventure", "mutate", "prototype", "battle", "reversible_card"
+            "case", "saga", "adventure", "mutate", "prototype", "battle", "reversible_card",
+            "prepare"
         };
 
         private readonly HttpClient _http;

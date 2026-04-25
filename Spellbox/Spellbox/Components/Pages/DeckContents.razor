@@ -196,6 +196,10 @@ else
             <MudPaper Class="pa-4 mt-n0"
                       Outlined="true">
 
+                @{
+                    _selectedZone = DeckZoneType.Mainboard;
+                }
+
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
                     <CardGridView Groups="_zones[DeckZoneType.Mainboard].FilteredGroups"
@@ -219,6 +223,10 @@ else
         <MudTabPanel Text="@($"Sideboard {_zones[DeckZoneType.Sideboard].Quantity}")">
             <MudPaper Class="pa-4 mt-n0"
                       Outlined="true">
+
+                @{
+                    _selectedZone = DeckZoneType.Sideboard;
+                }
 
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
@@ -244,6 +252,10 @@ else
             <MudPaper Class="pa-4 mt-n0"
                       Outlined="true">
 
+                @{
+                    _selectedZone = DeckZoneType.Maybeboard;
+                }
+
                 @if (_displayMode == CardDisplayMode.Grid)
                 {
                     <CardGridView Groups="_zones[DeckZoneType.Maybeboard].FilteredGroups"
@@ -267,7 +279,8 @@ else
     </MudTabs>
 
     <CardSelectionComponent @bind-SelectedAllocations="_selectedAllocations"
-                            OnMoveSuccess="UpdateCacheOnMove" />
+                            OnMoveSuccess="UpdateCacheOnMove"
+                            OnSelectAll="SelectAll" />
 
 }
 
@@ -295,6 +308,7 @@ else
     private CardDisplayMode _displayMode = CardDisplayMode.Grid;
     private bool _expandVariants = false;
     private HashSet<Guid> _selectedAllocations = new();
+    private DeckZoneType _selectedZone = DeckZoneType.Mainboard;
 
     private CardColours _CIF = new CardColours();
     private ColorIdentityFilterMode _CIFMode = ColorIdentityFilterMode.AtMost;
@@ -478,6 +492,15 @@ else
                     .ToList();
             }
         }
+    }
+
+    private void SelectAll()
+    {
+        _selectedAllocations
+            .UnionWith(_zones[_selectedZone].FilteredGroups
+                .SelectMany(og => og.Variants
+                    .SelectMany(vg => vg.Allocations
+                        .Select(a => a.Id))));
     }
 
 }

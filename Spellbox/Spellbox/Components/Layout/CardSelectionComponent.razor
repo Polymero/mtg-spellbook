@@ -19,6 +19,11 @@
 
                 <MudSpacer />
 
+                <MudIconButton Icon="@Icons.Material.Filled.SelectAll"
+                               Size="Size.Small"
+                               OnClick="SelectAll"
+                               Color="Color.Success" />
+
                 <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
                                Size="Size.Small"
                                OnClick="OpenMoveDialog"
@@ -43,7 +48,13 @@
     [Parameter] public HashSet<Guid> SelectedAllocations { get; set; } = new ();
     [Parameter] public EventCallback<HashSet<Guid>> SelectedAllocationsChanged { get; set; }
     [Parameter] public EventCallback<MoveAllocationsCallback> OnMoveSuccess { get; set; }
+    [Parameter] public EventCallback OnSelectAll { get; set; }
 
+
+    private async Task SelectAll()
+    {
+        await OnSelectAll.InvokeAsync();
+    }
 
     private async Task OpenMoveDialog()
     {
